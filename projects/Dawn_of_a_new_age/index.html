@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- NO_RESPONSIVO: Versión no responsiva (Escala fija 1360px) -->
+    <meta name="viewport" content="width=1360">
+    <!-- NO_RESPONSIVO_ORIGINAL: Versión responsiva previa
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    -->
+    <title></title>
+    <meta name="description" content="Sitio oficial de Mítago. Escucha el nuevo álbum 'Came From The Stars', descubre fechas de conciertos y noticias.">
+    <!-- Favicon & PWA Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+    <link rel="shortcut icon" href="assets/icons/favicon-32x32.png" type="image/png">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Web App PWA Metadata -->
+    <meta name="theme-color" content="#07090e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mítago">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sansation:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Background Space & Canvas Starfield -->
+    <div class="bg-wrapper">
+        <img src="assets/project_cover.jpg" alt="Came From The Stars - Mítago Background" class="bg-image" id="bgImage">
+        <canvas id="starfield"></canvas>
+        <div class="bg-overlay"></div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <a href="#hero" class="brand-logo-link" title="Mítago">
+            <img src="assets/mitago.png" alt="Mítago" class="brand-logo">
+        </a>
+        <nav class="header-nav">
+            <a href="#hero">Álbum</a>
+            <a href="#about">Concepto</a>
+            <a href="#discography">Discografía</a>
+            <a href="#newsletter">Contacto</a>
+            <!-- <button id="btnPwaInstall" class="btn-pwa-install" style="display: none;" title="Instalar Aplicación Web">
+                <i class="fa-solid fa-download"></i> <span>Instalar App</span>
+            </button> -->
+        </nav>
+    </header>
+
+    <!-- Main Hero Section -->
+    <section id="hero" class="hero-section">
+        <div class="hero-container">
+
+            <!-- Left Side Title -->
+            <div class="hero-left">
+                <h1 class="artist-hero-title" id="artistName"></h1>
+                <h1 class="album-hero-title" id="albumTitle"></h1>
+                <h2 class="album-hero-subtitle" id="albumSubtitle"></h2>
+                <!-- <p class="album-hero-desc" id="albumDesc"></p> -->
+            </div>
+
+            <!-- Right Side Tracklist Floating Card & Platform Links -->
+            <div class="hero-right">
+
+                <!-- Transparent Tracklist Card -->
+                <div class="tracklist-card transparent-playlist">
+                    <ul class="track-list" id="heroTrackList"></ul>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Scroll Mouse Indicator -->
+        <a href="#about" class="scroll-indicator" title="Desplazarse abajo">
+            <div class="mouse-icon">
+                <div class="scroll-wheel"></div>
+            </div>
+        </a>
+    </section>
+
+    <!-- Content Section: About Album & Artist -->
+    <section id="about" class="content-section glass-section">
+        <div class="section-container">
+            <div class="grid-2col">
+                <div class="about-text">
+                    <span class="section-tag">EL CONCEPTO</span>
+                    <h2 class="section-title" id="conceptTitle"></h2>
+                    <p class="section-desc" id="projectInfoDesc"></p>
+                    <div class="platforms-bar transparent-bar" id="albumSocials">
+                        <!-- Album social links dynamically populated -->
+                    </div>
+                </div>
+                <div class="about-cover-box">
+                    <div class="cover-glow"></div>
+                    <img src="assets/project_cover.jpg" alt="Album Art" class="about-cover-img" id="aboutCoverImg">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Content Section: Discography -->
+    <section id="discography" class="content-section glass-section">
+        <div class="section-container">
+            <span class="section-tag center">DISCOGRAFÍA</span>
+            <h2 class="section-title center">Lanzamientos Destacados</h2>
+
+            <div class="disco-grid" id="discoGrid">
+                <!-- Other albums dynamically populated from projectInfo.json -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Section: Newsletter & Contact -->
+    <section id="newsletter" class="content-section">
+        <div class="section-container">
+            <div class="newsletter-box glass-card">
+                <span class="section-tag">ÚNETE A LA TRIPULACIÓN</span>
+                <h2>Recibe Exclusivas y Nuevos Lanzamientos</h2>
+                <p>Suscríbete al boletín oficial de Mítago para recibir noticias del tour, material inédito y lanzamientos antes que nadie.</p>
+                <form id="newsletterForm" class="newsletter-form" onsubmit="handleNewsletter(event)">
+                    <input type="email" placeholder="Tu correo electrónico..." required id="subscriberEmail">
+                    <button type="submit" class="btn-subscribe">Suscribirme</button>
+                </form>
+                <div id="newsletterMsg" class="newsletter-message"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <p>&copy; 2026 Mítago. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Bottom Sticky Audio Player (Exact Match to Reference Image) -->
+    <div class="sticky-player-bar" id="stickyPlayer">
+        <div class="player-inner">
+
+            <!-- Controls Group Left -->
+            <div class="player-controls-left">
+                <!-- Previous -->
+                <button type="button" class="player-btn" id="btnPrev" title="Anterior"><i class="fa-solid fa-step-backward"></i></button>
+
+                <!-- Main Play/Pause -->
+                <button type="button" class="player-btn main-play-btn" id="btnMainPlay" title="Reproducir/Pausar"><i class="fa-solid fa-play" id="mainPlayIcon"></i></button>
+
+                <!-- Next -->
+                <button type="button" class="player-btn" id="btnNext" title="Siguiente"><i class="fa-solid fa-step-forward"></i></button>
+
+                <!-- Shuffle toggle -->
+                <button type="button" class="player-btn" id="btnShuffle" title="Aleatorio"><i class="fa-solid fa-shuffle"></i></button>
+
+                <!-- Single Repeat toggle (1) -->
+                <button type="button" class="player-btn btn-badge-parent" id="btnRepeat" title="Repetir 1 canción">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span class="player-btn-badge">1</span>
+                </button>
+
+                <!-- Loop All toggle (all) -->
+                <button type="button" class="player-btn btn-badge-parent" id="btnLoop" title="Repetir todo (Bucle)">
+                    <i class="fa-solid fa-repeat"></i>
+                    <span class="player-btn-badge">all</span>
+                </button>
+
+                <!-- Current Time -->
+                <span class="time-display" id="currentTime">02:00</span>
+
+                <!-- Progress Seek Slider -->
+                <div class="seek-container">
+                    <input type="range" id="seekSlider" class="seek-slider" min="0" max="100" value="35">
+                    <div class="seek-bar-fill" id="seekBarFill" style="width: 35%;"></div>
+                </div>
+
+                <!-- Remaining/Total Time -->
+                <span class="time-display" id="totalTime">23:65</span>
+
+                <!-- Volume Group -->
+                <div class="volume-container">
+                    <button type="button" class="player-btn btn-volume" id="btnVolume" title="Silenciar/Activar sonido">
+                        <i class="fa-solid fa-volume-high" id="volumeIcon"></i>
+                    </button>
+                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.8">
+                </div>
+            </div>
+
+            <!-- Current Track Info Right -->
+            <div class="player-track-right">
+                <span class="player-track-number" id="playerTrackNumber">01</span>
+                <div class="player-meta">
+                    <span class="player-title" id="playerTitle">I Came From ...</span>
+                    <span class="player-artist" id="playerArtist">Mítago</span>
+                </div>
+                <!-- Sparkle Star Icon -->
+                <!-- <div class="sparkle-star" title="Mítago Cosmic Star">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+                    </svg>
+                </div> -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Ticket Modal -->
+    <div id="ticketModal" class="modal-overlay">
+        <div class="modal-content glass-card">
+            <button class="modal-close" onclick="closeTicketModal()">&times;</button>
+            <h3>Boletos: <span id="modalCityName"></span></h3>
+            <p>Selecciona tu zona para el concierto de Mítago:</p>
+            <div class="ticket-zones">
+                <div class="zone-item">
+                    <span>VIP Cosmic Zone</span>
+                    <strong>$120 USD</strong>
+                    <button class="btn-buy-zone" onclick="confirmPurchase('VIP')">Seleccionar</button>
+                </div>
+                <div class="zone-item">
+                    <span>General Orbit</span>
+                    <strong>$65 USD</strong>
+                    <button class="btn-buy-zone" onclick="confirmPurchase('General')">Seleccionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Discrete PWA Install Button (Bottom Right) -->
+    <button id="pwaFloatingBtn" class="pwa-floating-btn" title="Instalar Aplicación Web" aria-label="Instalar Web App">
+        <i class="fa-solid fa-download"></i>
+        <span class="pwa-floating-tooltip">Instalar App</span>
+    </button>
+
+    <!-- PWA Install Guide Modal (Fallback & iOS) -->
+    <div id="pwaGuideModal" class="modal-overlay">
+        <div class="modal-content glass-card pwa-guide-card">
+            <button class="modal-close" onclick="closePwaGuideModal()">&times;</button>
+            <div class="pwa-guide-header">
+                <img src="assets/icons/icon-192.png" alt="Mítago Icon" class="pwa-guide-icon">
+                <div>
+                    <h3>Instalar Mítago App</h3>
+                    <p class="pwa-guide-subtitle">Instala la webapp en tu dispositivo</p>
+                </div>
+            </div>
+            <div class="pwa-guide-steps" id="pwaGuideSteps">
+                <!-- Dynamic steps populated via JS based on OS/Browser -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

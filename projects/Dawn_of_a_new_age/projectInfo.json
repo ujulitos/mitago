@@ -1,0 +1,200 @@
+{
+    "project": "Dawn of a new age",
+    "project_info": "Un proyecto de odisea sonora espacial y visual por Silent Voyager que explora la música como un viaje a través del espacio y el tiempo.",
+    "project_cover": "assets/project_cover.jpg",
+    "artist_name": "Silent Voyager",
+    "artist_cover": "assets/mitago.png",
+    "artist_social": [{
+            "name": "Instagram",
+            "url": "https://instagram.com/mitagostudio",
+            "icon": "fa-brands fa-instagram"
+        },
+        {
+            "name": "Facebook",
+            "url": "https://facebook.com/mitagostudio",
+            "icon": "fa-brands fa-facebook"
+        },
+        {
+            "name": "X / Twitter",
+            "url": "https://x.com/mitagostudio",
+            "icon": "fa-brands fa-x-twitter"
+        }
+    ],
+    "album_title": "Dawn of a new age",
+    "album_subtitle": "Songs from a Space-Time Traveler",
+    "album_description": "This album is a journey through the cosmos, exploring themes of love, loss, and the search for meaning in a vast universe. It features a blend of electronic, rock, and orchestral elements, creating a unique and immersive listening experience. Each song tells a different story, taking the listener on a journey through space and time.",
+    "album_cover": "assets/album-cover.jpg",
+    "album_social": [{
+            "name": "Spotify",
+            "url": "https://spotify.com",
+            "icon": "fa-brands fa-spotify"
+        },
+        {
+            "name": "Apple Music",
+            "url": "https://apple.com/music",
+            "icon": "fa-brands fa-apple"
+        },
+        {
+            "name": "iTunes",
+            "url": "https://itunes.com",
+            "icon": "fa-solid fa-music"
+        },
+        {
+            "name": "YouTube",
+            "url": "https://youtube.com",
+            "icon": "fa-brands fa-youtube"
+        },
+        {
+            "name": "YouTube Music",
+            "url": "https://music.youtube.com",
+            "icon": "fa-solid fa-circle-play"
+        },
+        {
+            "name": "SoundCloud",
+            "url": "https://soundcloud.com",
+            "icon": "fa-brands fa-soundcloud"
+        }
+    ],
+    "tracks": [{
+            "track_id": 0,
+            "track_filename": "01 It begins.mp3",
+            "track_src": "songs/01 It begins 1.mp3",
+            "track_title": "It begins",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 1,
+            "track_filename": "02 Journeyman.mp3",
+            "track_src": "songs/02 Journeyman.mp3",
+            "track_title": "Journeyman",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 2,
+            "track_filename": "03 Streetlights blinkin.mp3",
+            "track_src": "songs/03 Streetlights blinkin.mp3",
+            "track_title": "Streetlights blinkin",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 3,
+            "track_filename": "04 Those eyes, that smile.mp3",
+            "track_src": "songs/04 Those eyes, that smile.mp3",
+            "track_title": "Those eyes, that smile",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 4,
+            "track_filename": "05 May the light of a million suns.mp3",
+            "track_src": "songs/05 May the light of a million suns.mp3",
+            "track_title": "May the light of a million suns",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 5,
+            "track_filename": "06 Wait for me.mp3",
+            "track_src": "songs/06 Wait for me.mp3",
+            "track_title": "Wait for me",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 6,
+            "track_filename": "07 Take me back.mp3",
+            "track_src": "songs/07 Take me back.mp3",
+            "track_title": "Take me back",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 7,
+            "track_filename": "08 The journey continues.mp3",
+            "track_src": "songs/08 The journey continues.mp3",
+            "track_title": "The journey continues",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 8,
+            "track_filename": "09 Let there be light.mp3",
+            "track_src": "songs/09 Let there be light.mp3",
+            "track_title": "Let there be light",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 9,
+            "track_filename": "10 From the deep.mp3",
+            "track_src": "songs/10 From the deep.mp3",
+            "track_title": "From the deep",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 10,
+            "track_filename": "11 The void.mp3",
+            "track_src": "songs/11 The void.mp3",
+            "track_title": "The void",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 11,
+            "track_filename": "12 We all are made of stars.mp3",
+            "track_src": "songs/12 We all are made of stars.mp3",
+            "track_title": "We all are made of stars",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 12,
+            "track_filename": "13 Our destiny.mp3",
+            "track_src": "songs/13 Our destiny.mp3",
+            "track_title": "Our destiny",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 13,
+            "track_filename": "14 Take a walk on the moon.mp3",
+            "track_src": "songs/14 Take a walk on the moon.mp3",
+            "track_title": "Take a walk on the moon",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 14,
+            "track_filename": "15 Fire in the rain.mp3",
+            "track_src": "songs/15 Fire in the rain.mp3",
+            "track_title": "Fire in the rain",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 15,
+            "track_filename": "16 It begins.mp3",
+            "track_src": "songs/16 It begins.mp3",
+            "track_title": "It begins",
+            "track_artist": "Silent Voyager"
+        },
+        {
+            "track_id": 16,
+            "track_filename": "17 You change me.mp3",
+            "track_src": "songs/17 You change me.mp3",
+            "track_title": "You change me",
+            "track_artist": "Silent Voyager"
+        }
+    ],
+    "other_albums": [{
+            "album_title": "Supernova Legacy",
+            "album_cover": "assets/proximamente.png",
+            "album_info": "Próximamente • 2026",
+            "landing_page": "#",
+            "status": "published"
+        },
+        {
+            "album_title": "It's a Waste of Space",
+            "album_cover": "assets/proximamente.png",
+            "album_info": "Próximamente • 2027",
+            "landing_page": "#",
+            "status": "pending"
+        },
+        {
+            "album_title": "Through the Wormhole",
+            "album_cover": "assets/proximamente.png",
+            "album_info": "Próximamente • 2028",
+            "landing_page": "#",
+            "status": "pending"
+        }
+    ]
+}

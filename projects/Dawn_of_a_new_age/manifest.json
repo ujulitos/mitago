@@ -1,0 +1,42 @@
+{
+    "name": "Silent Voyager - Dawn of a New Age",
+    "short_name": "Silent Voyager",
+    "description": "Sitio oficial y reproductor de música de Mítago. Escucha el álbum 'Dawn of a New Age', fechas de conciertos y más.",
+    "start_url": "./index.html",
+    "scope": "./",
+    "id": "silent-voyager-dawn-of-a-new-age",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#07090e",
+    "theme_color": "#07090e",
+    "lang": "es",
+    "categories": [
+        "music",
+        "entertainment"
+    ],
+    "icons": [{
+            "src": "assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "assets/icons/icon-192-maskable.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "assets/icons/icon-512-maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

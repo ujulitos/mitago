@@ -1,40 +1,558 @@
 <!DOCTYPE html>
-
 <html lang="es">
 
-
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mítago Estudio</title>
+    <meta name="description" content="Productora de proyectos artísticos multidisciplinarios: música, fotografía, escultura y literatura.">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="projects/Dawn_of_a_new_age/assets/mitago.png">
 
-    <title>Focus - Advanced Learning Strategies</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <style>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        body {
-
-            font-family: Geneva, Arial, Helvetica, sans-serif;
-
-            font-size: 14px;
-
-        }
-
-
-
-    </style>
-
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
 </head>
-
-mitago.one
 
 <body>
 
+    <!-- Background Space & Canvas Starfield -->
+    <div class="bg-wrapper">
+        <img src="projects/Dawn_of_a_new_age/assets/bg-rocket.jpg" alt="Mítago Estudio Background" class="bg-image">
+        <canvas id="starfield"></canvas>
+        <div class="bg-overlay"></div>
+    </div>
 
+    <!-- Site Header -->
+    <header class="site-header">
+        <a href="#hero" class="brand-box">
+            <img src="projects/Dawn_of_a_new_age/assets/mitago.png" alt="Mítago" class="brand-logo">
+            <div>
+                <div class="brand-name">Mítago</div>
+                <div class="brand-tag">Estudio</div>
+            </div>
+        </a>
+
+        <nav class="header-nav">
+            <a href="#hero">Inicio</a>
+            <a href="#disciplines">Disciplinas</a>
+            <a href="#projects">Proyectos</a>
+            <a href="#contacto">Contacto</a>
+            <button class="btn-primary btn-admin" onclick="openLoginModal()">
+                <i class="fa-solid fa-lock"></i> Panel Admin
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Hero Section -->
+    <section id="hero" class="hero-producer">
+        <div class="hero-content">
+            <div class="badge-producer">
+                <i class="fa-solid fa-sparkles"></i> Mítago Estudio
+            </div>
+            <h1 class="hero-title">
+                Donde la Imaginación<br>
+                <span>Toma Forma & Sonido</span>
+            </h1>
+            <p class="hero-subtitle">
+                Mítago Estudio es una casa productora dedicada a crear y gestionar proyectos artísticos transformadores.
+                Desde álbumes musicales inmersivos hasta exposiciones de fotografía, instalaciones escultóricas y creaciones literarias.
+            </p>
+            <div class="hero-actions">
+                <a href="#projects" class="btn-primary">
+                    <i class="fa-solid fa-compass"></i> Explorar Catálogo
+                </a>
+                <button class="btn-secondary" onclick="openLoginModal()">
+                    <i class="fa-solid fa-sliders"></i> Administración de Proyectos
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section: Disciplines -->
+    <section id="disciplines" class="section-container">
+        <div class="section-header">
+            <span class="section-tag">DISCIPLINAS ARTÍSTICAS</span>
+            <h2 class="section-title">Nuestras Áreas de Creación</h2>
+        </div>
+
+        <div class="disciplines-grid">
+            <div class="discipline-card">
+                <div class="discipline-icon">
+                    <i class="fa-solid fa-music"></i>
+                </div>
+                <h3>Música & Sonido</h3>
+                <p>
+                    Producción musical conceptual, diseño sonoro inmersivo y lanzamientos discográficos completos con paisajes sonoros espaciales y orquestales.
+                </p>
+            </div>
+
+            <div class="discipline-card">
+                <div class="discipline-icon">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+                <h3>Fotografía & Arte Visual</h3>
+                <p>
+                    Ensayos fotográficos, portadas conceptuales, dirección de arte visual y proyectos documentales de alta definición y expresividad.
+                </p>
+            </div>
+
+            <div class="discipline-card">
+                <div class="discipline-icon">
+                    <i class="fa-solid fa-shapes"></i>
+                </div>
+                <h3>Escultura & Volumen</h3>
+                <p>
+                    Obras tridimensionales en bronce, polímeros y piedra, instalaciones monumentales urbanas y diseño de piezas escultóricas contemporáneas.
+                </p>
+            </div>
+
+            <div class="discipline-card">
+                <div class="discipline-icon">
+                    <i class="fa-solid fa-book"></i>
+                </div>
+                <h3>Literatura & Escritura</h3>
+                <p>
+                    Creación de antologías literarias, narrativa transmedia, poesía cósmica y desarrollo de libretos artísticos para proyectos audiovisuales.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section: Featured Projects -->
+    <section id="projects" class="section-container">
+        <div class="section-header">
+            <span class="section-tag">CATÁLOGO DE PROYECTOS</span>
+            <h2 class="section-title">Proyectos Destacados</h2>
+        </div>
+
+        <div class="projects-grid">
+
+            <!-- Active Project Card: Came From The Stars -->
+            <div class="project-card">
+                <div class="project-thumb-wrap">
+                    <img src="projects/Dawn_of_a_new_age/assets/bg-rocket.jpg" alt="Came From The Stars" class="project-thumb" id="hubProjectCover">
+                    <span class="project-badge">Música & Odisea</span>
+                </div>
+                <div class="project-body">
+                    <div class="project-meta">PROYECTO MUSICAL • 2026</div>
+                    <h3 class="project-title" id="hubProjectTitle">Came From The Stars</h3>
+                    <p class="project-desc" id="hubProjectDesc">
+                        Una odisea sonora espacial que explora la música como un viaje a través del espacio y el tiempo. Álbum conceptual con 17 pistas exclusivas.
+                    </p>
+                    <div class="project-footer-actions">
+                        <a href="projects/Dawn_of_a_new_age/index.html" target="_blank" class="btn-primary">
+                            <i class="fa-solid fa-play"></i> Ver Landing Page
+                        </a>
+                        <button class="btn-secondary" onclick="openAdminEditor('Dawn_of_a_new_age')">
+                            <i class="fa-solid fa-gear"></i> Administrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Placeholder Project 2: Photography -->
+            <div class="project-card">
+                <div class="project-thumb-wrap">
+                    <img src="projects/Dawn_of_a_new_age/assets/track2.png" alt="Ecos de Nebulosa" class="project-thumb">
+                    <span class="project-badge">Fotografía</span>
+                </div>
+                <div class="project-body">
+                    <div class="project-meta">EXPOSICIÓN FOTOGRÁFICA • 2025</div>
+                    <h3 class="project-title">Ecos de Nebulosa</h3>
+                    <p class="project-desc">
+                        Serie de fotografías astronómicas de gran formato capturadas con filtros infrarrojos para revelar texturas estelares ocultas.
+                    </p>
+                    <div class="project-footer-actions">
+                        <button class="btn-secondary" disabled style="opacity:0.6;">Próximamente</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Placeholder Project 3: Sculpture -->
+            <div class="project-card">
+                <div class="project-thumb-wrap">
+                    <img src="projects/Dawn_of_a_new_age/assets/track3.png" alt="Constelaciones de Bronce" class="project-thumb">
+                    <span class="project-badge">Escultura</span>
+                </div>
+                <div class="project-body">
+                    <div class="project-meta">ESCULTURA CONTEMPORÁNEA • 2025</div>
+                    <h3 class="project-title">Constelaciones de Bronce</h3>
+                    <p class="project-desc">
+                        Colección de esculturas geométricas fluidas en bronce pulido a mano que simbolizan alineaciones planetarias y fuerzas gravitacionales.
+                    </p>
+                    <div class="project-footer-actions">
+                        <button class="btn-secondary" disabled style="opacity:0.6;">Próximamente</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Section: Contacto -->
+    <section id="contacto" class="section-container">
+        <div class="section-header">
+            <span class="section-tag">CONTACTO & COLABORACIONES</span>
+            <h2 class="section-title">Hablemos de tu Próximo Proyecto</h2>
+        </div>
+
+        <div class="contact-grid">
+            <!-- Contact Info Box -->
+            <div class="contact-info-card">
+                <h3>Mítago Estudio</h3>
+                <p class="contact-intro">
+                    ¿Tienes una idea artística, un proyecto musical, audiovisual o literario? Nos encantaría colaborar contigo y llevar tu visión al siguiente nivel.
+                </p>
+
+                <div class="contact-info-list">
+                    <div class="contact-info-item">
+                        <div class="contact-item-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div>
+                            <h4>Correo Electrónico</h4>
+                            <a href="mailto:contacto@mitagoestudio.com">contacto@mitagoestudio.com</a>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-item">
+                        <div class="contact-item-icon">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                        <div>
+                            <h4>Ubicación del Estudio</h4>
+                            <p>Estudio Central & Producción Global</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-item">
+                        <div class="contact-item-icon">
+                            <i class="fa-solid fa-comments"></i>
+                        </div>
+                        <div>
+                            <h4>Respuesta Rápida</h4>
+                            <p>Respondemos en menos de 24 horas laborables.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-socials-box">
+                    <h4>Síguenos en Redes</h4>
+                    <div class="contact-social-icons">
+                        <a href="https://instagram.com/mitagomusic" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://youtube.com" target="_blank" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="https://spotify.com" target="_blank" title="Spotify"><i class="fa-brands fa-spotify"></i></a>
+                        <a href="https://x.com/mitagomusic" target="_blank" title="X / Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="contact-form-card">
+                <form id="contactForm" onsubmit="handleContactSubmit(event)">
+                    <div class="form-group">
+                        <label for="contactName">Nombre Completo</label>
+                        <input type="text" id="contactName" class="form-control" placeholder="Tu nombre..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactEmail">Correo Electrónico</label>
+                        <input type="email" id="contactEmail" class="form-control" placeholder="tu@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactCategory">Disciplina / Tipo de Proyecto</label>
+                        <select id="contactCategory" class="form-control" style="cursor:pointer;">
+                            <option value="Musica">🎵 Música & Producción Sonora</option>
+                            <option value="Fotografia">📷 Fotografía & Arte Visual</option>
+                            <option value="Escultura">🗿 Escultura & Instalación</option>
+                            <option value="Literatura">📚 Literatura & Escritura</option>
+                            <option value="Otro">✨ Otra Colaboración / Prensa</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactMessage">Mensaje / Propuesta</label>
+                        <textarea id="contactMessage" class="form-control" placeholder="Cuéntanos más sobre tu proyecto o consulta..." required style="min-height:120px;"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:14px; font-size:1rem;">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar Mensaje
+                    </button>
+
+                    <div id="contactFormMsg" class="contact-msg-box"></div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="section-container" style="padding: 20px 0;">
+            <p>&copy; 2026 Mítago Estudio. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- ==========================================================================
+         ADMIN LOGIN MODAL
+         ========================================================================== -->
+    <div class="modal-overlay" id="adminLoginModal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal('adminLoginModal')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header">
+                <h2>Acceso Administrador</h2>
+                <p>Ingresa tus credenciales para gestionar los proyectos artísticos.</p>
+            </div>
+            <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+                <div class="form-group">
+                    <label for="adminUser">Usuario</label>
+                    <input type="text" id="adminUser" class="form-control" value="admin" required placeholder="admin">
+                </div>
+                <div class="form-group">
+                    <label for="adminPass">Contraseña</label>
+                    <input type="password" id="adminPass" class="form-control" value="admin" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary form-submit-btn">
+                    <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+                </button>
+                <div id="loginErrorMsg" class="auth-error">Usuario o contraseña incorrectos.</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         ADMIN DASHBOARD & EDITOR MODAL (projectInfo.json Editor)
+         ========================================================================== -->
+    <div class="modal-overlay" id="adminPanelModal">
+        <div class="modal-card admin-modal-card">
+
+            <!-- Admin Header -->
+            <div class="admin-header">
+                <div class="admin-header-title">
+                    <i class="fa-solid fa-sliders" style="color:var(--accent-cyan); font-size:1.4rem;"></i>
+                    <div>
+                        <h2>Panel de Administración de Proyectos</h2>
+                        <span style="font-size:0.8rem; color:var(--text-muted);">Mítago Content Management System</span>
+                    </div>
+                </div>
+
+                <div class="admin-actions">
+                    <select id="adminProjectSelect" class="admin-project-select" onchange="switchAdminProject(this.value)">
+                        <option value="Dawn_of_a_new_age">🎵 Came From The Stars (Música)</option>
+                    </select>
+
+                    <button class="btn-primary" onclick="saveCurrentProjectData()">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+                    </button>
+
+                    <a href="projects/Dawn_of_a_new_age/index.html" target="_blank" class="btn-secondary" title="Ver Landing Page">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver Página
+                    </a>
+
+                    <button class="modal-close" style="position:static;" onclick="closeModal('adminPanelModal')" title="Cerrar Panel">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Tabs Navigation -->
+            <div class="admin-tabs-bar">
+                <button class="tab-btn active" onclick="switchTab('tabGeneral')">
+                    <i class="fa-solid fa-rocket"></i> Proyecto & Artista
+                </button>
+                <button class="tab-btn" onclick="switchTab('tabArtistSocials')">
+                    <i class="fa-solid fa-share-nodes"></i> Redes del Artista
+                </button>
+                <button class="tab-btn" onclick="switchTab('tabAlbumDetails')">
+                    <i class="fa-solid fa-compact-disc"></i> Detalles del Álbum
+                </button>
+                <button class="tab-btn" onclick="switchTab('tabAlbumSocials')">
+                    <i class="fa-solid fa-globe"></i> Plataformas del Álbum
+                </button>
+                <button class="tab-btn" onclick="switchTab('tabTracks')">
+                    <i class="fa-solid fa-list-ol"></i> Canciones (Tracks)
+                </button>
+                <button class="tab-btn" onclick="switchTab('tabDiscography')">
+                    <i class="fa-solid fa-record-vinyl"></i> Discografía
+                </button>
+            </div>
+
+            <!-- Admin Form Body -->
+            <div class="admin-body">
+
+                <!-- Tab 1: General & Artist -->
+                <div id="tabGeneral" class="tab-content active">
+                    <div class="grid-form-2col">
+                        <div class="section-box">
+                            <div class="section-box-title">
+                                <span><i class="fa-solid fa-folder"></i> Datos del Proyecto</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="field_project">Nombre del Proyecto</label>
+                                <input type="text" id="field_project" class="form-control" placeholder="Ej: Came From The Stars">
+                            </div>
+                            <div class="form-group">
+                                <label for="field_project_info">Descripción / Concepto del Proyecto</label>
+                                <textarea id="field_project_info" class="form-control" placeholder="Descripción amplia del proyecto..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="field_project_cover">Imagen de Fondo del Proyecto (project_cover.jpg)</label>
+                                <input type="text" id="field_project_cover" class="form-control" placeholder="assets/project_cover.jpg">
+                                <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+                                    <input type="file" id="upload_project_cover_file" accept="image/*" style="display:none;" onchange="handleImageUpload('field_project_cover', 'project_cover.jpg', this, 'preview_project_cover')">
+                                    <button type="button" class="btn-secondary" style="font-size:0.85rem;" onclick="document.getElementById('upload_project_cover_file').click()">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Subir Imagen (project_cover.jpg)
+                                    </button>
+                                </div>
+                                <div style="margin-top:10px;">
+                                    <img id="preview_project_cover" src="" alt="Vista Previa Fondo" style="max-height:90px; border-radius:6px; border:1px solid var(--glass-border); display:none; object-fit:cover;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-box">
+                            <div class="section-box-title">
+                                <span><i class="fa-solid fa-user-astronaut"></i> Datos del Artista</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="field_artist_name">Nombre del Artista</label>
+                                <input type="text" id="field_artist_name" class="form-control" placeholder="Ej: Mítago">
+                            </div>
+                            <div class="form-group">
+                                <label for="field_artist_cover">Imagen / Logo del Artista</label>
+                                <input type="text" id="field_artist_cover" class="form-control" placeholder="assets/mitago.png">
+                                <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+                                    <input type="file" id="upload_artist_cover_file" accept="image/*" style="display:none;" onchange="handleImageUpload('field_artist_cover', 'artist_cover.png', this, 'preview_artist_cover')">
+                                    <button type="button" class="btn-secondary" style="font-size:0.85rem;" onclick="document.getElementById('upload_artist_cover_file').click()">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Subir Imagen de Artista
+                                    </button>
+                                </div>
+                                <div style="margin-top:10px;">
+                                    <img id="preview_artist_cover" src="" alt="Vista Previa Artista" style="max-height:80px; border-radius:6px; border:1px solid var(--glass-border); display:none; object-fit:contain;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Artist Social Links -->
+                <div id="tabArtistSocials" class="tab-content">
+                    <div class="section-box">
+                        <div class="section-box-title">
+                            <span><i class="fa-solid fa-hashtag"></i> Redes Sociales del Artista</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+                            Agrega, edita o elimina los enlaces a redes sociales oficiales del artista.
+                        </p>
+                        <div id="artistSocialsList" class="repeater-list">
+                            <!-- Dynamically generated -->
+                        </div>
+                        <button type="button" class="btn-add-item" onclick="addArtistSocialItem()">
+                            <i class="fa-solid fa-plus"></i> Agregar Red Social
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Album Details -->
+                <div id="tabAlbumDetails" class="tab-content">
+                    <div class="section-box">
+                        <div class="section-box-title">
+                            <span><i class="fa-solid fa-music"></i> Información Principal del Álbum</span>
+                        </div>
+                        <div class="grid-form-2col">
+                            <div class="form-group">
+                                <label for="field_album_title">Título del Álbum</label>
+                                <input type="text" id="field_album_title" class="form-control" placeholder="CAME FROM THE STARS">
+                            </div>
+                            <div class="form-group">
+                                <label for="field_album_subtitle">Subtítulo del Álbum</label>
+                                <input type="text" id="field_album_subtitle" class="form-control" placeholder="Songs from a Space-Time Traveler">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="field_album_description">Descripción Breve del Álbum</label>
+                            <textarea id="field_album_description" class="form-control" placeholder="This album is a journey through the cosmos..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="field_album_cover">Ruta Portada del Álbum</label>
+                            <input type="text" id="field_album_cover" class="form-control" placeholder="assets/album-cover.png">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Album Socials / Streaming Platforms -->
+                <div id="tabAlbumSocials" class="tab-content">
+                    <div class="section-box">
+                        <div class="section-box-title">
+                            <span><i class="fa-solid fa-headphones"></i> Enlaces a Plataformas de Streaming</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+                            Enlaces principales que aparecen en la barra de plataformas de la landing page.
+                        </p>
+                        <div id="albumSocialsList" class="repeater-list">
+                            <!-- Dynamically generated -->
+                        </div>
+                        <button type="button" class="btn-add-item" onclick="addAlbumSocialItem()">
+                            <i class="fa-solid fa-plus"></i> Agregar Plataforma
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab 5: Tracklist Manager -->
+                <div id="tabTracks" class="tab-content">
+                    <div class="section-box">
+                        <div class="section-box-title">
+                            <span><i class="fa-solid fa-list-music"></i> Gestor de Canciones (Tracklist)</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+                            Organiza, edita o añade canciones. Puedes reordenar la posición utilizando los botones ▲ y ▼.
+                        </p>
+                        <div id="tracksList" class="repeater-list">
+                            <!-- Dynamically generated track items -->
+                        </div>
+                        <button type="button" class="btn-add-item" onclick="addTrackItem()">
+                            <i class="fa-solid fa-plus"></i> Agregar Canción
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab 6: Discography / Other Albums -->
+                <div id="tabDiscography" class="tab-content">
+                    <div class="section-box">
+                        <div class="section-box-title">
+                            <span><i class="fa-solid fa-layer-group"></i> Lanzamientos Relacionados (Discografía)</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+                            Álbumes o lanzamientos recomendados que se muestran en la sección de discografía.
+                        </p>
+                        <div id="discographyList" class="repeater-list">
+                            <!-- Dynamically generated album items -->
+                        </div>
+                        <button type="button" class="btn-add-item" onclick="addDiscographyItem()">
+                            <i class="fa-solid fa-plus"></i> Agregar Lanzamiento
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Application JavaScript -->
+    <script src="app.js"></script>
 
 </body>
 
-
-
 </html>
-
