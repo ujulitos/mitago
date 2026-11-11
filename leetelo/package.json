@@ -1,0 +1,12 @@
+{
+  "name": "leetelo-webapp",
+  "version": "1.1.1",
+  "type": "module",
+  "description": "Lector web para libros EPUB, FB2 y CBZ accesible desde localhost y red local.",
+  "private": true,
+  "scripts": {
+    "start": "node server.js --open",
+    "dev": "node server.js",
+    "serve": "node server.js"
+  }
+}

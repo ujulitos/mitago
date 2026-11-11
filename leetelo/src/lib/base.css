@@ -1,0 +1,322 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,300..700;1,300..700&display=swap');
+
+/* Shared tokens and controls for the popup and options page. */
+
+:root,
+:root[data-theme="sepia"] {
+  --rp-progress: salmon; /* #fa8072 */
+  color-scheme: light;
+  /* Sepia: bg: #F4ECD8; text: #3E2723; */
+  --paper: #F4ECD8;
+  --card: #faf4e6;
+  --ink: #3E2723;
+  --muted: #735d4b;
+  --line: #dfd5bc;
+  --hover: #ebe1cb;
+  --screen: #e8dec7;
+  --bezel: #3E2723;
+  --loose: #b9aa93;
+  --ok: #137333;
+  --warn: #b05a00;
+  --error: #c5221f;
+  --radius: 10px;
+  /* Legacy names used by the options page */
+  --bg: var(--paper);
+  --surface: var(--hover);
+  --fg: var(--ink);
+  --accent: var(--ink);
+  --accent-fg: var(--card);
+  --accent-soft: var(--hover);
+  --border: var(--line);
+  --focus: #1a73e8;
+  /* Chrome tab-group colours, with a text colour that stays readable on each */
+  --g-grey: #5f6368; --g-blue: #1a73e8; --g-red: #d93025; --g-yellow: #f9ab00; --g-green: #188038;
+  --g-pink: #d01884; --g-purple: #a142f4; --g-cyan: #007b83; --g-orange: #fa903e;
+  --g-text: #ffffff; --g-text-light: #3E2723;
+}
+
+/* Crepúsculo: bg: #111923; text: #edf2f8; */
+:root[data-theme="twilight"] {
+  color-scheme: dark;
+  --paper: #111923;
+  --card: #182330;
+  --ink: #edf2f8;
+  --muted: #97a6b8;
+  --line: #263547;
+  --hover: #1f2d3d;
+  --screen: #223042;
+  --bezel: #090e14;
+  --loose: #5c6f84;
+  --ok: #81c995;
+  --warn: #fdb064;
+  --error: #f28b82;
+  --focus: #8ab4f8;
+  --g-grey: #bdc1c6; --g-blue: #8ab4f8; --g-red: #f28b82; --g-yellow: #fdd663; --g-green: #81c995;
+  --g-pink: #ff8bcb; --g-purple: #d7aefb; --g-cyan: #78d9ec; --g-orange: #fcad70;
+  --g-text: #111923;
+}
+
+/* Contraste: bg: #17181b; text: #d6d8dc; */
+:root[data-theme="contrast"] {
+  color-scheme: dark;
+  --paper: #17181b;
+  --card: #202227;
+  --ink: #d6d8dc;
+  --muted: #9a9fa8;
+  --line: #34373e;
+  --hover: #282a30;
+  --screen: #2c2f36;
+  --bezel: #08090a;
+  --loose: #6d727c;
+  --ok: #81c995;
+  --warn: #fdb064;
+  --error: #f28b82;
+  --focus: #8ab4f8;
+  --g-grey: #bdc1c6; --g-blue: #8ab4f8; --g-red: #f28b82; --g-yellow: #fdd663; --g-green: #81c995;
+  --g-pink: #ff8bcb; --g-purple: #d7aefb; --g-cyan: #78d9ec; --g-orange: #fcad70;
+  --g-text: #17181b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --paper: #17181b;
+    --card: #202227;
+    --ink: #d6d8dc;
+    --muted: #9a9fa8;
+    --line: #34373e;
+    --hover: #282a30;
+    --screen: #2c2f36;
+    --bezel: #08090a;
+    --loose: #6d727c;
+    --ok: #81c995;
+    --warn: #fdb064;
+    --error: #f28b82;
+    --focus: #8ab4f8;
+    --g-grey: #bdc1c6; --g-blue: #8ab4f8; --g-red: #f28b82; --g-yellow: #fdd663; --g-green: #81c995;
+    --g-pink: #ff8bcb; --g-purple: #d7aefb; --g-cyan: #78d9ec; --g-orange: #fcad70;
+    --g-text: #17181b;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+h1, h2 { margin: 0; }
+h1 { font-size: 16px; }
+h2 { font-size: 13px; }
+
+.muted, .hint { color: var(--muted); }
+.hint { margin: 6px 0 0; font-size: 12px; }
+
+button, input, select { font: inherit; color: inherit; }
+
+button.primary, button.secondary {
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 120ms ease, background-color 120ms ease;
+}
+button.primary { border: 0; background: var(--accent); color: var(--accent-fg); }
+button.primary.big { width: 100%; padding: 9px 12px; }
+button.secondary { border: 1px solid var(--border); background: var(--bg); color: var(--accent); }
+button.secondary:hover { background: var(--surface); }
+button.danger { color: var(--error); }
+button:disabled { opacity: 0.5; cursor: default; }
+
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+input[type="text"], input[type="number"], select {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+kbd {
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Key combinations read left to right in every language. */
+[dir="rtl"] :has(> kbd) { direction: ltr; }
+
+.group-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.group-chip::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--chip, var(--g-grey));
+}
+
+.result-ok { color: var(--ok); }
+.result-error { color: var(--error); }
+.warnings { margin: 4px 0 0; padding-left: 18px; }
+.warnings li { margin-top: 3px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ------------------------------------------------- floating message (toast) */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  z-index: 50;
+  width: max-content;
+  max-width: min(440px, calc(100vw - 24px));
+  overflow: hidden;
+  /* A fixed dark surface reads the same on light and dark pages. */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #2b2e35;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transform: translateX(-50%);
+  animation: toast-in 140ms ease-out;
+}
+.toast-line { display: flex; align-items: center; gap: 8px; padding: 9px 8px 10px 12px; font-weight: 600; font-size: 13px; }
+.toast-line .icon { flex: none; }
+.toast.ok .toast-line > .icon { color: #81c995; }
+.toast.warn .toast-line > .icon { color: #fdb064; }
+.toast.error { background: #c5221f; }
+.toast-text { flex: 1; min-width: 0; }
+.toast-more, .toast-btn {
+  flex: none;
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.toast-btn { display: grid; place-items: center; width: 24px; padding: 0; background: none; opacity: 0.8; }
+.toast-more:hover, .toast-btn:hover { background: rgba(255, 255, 255, 0.24); opacity: 1; }
+.toast-details { display: none; margin: 0; padding: 0 14px 10px 34px; font-size: 12px; font-weight: 400; line-height: 1.45; }
+.toast-details li + li { margin-top: 4px; }
+.toast.expanded .toast-details { display: block; }
+.toast-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: currentColor;
+  opacity: 0.35;
+  transform-origin: left;
+  animation: toast-time var(--duration, 2600ms) linear forwards;
+}
+.toast.ok .toast-bar { background: #81c995; opacity: 0.9; }
+.toast.warn .toast-bar { background: #fdb064; opacity: 0.9; }
+.toast.paused .toast-bar, .toast.expanded .toast-bar { animation-play-state: paused; }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 6px); } }
+@keyframes toast-time { to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+  .toast-bar { animation: none; display: none; }
+}
+
+/* ------------------------------------------------------------ Ko-fi support */
+/* Ko-fi's brand orange is the one colour besides tab groups, used only here. */
+
+:root { --kofi: #ff6433; --kofi-hover: #ff7a4d; --kofi-text: #d9461b; --kofi-tint: rgba(255, 100, 51, 0.1); --kofi-line: rgba(255, 100, 51, 0.35); }
+:root[data-theme="twilight"], :root[data-theme="contrast"] { --kofi-text: #ff8a65; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) { --kofi-text: #ff8a65; } }
+
+.kofi-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px 0 6px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--kofi);
+  color: #ffffff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+.kofi-btn:hover { background: var(--kofi-hover); box-shadow: 0 4px 14px rgba(255, 100, 51, 0.35); }
+.kofi-btn .cup-tile { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: #ffffff; }
+.kofi-cup { display: block; flex: none; }
+.rate-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 13px 0 11px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-fg); font: inherit; font-size: 12.5px; font-weight: 650; white-space: nowrap; cursor: pointer; }
+.rate-btn:hover { opacity: 0.88; }
+
+/* ------------------------------------------------- JavaScript state colours */
+
+:root {
+  --on: #137333; --on-tint: rgba(19, 115, 51, 0.09); --on-line: rgba(19, 115, 51, 0.3);
+  --off: #c5221f; --off-tint: rgba(197, 34, 31, 0.08); --off-line: rgba(197, 34, 31, 0.32);
+  --caution: #b05a00; --caution-tint: rgba(232, 113, 10, 0.1); --caution-line: rgba(232, 113, 10, 0.4);
+}
+:root[data-theme="twilight"],
+:root[data-theme="contrast"] {
+  --on: #81c995; --on-tint: rgba(129, 201, 149, 0.1); --on-line: rgba(129, 201, 149, 0.3);
+  --off: #f28b82; --off-tint: rgba(242, 139, 130, 0.1); --off-line: rgba(242, 139, 130, 0.35);
+  --caution: #fdb064; --caution-tint: rgba(253, 176, 100, 0.1); --caution-line: rgba(253, 176, 100, 0.4);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --on: #81c995; --on-tint: rgba(129, 201, 149, 0.1); --on-line: rgba(129, 201, 149, 0.3);
+    --off: #f28b82; --off-tint: rgba(242, 139, 130, 0.1); --off-line: rgba(242, 139, 130, 0.35);
+    --caution: #fdb064; --caution-tint: rgba(253, 176, 100, 0.1); --caution-line: rgba(253, 176, 100, 0.4);
+  }
+}
+
+.icon { flex: none; display: block; }
+.icon-btn {
+  display: grid; place-items: center; width: 32px; height: 32px; padding: 0;
+  border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer;
+}
+.icon-btn:hover { background: var(--hover); color: var(--ink); }
+.link-btn { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.link-btn:hover { color: var(--focus); }
