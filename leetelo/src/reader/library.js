@@ -192,13 +192,52 @@ export function problemText(code, name = '') {
 }
 
 // ---- shelf -----------------------------------------------------------------------
+const healingIds = new Set();
+async function healBookCover(book) {
+  if (!book?.id || healingIds.has(book.id) || !ctx?.store) return;
+  healingIds.add(book.id);
+  try {
+    const rec = await ctx.store.getBook(book.id);
+    if (!rec?.blob) return;
+    const parsed = await openAny(rec.blob, rec.meta?.fileName || book.fileName);
+    if (!parsed?.cover) return;
+    const bmp = await createImageBitmap(await parsed.zip.blob(parsed.cover));
+    const w = Math.min(320, bmp.width);
+    const h = Math.round((bmp.height / bmp.width) * w);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+    bmp.close();
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+    if (!dataUrl) return;
+    await ctx.store.putBook(rec.blob, { ...rec.meta, cover: dataUrl });
+    for (const img of document.querySelectorAll(`[data-id="${CSS.escape(book.id)}"] .cover-btn img`)) {
+      img.src = dataUrl;
+    }
+  } catch { /* ignore */ } finally {
+    healingIds.delete(book.id);
+  }
+}
+
 function coverOf(book) {
-  if (book.cover instanceof Blob) {
+  if (typeof book.cover === 'string' && book.cover.startsWith('data:')) {
+    return el('img', { src: book.cover, alt: '', decoding: 'async' });
+  }
+  if (book.cover instanceof Blob && book.cover.size > 0) {
     const url = URL.createObjectURL(book.cover);
     urls.push(url);
-    return el('img', { src: url, alt: '', loading: 'lazy', decoding: 'async' });
+    const img = el('img', { src: url, alt: '', decoding: 'async' });
+    img.addEventListener('error', () => {
+      img.src = 'icons/libro.jpg';
+      healBookCover(book);
+    }, { once: true });
+    healBookCover(book);
+    return img;
   }
-  return el('img', { src: 'icons/libro.jpg', alt: book.title || '', loading: 'lazy', decoding: 'async' });
+  const img = el('img', { src: 'icons/libro.jpg', alt: book.title || '', decoding: 'async' });
+  healBookCover(book);
+  return img;
 }
 
 function readLabel(pos) {
@@ -559,8 +598,11 @@ function sortAllBooks(list, sortBy, sortDir) {
   });
 }
 
+let renderSeq = 0;
+
 export async function renderLibrary() {
   const { store } = ctx;
+  const seq = ++renderSeq;
   if (!syncDone) {
     syncDone = true;
     const added = await syncFromLibros(store);
@@ -568,6 +610,7 @@ export async function renderLibrary() {
       return renderLibrary();
     }
   }
+  if (seq !== renderSeq) return;
   if (!sortLoaded) {
     sortLoaded = true;
     const savedSort = await store.getSetting('books_sort', null);
@@ -576,14 +619,15 @@ export async function renderLibrary() {
       currentSortDir = savedSort.sortDir || (currentSortBy === 'date' ? 'desc' : 'asc');
     }
   }
-  for (const u of urls) URL.revokeObjectURL(u);
-  urls = [];
   const [books, positions, stats, categories] = await Promise.all([
     store.listBooks(),
     store.listPositions(),
     store.listStats(),
     store.getSetting('book_categories', {})
   ]);
+  if (seq !== renderSeq) return;
+  const oldUrls = urls;
+  urls = [];
   const byId = new Map(positions.map((p) => [p.bookId, p]));
   const statOf = new Map(stats.map((s) => [s.bookId, s]));
   const has = books.length > 0;
@@ -597,6 +641,7 @@ export async function renderLibrary() {
 
   if (!has) {
     if (shelfSections) shelfSections.replaceChildren();
+    for (const u of oldUrls) URL.revokeObjectURL(u);
     return;
   }
 
@@ -761,6 +806,7 @@ export async function renderLibrary() {
   }
 
   renderSections();
+  for (const u of oldUrls) URL.revokeObjectURL(u);
   renderStats(stats, positions);
   $('lib-export').hidden = !has;
   await Promise.all([renderStorage(), renderWhatsNew(), renderTier2()]);

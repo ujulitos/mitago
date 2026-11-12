@@ -430,6 +430,12 @@ export async function setStyle(partial) {
   rp.view.setStyle(partial);
   syncSettings();
   const { forceColors, ...keep } = rp.view.style;
+  if (partial.marginV !== undefined || partial.marginH !== undefined) {
+    try {
+      const globalStyle = { ...(await store.getSetting('style', {})), marginV: keep.marginV, marginH: keep.marginH };
+      await store.setSetting('style', globalStyle);
+    } catch {}
+  }
   // A book with its own settings keeps them to itself; the global defaults stay untouched.
   if (rp.ownStyle) await store.setSetting(`book:${rp.bookId}`, { style: keep });
   else await store.setSetting('style', keep);

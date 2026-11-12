@@ -179,9 +179,14 @@ async function show(book, id, { push = false } = {}) {
   // This book's own text settings (P1-4) replace the global ones entirely.
   const own = await store.getSetting(`book:${id}`, null);
   rp.ownStyle = !!own?.style;
-  const rawStyle = { ...READER_DEFAULTS, ...(own?.style ?? await store.getSetting('style', {})) };
-  if (typeof rawStyle.marginV === 'number' && (rawStyle.marginV > 30 || rawStyle.marginV < 10)) rawStyle.marginV = 10;
-  if (typeof rawStyle.marginH === 'number' && (rawStyle.marginH > 60 || rawStyle.marginH < 10)) rawStyle.marginH = 20;
+  const globalStyle = (await store.getSetting('style', {})) || {};
+  const rawStyle = { ...READER_DEFAULTS, ...globalStyle, ...(own?.style ?? {}) };
+  if (globalStyle.marginV !== undefined) rawStyle.marginV = globalStyle.marginV;
+  if (globalStyle.marginH !== undefined) rawStyle.marginH = globalStyle.marginH;
+  const mvNum = Number(rawStyle.marginV);
+  rawStyle.marginV = (!Number.isFinite(mvNum) || mvNum > 30 || mvNum < 10) ? 10 : mvNum;
+  const mhNum = Number(rawStyle.marginH);
+  rawStyle.marginH = (!Number.isFinite(mhNum) || mhNum > 60 || mhNum < 10) ? 20 : mhNum;
   const em = typeof rawStyle.measure === 'number' ? rawStyle.measure : (MEASURES[rawStyle.measure] ?? 35);
   const maxWidth = Math.round(em * (rawStyle.fontSize ?? 18));
   const style = { ...rawStyle, maxWidth, forceColors };
@@ -232,15 +237,17 @@ async function fail(code, name = '') {
 // ---- opening --------------------------------------------------------------------------
 /** A small cover for the shelf (decoded once at import, never the full image). */
 async function coverThumb(book) {
-  if (!book.cover) return null;
+  if (!book?.cover) return null;
   try {
     const bmp = await createImageBitmap(await book.zip.blob(book.cover));
     const w = Math.min(320, bmp.width);
     const h = Math.round((bmp.height / bmp.width) * w);
-    const canvas = new OffscreenCanvas(w, h);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
     canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
     bmp.close();
-    return await canvas.convertToBlob({ type: 'image/webp', quality: 0.8 });
+    return canvas.toDataURL('image/jpeg', 0.82);
   } catch { return null; } // SVG or broken cover: the shelf typesets the title instead
 }
 
@@ -339,6 +346,10 @@ async function openStored(id, { push = false } = {}) {
     const rec = await store.getBook(id);
     if (!rec) return fail('gone');
     const book = await openAny(rec.blob, rec.meta?.fileName, { pageLabel });
+    if (typeof rec.meta?.cover !== 'string' || !rec.meta.cover.startsWith('data:')) {
+      const freshCover = await coverThumb(book);
+      if (freshCover) rec.meta = { ...rec.meta, cover: freshCover };
+    }
     await store.putBook(rec.blob, rec.meta); // most recently opened first on the shelf
     await show(book, id, { push });
   } catch (e) { fail(errorCode(e)); }

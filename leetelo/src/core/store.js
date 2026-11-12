@@ -64,8 +64,9 @@ export async function openStore(name = DB_NAME) {
       const id = meta.id ?? await bookKey(blob);
       const now = Date.now();
       const old = await get('books', id);
+      const cover = meta?.cover ?? old?.cover ?? null;
       const tx = db.transaction(['books', 'files'], 'readwrite');
-      tx.objectStore('books').put({ ...old, ...meta, id, size: blob.size, addedAt: old?.addedAt ?? now, openedAt: now });
+      tx.objectStore('books').put({ ...old, ...meta, ...(cover ? { cover } : {}), id, size: blob.size, addedAt: old?.addedAt ?? now, openedAt: now });
       if (!old) tx.objectStore('files').put({ id, blob });
       await done(tx);
       return id;

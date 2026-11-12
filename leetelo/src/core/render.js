@@ -65,11 +65,19 @@ const SECTION_CSS = `
 .rp-body table { max-width: 100%; table-layout: fixed; }
 /* Layout containment would turn the columns' overflow into ink overflow: the
    view could not scroll to page 2+ and would count one page. */
+:host(:not(.rp-paged)) .rp-body {
+  box-sizing: border-box !important; width: 100% !important; max-width: none !important;
+  margin: 0 !important; padding: 0 !important;
+}
+.rp-body > :is(div, section, article, main) {
+  max-width: none !important; margin-left: 0 !important; margin-right: 0 !important;
+  padding-left: 0 !important; padding-right: 0 !important;
+}
 :host(.rp-paged) { contain: style; }
 :host(.rp-paged) .rp-body {
   box-sizing: border-box !important; width: var(--rp-pw) !important; height: var(--rp-ph) !important;
   max-width: none !important; min-height: 0 !important; margin: 0 !important;
-  padding: var(--rp-pad-y) var(--rp-m) !important;
+  padding: var(--rp-pad-y) var(--rp-m) var(--rp-pad-y-bottom, var(--rp-pad-y)) var(--rp-m) !important;
   /* --rp-span columns per screen (1, or 2 side by side); the rest overflow to the side. */
   column-count: var(--rp-span, 1) !important; column-width: auto !important; column-gap: calc(2 * var(--rp-m)) !important;
   column-fill: auto !important; overflow: visible !important;
@@ -506,27 +514,31 @@ class PagedView {
     const dpr = devicePixelRatio || 1;
     const width = Math.round(this.el.getBoundingClientRect().width * dpr) / dpr;
     const rawMh = Number(s.marginH ?? 20);
-    const mhPct = rawMh > 60 ? 20 : Math.min(60, Math.max(10, rawMh));
-    const sidePx = Math.round((window.innerWidth * (mhPct / 2)) / 100);
+    const mhPct = (!Number.isFinite(rawMh) || rawMh > 60 || rawMh < 10) ? 20 : rawMh;
+    const sidePx = Math.round(((width || window.innerWidth) * (mhPct / 2)) / 100);
     // A book of single-page sections that cannot pair shows them one per screen in Auto.
     const auto = String(s.spread ?? 'auto') === 'auto';
     const g = pageGeometry(width, this.imagePages && this.noPair && auto ? { ...s, marginH: sidePx, margin: sidePx, spread: '1' } : { ...s, marginH: sidePx, margin: sidePx });
-    const pw = Math.round((width - 2 * g.off) * dpr) / dpr;
+    const off = 0;
+    const pw = width;
     const ph = this.el.clientHeight;
     const rawMv = Number(s.marginV ?? 10);
-    const mvPct = (rawMv > 30 || rawMv < 10) ? 10 : rawMv;
+    const mvPct = (!Number.isFinite(rawMv) || rawMv > 30 || rawMv < 10) ? 10 : rawMv;
     const safe = safeInsets();
-    const basePadY = Math.round((window.innerHeight * (mvPct / 2)) / 100);
+    const basePadY = Math.round(((ph || window.innerHeight) * (mvPct / 2)) / 100);
     const padY = Math.max(
       basePadY,
-      safe.top > 0 ? Math.ceil(safe.top) + 14 : 0,
-      safe.bottom > 0 ? Math.ceil(safe.bottom) + 36 : 0,
+      safe.top > 0 ? Math.ceil(safe.top) + 8 : 0,
+    );
+    const padYBottom = Math.max(
+      basePadY,
+      38 + Math.ceil(safe.bottom),
     );
     const cw = pw / g.span;
-    const mBase = g.span === 2 ? Math.round((cw * (mhPct / 2)) / 100) : sidePx;
+    const mBase = Math.round((cw * (mhPct / 2)) / 100);
     const m = Math.max(mBase, Math.ceil(Math.max(safe.left, safe.right)));
     Object.assign(this, {
-      span: g.span, off: g.off, m, pw, ph, padY, colH: ph - 2 * padY, cw,
+      span: g.span, off, m, pw, ph, padY, padYBottom, colH: Math.max(80, ph - padY - padYBottom), cw,
       pair: g.span === 2 && this.imagePages && !this.noPair,
       rev: g.span === 2 && this.book.dir === 'rtl',
     });
@@ -534,7 +546,7 @@ class PagedView {
 
   layout() {
     this.measure();
-    const { el, pw, cw, ph, m, padY, span, pair, rev, off } = this;
+    const { el, pw, cw, ph, m, padY, padYBottom, span, pair, rev, off } = this;
     el.classList.toggle('rp-spread', span === 2);
     el.classList.toggle('rp-pair', pair);
     // The outer blank of a centred spread: a border is outside the overflow clip.
@@ -545,7 +557,7 @@ class PagedView {
     el.style.setProperty('--rp-margin-x', `${m}px`);
     for (const h of this.panes()) {
       h.classList.toggle('rp-rev', rev && !pair);
-      for (const [k, v] of [['--rp-pw', `${pair ? cw : pw}px`], ['--rp-ph', `${ph}px`], ['--rp-m', `${m}px`], ['--rp-pad-y', `${padY}px`], ['--rp-span', pair ? 1 : span]]) h.style.setProperty(k, String(v));
+      for (const [k, v] of [['--rp-pw', `${pair ? cw : pw}px`], ['--rp-ph', `${ph}px`], ['--rp-m', `${m}px`], ['--rp-pad-y', `${padY}px`], ['--rp-pad-y-bottom', `${padYBottom}px`], ['--rp-span', pair ? 1 : span]]) h.style.setProperty(k, String(v));
       h.style.transform = '';
     }
     const count = (w) => Math.max(1, Math.ceil((w - 1) / cw));
@@ -697,7 +709,7 @@ class PagedView {
     this.ro.disconnect();
     this.el.removeEventListener('scroll', this.onScroll);
     this.el.classList.remove('rp-paged-view', 'rp-spread', 'rp-pair');
-    for (const k of ['border-left', 'border-right', 'direction', '--rp-pad-y']) this.el.style.removeProperty(k);
+    for (const k of ['border-left', 'border-right', 'direction', '--rp-pad-y', '--rp-pad-y-bottom', '--rp-margin-x']) this.el.style.removeProperty(k);
     this.el.replaceChildren();
     this.el.scrollLeft = 0;
     this.host = null;
@@ -811,6 +823,7 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
       if (m === currentMode) return;
       const pos = this.position;
       impl.destroy();
+      applyStyle();
       currentMode = m;
       impl = make(m);
       await impl.goTo(pos);
