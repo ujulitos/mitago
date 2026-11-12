@@ -148,6 +148,7 @@ export default {
 "delete_bookmark": "Delete bookmark",
 "marks_empty": "No bookmarks yet. Press B while reading to add one.",
 "close_panel": "Close",
+"settings_title": "Settings",
 "reading_settings": "Text and layout",
 "text_size": "Text size",
 "smaller_text": "Smaller text",

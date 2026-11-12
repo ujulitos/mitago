@@ -29,23 +29,31 @@ let lastFocus = null;
 // ---------------------------------------------------------------------------------- chrome
 /** Show the bar (bar is always visible). */
 export function wake() { $('reading').classList.remove('calm'); }
+export function hideChrome() { $('reading')?.classList.remove('mobile-ui-visible'); }
 function calm() {
   // #bar never hides
 }
-export const settle = () => {};
+export const settle = () => { hideChrome(); };
 
 let lastTop = 0;
 let lastInput = -Infinity; // the reader's own scrolling (wheel, keys, touch), not a jump
 function onViewScroll() {
-  // #bar never hides
+  const viewEl = $('view');
+  if (!viewEl) return;
+  const top = viewEl.scrollTop;
+  const delta = Math.abs(top - lastTop);
+  lastTop = top;
+  if (!$('reading')?.classList.contains('mobile-ui-visible')) return;
+  if ($('rail')?.classList.contains('dragging')) return;
+  if (!$('panel')?.hidden && $('panel')?.dataset.pane === 'settings') return;
+  if (delta > 3 && performance.now() - lastInput < 1000) hideChrome();
 }
 
 // ------------------------------------------------------------------------------- panels
-const PANES = { toc: 'toc-pane', search: 'search-pane', marks: 'marks-pane', hl: 'hl-pane' };
-const BUTTONS = { toc: 'btn-toc', search: 'btn-search', marks: 'btn-marks', hl: 'btn-hl' };
+const PANES = { toc: 'toc-pane', search: 'search-pane', marks: 'marks-pane', hl: 'hl-pane', settings: 'settings' };
+const BUTTONS = { toc: 'btn-toc', search: 'btn-search', marks: 'btn-marks', hl: 'btn-hl', settings: 'btn-settings' };
 
 export function openPanel(which) {
-  closeSettings(false);
   if (!$('panel').hidden && $('panel').dataset.pane === which) {
     if (which === 'search') $('q').focus();
     return;
@@ -55,7 +63,7 @@ export function openPanel(which) {
   $('panel').dataset.pane = which;
   for (const [k, id] of Object.entries(PANES)) $(id).hidden = k !== which;
   for (const [k, id] of Object.entries(BUTTONS)) $(id).setAttribute('aria-expanded', String(k === which));
-  $('panel-title').textContent = { toc: t('contents'), search: t('search'), marks: t('bookmarks'), hl: t('highlights') }[which];
+  $('panel-title').textContent = { toc: t('contents'), search: t('search'), marks: t('bookmarks'), hl: t('highlights'), settings: t('settings_title') }[which];
   wake();
   if (which === 'search') { $('q').focus(); $('q').select(); }
   if (which === 'toc') {
@@ -66,6 +74,7 @@ export function openPanel(which) {
   }
   if (which === 'marks') ($('bookmarks').querySelector('.jump') ?? $('mark-add')).focus();
   if (which === 'hl') ($('hl-list').querySelector('.jump') ?? $('panel-close')).focus();
+  if (which === 'settings') $('panel-close')?.focus();
 }
 
 export function closePanel(restore = true) {
@@ -396,19 +405,11 @@ export async function toggleBookmark() {
 
 // ------------------------------------------------------------------------------- settings
 function openSettings() {
-  closePanel(false);
-  lastFocus = $('btn-settings');
-  $('settings').hidden = false;
-  $('btn-settings').setAttribute('aria-expanded', 'true');
-  wake();
-  $('settings').querySelector('[aria-checked="true"], button')?.focus();
+  openPanel('settings');
 }
 export function closeSettings(restore = true) {
-  if ($('settings').hidden) return false;
-  $('settings').hidden = true;
-  $('btn-settings').setAttribute('aria-expanded', 'false');
-  if (restore) $('btn-settings').focus();
-  return true;
+  if ($('panel').hidden || $('panel').dataset.pane !== 'settings') return false;
+  return closePanel(restore);
 }
 
 /** Effective theme -> page colours and the engine's colour forcing. */
@@ -492,7 +493,7 @@ let keysFocus = null;
 export function openKeys() {
   const d = $('keys');
   if (d.open) return;
-  keysFocus = $('settings').contains(document.activeElement) ? $('btn-settings') : document.activeElement;
+  keysFocus = (!$('panel').hidden && $('panel').dataset.pane === 'settings') ? $('btn-settings') : document.activeElement;
   closeSettings(false);
   d.showModal();
   $('keys-close').focus();
@@ -942,6 +943,7 @@ export async function setupBook() {
   syncSettings();
   await renderMarks();
   onPosition(rp.view.position, rp.view.progress); // current chapter, rail, % for the new lists
+  lastTop = $('view')?.scrollTop ?? 0;
 }
 
 export function syncMode() {
@@ -988,7 +990,7 @@ export function initReading(state, deps) {
   $('btn-marks').addEventListener('click', () => togglePanel('marks'));
   $('btn-hl').addEventListener('click', () => togglePanel('hl'));
   $('btn-bookmark').addEventListener('click', () => toggleBookmark());
-  $('btn-settings').addEventListener('click', () => ($('settings').hidden ? openSettings() : closeSettings()));
+  $('btn-settings').addEventListener('click', () => togglePanel('settings'));
   $('panel-close').addEventListener('click', () => closePanel());
   $('mark-add').addEventListener('click', () => addBookmark());
   $('search-form').addEventListener('submit', (e) => { e.preventDefault(); runSearch($('q').value); });
@@ -1025,7 +1027,10 @@ export function initReading(state, deps) {
     }
   }, { passive: true });
   $('view').addEventListener('scroll', onViewScroll, { passive: true });
-  for (const type of ['wheel', 'keydown', 'touchmove']) addEventListener(type, () => { lastInput = performance.now(); }, { passive: true, capture: true });
+  for (const type of ['wheel', 'touchmove']) $('view').addEventListener(type, () => { lastInput = performance.now(); }, { passive: true, capture: true });
+  addEventListener('keydown', (e) => {
+    if (!e.target?.closest?.('.panel, .popover, .hl-bar, dialog, #rail')) lastInput = performance.now();
+  }, { passive: true, capture: true });
   $('bar').addEventListener('focusin', wake);
   document.addEventListener('pointermove', (e) => { if (e.clientY < 72 && !$('reading').hidden) wake(); }, { passive: true });
   // Click outside the settings popover closes it.
@@ -1035,8 +1040,7 @@ export function initReading(state, deps) {
   document.addEventListener('pointerdown', (e) => {
     tapStartX = e.clientX;
     tapStartY = e.clientY;
-    overlayWasOpen = !$('settings').hidden || !$('panel').hidden || !$('hl-bar').hidden;
-    if (!$('settings').hidden && !e.target.closest('#settings, #btn-settings')) closeSettings(false);
+    overlayWasOpen = !$('panel').hidden || !$('hl-bar').hidden;
     if (!$('panel').hidden && !e.target.closest('#panel, [aria-controls="panel"], #panel-close')) closePanel(false);
   });
   $('reading').addEventListener('click', (e) => {

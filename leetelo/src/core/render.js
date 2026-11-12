@@ -97,8 +97,8 @@ const FXL_CSS = `
 // Page-level rules for the view element itself.
 const VIEW_CSS = `
 .rp-scroll-view { overflow-y: auto; overflow-x: hidden; overflow-anchor: none;
-  padding-block: calc(var(--rp-pad-y, 5vh) + 8px) max(35vh, calc(var(--rp-pad-y, 5vh) + 24px)) !important;
-  padding-inline: var(--rp-margin-x, 10vw) !important; box-sizing: border-box; }
+  padding-block: calc(max(var(--rp-pad-y, 5vh), var(--safe-top, 0px)) + 8px) max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + var(--safe-bottom, 0px))) !important;
+  padding-inline: max(var(--rp-margin-x, 10vw), var(--safe-left, 0px)) max(var(--rp-margin-x, 10vw), var(--safe-right, 0px)) !important; box-sizing: border-box; }
 .rp-scroll-view > .rp-section { display: block; }
 .rp-paged-view { overflow: hidden !important; padding: 0 !important; }
 .rp-paged-view > .rp-section { display: block; width: 100%; height: 100%; }
@@ -111,6 +111,21 @@ const VIEW_CSS = `
   background-size: 100% calc(100% - 2 * var(--rp-pad-y, 0px)) !important; background-position: center !important; background-repeat: no-repeat !important;
 }
 `;
+
+/** Read resolved CSS safe-area insets in px so reading views stay clear of notches/home bars. */
+function safeInsets() {
+  const cs = getComputedStyle(document.documentElement);
+  const px = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+  return {
+    top: px(cs.scrollPaddingTop),
+    bottom: px(cs.scrollPaddingBottom),
+    left: px(cs.scrollPaddingLeft),
+    right: px(cs.scrollPaddingRight),
+  };
+}
 
 let viewSheet;
 function ensureViewSheet() {
@@ -214,7 +229,8 @@ class ContinuousView {
   padYPx() {
     const rawMv = Number(this.ctx.style.marginV ?? 10);
     const mvPct = (rawMv > 30 || rawMv < 10) ? 10 : rawMv;
-    return Math.round((window.innerHeight * (mvPct / 2)) / 100);
+    const base = Math.round((window.innerHeight * (mvPct / 2)) / 100);
+    return Math.max(base, Math.ceil(safeInsets().top));
   }
 
   /** The reading edge: the view's top plus the vertical margin area kept clear for page chrome. */
@@ -498,9 +514,16 @@ class PagedView {
     const ph = this.el.clientHeight;
     const rawMv = Number(s.marginV ?? 10);
     const mvPct = (rawMv > 30 || rawMv < 10) ? 10 : rawMv;
-    const padY = Math.round((window.innerHeight * (mvPct / 2)) / 100);
+    const safe = safeInsets();
+    const basePadY = Math.round((window.innerHeight * (mvPct / 2)) / 100);
+    const padY = Math.max(
+      basePadY,
+      safe.top > 0 ? Math.ceil(safe.top) + 8 : 0,
+      safe.bottom > 0 ? Math.ceil(safe.bottom) + 36 : 0,
+    );
     const cw = pw / g.span;
-    const m = g.span === 2 ? Math.round((cw * (mhPct / 2)) / 100) : sidePx;
+    const mBase = g.span === 2 ? Math.round((cw * (mhPct / 2)) / 100) : sidePx;
+    const m = Math.max(mBase, Math.ceil(Math.max(safe.left, safe.right)));
     Object.assign(this, {
       span: g.span, off: g.off, m, pw, ph, padY, colH: ph - 2 * padY, cw,
       pair: g.span === 2 && this.imagePages && !this.noPair,

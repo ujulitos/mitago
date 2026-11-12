@@ -6,6 +6,10 @@
 /* Sepia: bg: #F0DEC6; text: #614D34; */
 :root,
 :root[data-theme="sepia"] {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
     --rp-progress: salmon;
     /* #fa8072 */
     --rp-paper: #F0DEC6;
@@ -24,6 +28,9 @@
     --rp-hl-blue: rgb(70 150 255 / 0.32);
     --rp-hl-pink: rgb(255 90 170 / 0.30);
     --mark: #27346a;
+    --panel-bg: #fbf2e6;
+    --panel-hover: #eedcc5;
+    --panel-line: #dfd0ba;
     --shadow: 0 10px 30px rgba(97, 77, 52, 0.14), 0 1px 3px rgba(97, 77, 52, 0.1);
 }
 
@@ -40,6 +47,9 @@
     --rp-hit-bg: #7a6210;
     --rp-hit-ink: #ffffff;
     --mark: #b8c4ec;
+    --panel-bg: #3d3d3d;
+    --panel-hover: #494949;
+    --panel-line: #525252;
     --rp-hl-yellow: rgb(230 190 30 / 0.34);
     --rp-hl-green: rgb(60 190 100 / 0.32);
     --rp-hl-blue: rgb(80 140 255 / 0.36);
@@ -60,6 +70,9 @@
     --rp-hit-bg: #7a6210;
     --rp-hit-ink: #ffffff;
     --mark: #b8c4ec;
+    --panel-bg: #444c5f;
+    --panel-hover: #505a70;
+    --panel-line: #5b657d;
     --rp-hl-yellow: rgb(230 190 30 / 0.34);
     --rp-hl-green: rgb(60 190 100 / 0.32);
     --rp-hl-blue: rgb(80 140 255 / 0.36);
@@ -80,6 +93,9 @@
     --rp-hit-bg: #7a6210;
     --rp-hit-ink: #ffffff;
     --mark: #b8c4ec;
+    --panel-bg: #2c2f36;
+    --panel-hover: #373b44;
+    --panel-line: #444954;
     --rp-hl-yellow: rgb(230 190 30 / 0.34);
     --rp-hl-green: rgb(60 190 100 / 0.32);
     --rp-hl-blue: rgb(80 140 255 / 0.36);
@@ -100,6 +116,9 @@
     --rp-hit-bg: #7a6210;
     --rp-hit-ink: #ffffff;
     --mark: #b8c4ec;
+    --panel-bg: #222222;
+    --panel-hover: #303030;
+    --panel-line: #3d3d3d;
     --rp-hl-yellow: rgb(230 190 30 / 0.34);
     --rp-hl-green: rgb(60 190 100 / 0.32);
     --rp-hl-blue: rgb(80 140 255 / 0.36);
@@ -120,6 +139,9 @@
         --rp-hit-bg: #7a6210;
         --rp-hit-ink: #ffffff;
         --mark: #b8c4ec;
+        --panel-bg: #222222;
+        --panel-hover: #303030;
+        --panel-line: #3d3d3d;
         --rp-hl-yellow: rgb(230 190 30 / 0.34);
         --rp-hl-green: rgb(60 190 100 / 0.32);
         --rp-hl-blue: rgb(80 140 255 / 0.36);
@@ -128,9 +150,18 @@
     }
 }
 
+html {
+    background: var(--paper);
+    scroll-padding-top: var(--safe-top);
+    scroll-padding-bottom: var(--safe-bottom);
+    scroll-padding-left: var(--safe-left);
+    scroll-padding-right: var(--safe-right);
+}
+
 html,
 body {
     height: 100%;
+    min-height: 100dvh;
 }
 
 body {
@@ -181,7 +212,7 @@ button.primary:hover {
     min-height: 100%;
     max-width: 1120px;
     margin: 0 auto;
-    padding: 88px 32px 0;
+    padding: calc(88px + var(--safe-top)) calc(32px + var(--safe-right)) var(--safe-bottom) calc(32px + var(--safe-left));
 }
 
 .lib-head {
@@ -190,7 +221,8 @@ button.primary:hover {
     left: 0;
     right: 0;
     z-index: 50;
-    height: 72px;
+    height: calc(72px + var(--safe-top));
+    padding-top: var(--safe-top);
     display: flex;
     align-items: center;
     background: color-mix(in srgb, var(--paper) 92%, transparent);
@@ -203,7 +235,7 @@ button.primary:hover {
     width: 100%;
     max-width: 1120px;
     margin: 0 auto;
-    padding: 0 32px;
+    padding: 0 calc(32px + var(--safe-right)) 0 calc(32px + var(--safe-left));
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -492,19 +524,6 @@ body.dragging .drop-art .pane-fill {
 
 .books.books-row .meta .format-size {
     font-size: 10px;
-}
-
-.books.books-row .book-actions {
-    height: 24px;
-}
-
-.books.books-row .book-action-btn {
-    height: 22px;
-}
-
-.books.books-row .book-action-btn svg {
-    width: 14px;
-    height: 14px;
 }
 
 .book {
@@ -1199,10 +1218,19 @@ body.dragging .shelf-dropzone {
 
 /* =================================================================== reading */
 .reading {
+    --rail-h: 42px;
     position: fixed;
     inset: 0;
     background: var(--rp-paper);
     color: var(--rp-ink);
+}
+
+.panel,
+.hl-bar,
+.keys {
+    --card: var(--panel-bg);
+    --hover: var(--panel-hover);
+    --line: var(--panel-line);
 }
 
 #view {
@@ -1222,8 +1250,8 @@ body.dragging .shelf-dropzone {
 }
 
 #view.rp-scroll-view {
-    padding-top: calc(var(--rp-pad-y, 5vh) + 8px) !important;
-    padding-bottom: max(35vh, calc(var(--rp-pad-y, 5vh) + 24px)) !important;
+    padding-top: calc(max(var(--rp-pad-y, 5vh), var(--safe-top)) + 8px) !important;
+    padding-bottom: max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + var(--safe-bottom))) !important;
 }
 
 .reading.paged #view {
@@ -1242,10 +1270,10 @@ body.dragging .shelf-dropzone {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 16px;
-    background: var(--rp-paper);
+    padding: calc(10px + var(--safe-top)) calc(16px + var(--safe-right)) 16px calc(16px + var(--safe-left));
+    background: var(--panel-bg);
     /* opaque: the book scrolls under it */
-    border-bottom: 1px solid var(--rp-rule);
+    border-bottom: 1px solid var(--panel-line);
 }
 
 .bar-controls {
@@ -1265,7 +1293,7 @@ body.dragging .shelf-dropzone {
 
 .bar .icon-btn:hover,
 .bar .icon-btn[aria-expanded="true"] {
-    background: color-mix(in srgb, var(--rp-ink) 8%, transparent);
+    background: var(--panel-hover);
     color: var(--rp-ink);
 }
 
@@ -1359,7 +1387,7 @@ body.dragging .shelf-dropzone {
     top: 0;
     left: 0;
     right: 0;
-    height: var(--rp-pad-y, 5vh);
+    height: max(var(--rp-pad-y, 5vh), var(--safe-top));
     background: var(--rp-paper);
     pointer-events: none;
 }
@@ -1367,12 +1395,12 @@ body.dragging .shelf-dropzone {
 /* Progress rail: horizontal bar in the footer just above pagination, chapter time and progress %. */
 .rail {
     position: absolute;
-    z-index: 26;
+    z-index: 22;
     bottom: 100%;
     left: 0;
     right: 0;
     width: 100%;
-    height: 42px;
+    height: var(--rail-h, 42px);
     background: var(--rp-paper);
     cursor: pointer;
     touch-action: none;
@@ -1382,8 +1410,8 @@ body.dragging .shelf-dropzone {
 
 .rail-track {
     position: absolute;
-    left: 16px;
-    right: 16px;
+    left: calc(16px + var(--safe-left));
+    right: calc(16px + var(--safe-right));
     top: 50%;
     height: 3px;
     margin-top: -1.5px;
@@ -1476,7 +1504,7 @@ body.dragging .shelf-dropzone {
     bottom: 0;
     height: auto;
     min-height: 38px;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: var(--safe-bottom);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -1493,8 +1521,9 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: space-between;
     padding-block: 0;
-    padding-inline: 16px 6px;
+    padding-inline: calc(16px + var(--safe-left)) calc(6px + var(--safe-right));
     flex-shrink: 0;
+    background: var(--rp-paper);
 }
 
 .foot-margin {
@@ -1503,7 +1532,7 @@ body.dragging .shelf-dropzone {
     bottom: 0;
     left: 0;
     right: 0;
-    height: var(--rp-pad-y, 5vh);
+    height: max(var(--rp-pad-y, 5vh), var(--safe-bottom));
     min-height: 100%;
     background: var(--rp-paper);
     pointer-events: none;
@@ -1538,7 +1567,7 @@ body.dragging .shelf-dropzone {
 /* Book progress: a slim line along the bottom (both modes); page numbers in page mode. */
 .book-bar {
     position: absolute;
-    z-index: 14;
+    z-index: 27;
     left: 0;
     right: 0;
     bottom: 0;
@@ -1628,7 +1657,7 @@ body.dragging .shelf-dropzone {
 
 .analog-clock {
     position: absolute;
-    bottom: calc(100% + 54px);
+    bottom: calc(100% + var(--rail-h, 42px) + 10px);
     left: 50%;
     transform: translateX(-50%);
     width: 131px;
@@ -1841,9 +1870,9 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    height: 56px;
-    padding-block: 0;
-    padding-inline: 20px 10px;
+    height: calc(56px + var(--safe-top));
+    padding-block: var(--safe-top) 0;
+    padding-inline: 20px calc(10px + var(--safe-right));
     border-bottom: 1px solid var(--line);
     flex: none;
 }
@@ -1859,7 +1888,7 @@ body.dragging .shelf-dropzone {
     display: flex;
     flex-direction: column;
     overflow: auto;
-    padding: 10px 10px 24px;
+    padding: 10px calc(10px + var(--safe-right)) calc(24px + var(--safe-bottom)) 10px;
 }
 
 .empty {
@@ -2214,39 +2243,15 @@ body.dragging .shelf-dropzone {
     white-space: pre-line;
 }
 
-/* Settings popover */
-.popover {
-    position: absolute;
-    z-index: 40;
-    top: 60px;
-    inset-inline-end: 12px;
-    width: 360px;
-    max-width: calc(100vw - 20px);
-    max-height: calc(100vh - 76px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
+/* Settings pane */
+#settings.pane {
     gap: 4px;
-    padding: 12px 16px 14px;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    background: var(--card);
-    color: var(--ink);
-    box-shadow: var(--shadow);
-    animation: pop-in 140ms ease-out;
+    padding: 10px calc(18px + var(--safe-right)) calc(24px + var(--safe-bottom)) 18px;
 }
 
-/* In a short window the popover scrolls; its rows keep their height instead of squeezing into each other. */
-.popover>* {
+/* In a short window the pane scrolls; its rows keep their height instead of squeezing into each other. */
+#settings.pane>* {
     flex-shrink: 0;
-}
-
-@keyframes pop-in {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
 }
 
 .set-row {
@@ -2652,11 +2657,11 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 640px) {
     .library {
-        padding: 82px 16px 0;
+        padding: calc(82px + var(--safe-top)) calc(16px + var(--safe-right)) var(--safe-bottom) calc(16px + var(--safe-left));
     }
 
     .lib-head-inner {
-        padding: 0 16px;
+        padding: 0 calc(16px + var(--safe-right)) 0 calc(16px + var(--safe-left));
     }
 
     .books,
@@ -2700,20 +2705,29 @@ body.dragging .shelf-dropzone {
         padding: 0 10px !important;
     }
 
+    .reading {
+        --rail-h: 38px;
+    }
+
     .bar {
         height: auto;
         gap: 8px;
-        padding: calc(10px + env(safe-area-inset-top, 0px)) 10px 14px;
+        padding: calc(10px + var(--safe-top)) calc(10px + var(--safe-right)) 14px calc(10px + var(--safe-left));
     }
 
     .bar-controls {
-        min-height: 34px;
-        gap: 4px;
+        min-height: 42px;
+        gap: 6px;
     }
 
     .bar .icon-btn {
-        width: 34px;
-        height: 34px;
+        width: 42px;
+        height: 42px;
+    }
+
+    .bar .icon-btn svg {
+        width: 23px;
+        height: 23px;
     }
 
     .bar-tools {
@@ -2756,18 +2770,14 @@ body.dragging .shelf-dropzone {
         top: 0;
     }
 
-    .popover {
-        top: 56px;
-        inset-inline-end: 8px;
-        width: min(360px, calc(100vw - 16px));
-        padding: 12px 14px 14px;
-        max-height: calc(100vh - 66px);
+    #settings.pane {
+        padding: 10px calc(16px + var(--safe-right)) calc(24px + var(--safe-bottom)) 16px;
     }
 
     .reading-foot {
         height: auto;
         min-height: 36px;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-bottom: var(--safe-bottom);
     }
 
     .reading-foot-row {
@@ -2788,7 +2798,7 @@ body.dragging .shelf-dropzone {
     }
 
     .rail {
-        height: 38px;
+        height: var(--rail-h);
     }
 
     .rail-track {
@@ -2812,7 +2822,7 @@ body.dragging .shelf-dropzone {
     .analog-clock {
         width: 78px;
         height: 78px;
-        bottom: calc(100% + 50px);
+        bottom: calc(100% + var(--rail-h) + 10px);
     }
 
     .clock-segmented {
@@ -2863,11 +2873,11 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 480px) {
     .library {
-        padding: 74px 16px 0;
+        padding: calc(74px + var(--safe-top)) calc(16px + var(--safe-right)) var(--safe-bottom) calc(16px + var(--safe-left));
     }
 
     .lib-head {
-        height: 64px;
+        height: calc(64px + var(--safe-top));
     }
 
     .lib-tools {
@@ -2890,24 +2900,33 @@ body.dragging .shelf-dropzone {
         gap: 10px;
     }
 
+    .reading {
+        --rail-h: 36px;
+    }
+
     .bar {
         height: auto;
         gap: 8px;
-        padding: calc(8px + env(safe-area-inset-top, 0px)) 8px 14px;
+        padding: calc(8px + var(--safe-top)) calc(8px + var(--safe-right)) 14px calc(8px + var(--safe-left));
     }
 
     .bar-controls {
-        min-height: 32px;
-        gap: 2px;
+        min-height: 40px;
+        gap: 4px;
     }
 
     .bar .icon-btn {
-        width: 32px;
-        height: 32px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .bar .icon-btn svg {
+        width: 22px;
+        height: 22px;
     }
 
     .bar-tools {
-        gap: 2px;
+        gap: 3px;
     }
 
     .bar-title {
@@ -2967,7 +2986,7 @@ body.dragging .shelf-dropzone {
 
     .reading-foot-row {
         height: 34px;
-        padding-inline: 8px;
+        padding-inline: calc(8px + var(--safe-left)) calc(8px + var(--safe-right));
         gap: 4px;
     }
 
@@ -2976,12 +2995,12 @@ body.dragging .shelf-dropzone {
     }
 
     .rail {
-        height: 36px;
+        height: var(--rail-h);
     }
 
     .rail-track {
-        left: 14px;
-        right: 14px;
+        left: calc(14px + var(--safe-left));
+        right: calc(14px + var(--safe-right));
     }
 
     .rail-thumb {
@@ -3005,7 +3024,7 @@ body.dragging .shelf-dropzone {
     .analog-clock {
         width: 64px;
         height: 64px;
-        bottom: calc(100% + 48px);
+        bottom: calc(100% + var(--rail-h) + 10px);
     }
 
     .clock-segmented {
@@ -3042,6 +3061,10 @@ body.dragging .shelf-dropzone {
     transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
 }
 
+#analog-clock {
+    transition: transform 180ms ease;
+}
+
 #reading:not(.mobile-ui-visible) #bar {
     opacity: 0;
     visibility: hidden;
@@ -3053,7 +3076,11 @@ body.dragging .shelf-dropzone {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateY(6px);
+    transform: translateY(var(--rail-h, 42px));
+}
+
+#reading:not(.mobile-ui-visible) #analog-clock {
+    transform: translateX(-50%) translateY(var(--rail-h, 42px));
 }
 
 #reading.mobile-ui-visible #bar {
@@ -3068,6 +3095,10 @@ body.dragging .shelf-dropzone {
     visibility: visible;
     pointer-events: auto;
     transform: translateY(0);
+}
+
+#reading.mobile-ui-visible #analog-clock {
+    transform: translateX(-50%) translateY(0);
 }
 
 /* ------------------------------------------------------------ what's new */
@@ -3114,7 +3145,7 @@ body.dragging .shelf-dropzone {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: calc(20px + var(--safe-top)) calc(20px + var(--safe-right)) calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left));
     box-sizing: border-box;
     overscroll-behavior: contain;
 }
@@ -3137,7 +3168,7 @@ body.dragging .shelf-dropzone {
     width: 60vw;
     max-width: 1000px;
     min-width: 320px;
-    max-height: 85vh;
+    max-height: min(85vh, calc(100dvh - 40px - var(--safe-top) - var(--safe-bottom)));
     overflow-y: auto;
     overscroll-behavior: contain;
     background: var(--card);

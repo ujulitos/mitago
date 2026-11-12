@@ -20,7 +20,7 @@ import { openRemote } from './remote.js';
 import { clearHighlights, closeHighlightBar, exportHighlights, highlightSelection, highlights, initHighlights, onTextMoved, paint as paintHighlights, setupHighlights } from './highlights.js';
 import {
   MEASURES, READER_DEFAULTS, addBookmark, applyReadingTheme, bumpSize, closeKeys, closePanel, closeSettings,
-  initReading, openKeys, onPosition as paintPosition, openPanel, paintFolio, runSearch, setStyle, settle, setupBook, syncMode, toggleBookmark, wake,
+  hideChrome, initReading, openKeys, onPosition as paintPosition, openPanel, paintFolio, runSearch, setStyle, settle, setupBook, syncMode, toggleBookmark, wake,
 } from './reading.js';
 
 // Exposed for the e2e suite and debugging; nothing reads it in production paths.
@@ -357,6 +357,7 @@ function backToLibrary() {
 // ---- moving through the book -----------------------------------------------------------
 rp.turn = async (dir) => {
   if (!rp.view) return;
+  hideChrome();
   await (dir > 0 ? rp.view.next() : rp.view.prev());
   settle();
 };
@@ -415,6 +416,7 @@ document.addEventListener('keydown', (e) => {
     else { e.preventDefault(); $('view').scrollBy({ top: k === 'ArrowDown' ? 80 : -80, behavior: 'smooth' }); return; }
   } else if (k === 'Home' || k === 'End') {
     e.preventDefault();
+    hideChrome();
     rp.goToProgress(k === 'Home' ? 0 : 1);
     return;
   }
@@ -479,6 +481,7 @@ document.addEventListener('click', (e) => {
   const a = e.composedPath().find((n) => n.dataset?.rpHref);
   if (!a || !rp.view) return;
   e.preventDefault();
+  hideChrome();
   rp.view.goToHref(a.dataset.rpHref);
 });
 for (const type of ['pointerdown', 'scroll', 'wheel']) addEventListener(type, () => { rp.lastActive = Date.now(); }, { passive: true, capture: true });

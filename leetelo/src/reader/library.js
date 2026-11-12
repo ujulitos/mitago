@@ -341,12 +341,17 @@ function bookItem(book, pos, stat, category, categories) {
     }
   });
 
-  const btnDel = labelled(el('button', {
-    type: 'button',
-    class: 'book-action-btn btn-delete',
-  }, icon('trash', 15)), t('delete'));
+  const actionBtns = [btnReading, btnToRead, btnRead, btnMeta];
+  let btnDel = null;
+  if (category === 'all_books') {
+    btnDel = labelled(el('button', {
+      type: 'button',
+      class: 'book-action-btn btn-delete',
+    }, icon('trash', 15)), t('delete'));
+    actionBtns.push(btnDel);
+  }
 
-  const actions = el('div', { class: 'book-actions' }, btnReading, btnToRead, btnRead, btnMeta, btnDel);
+  const actions = el('div', { class: 'book-actions' }, ...actionBtns);
 
   const li = el('li', { class: 'book', dataset: { id: book.id } },
     cover,
@@ -355,10 +360,12 @@ function bookItem(book, pos, stat, category, categories) {
     actions
   );
 
-  btnDel.addEventListener('click', (e) => {
-    e.stopPropagation();
-    confirmDelete(li, book, btnDel, categories);
-  });
+  if (btnDel) {
+    btnDel.addEventListener('click', (e) => {
+      e.stopPropagation();
+      confirmDelete(li, book, btnDel, categories);
+    });
+  }
 
   return li;
 }

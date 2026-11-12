@@ -153,7 +153,7 @@
         <button id="btn-marks" class="icon-btn" type="button" aria-controls="panel" aria-expanded="false"></button>
         <button id="btn-hl" class="icon-btn" type="button" aria-controls="panel" aria-expanded="false"></button>
         <button id="btn-bookmark" class="icon-btn" type="button" aria-pressed="false"></button>
-        <button id="btn-settings" class="icon-btn" type="button" aria-controls="settings" aria-expanded="false"></button>
+        <button id="btn-settings" class="icon-btn" type="button" aria-controls="panel" aria-expanded="false"></button>
       </div>
     </div>
     <div class="bar-title">
@@ -251,70 +251,70 @@
       <ol id="hl-list" class="marks hl-list"></ol>
       <p id="hl-empty" class="empty" data-i18n="hl_empty" hidden></p>
     </div>
-  </aside>
 
-  <div id="settings" class="popover" role="dialog" data-i18n-aria="reading_settings" hidden>
-    <div class="set-row">
-      <span class="set-label" id="lbl-size" data-i18n="text_size"></span>
-      <div class="stepper" role="group" aria-labelledby="lbl-size">
-        <button id="size-down" class="icon-btn" type="button" data-i18n-aria="smaller_text" data-i18n-title="smaller_text"></button>
-        <output id="size-val" aria-live="polite"></output>
-        <button id="size-up" class="icon-btn" type="button" data-i18n-aria="larger_text" data-i18n-title="larger_text"></button>
+    <div id="settings" class="pane" hidden>
+      <div class="set-row">
+        <span class="set-label" id="lbl-size" data-i18n="text_size"></span>
+        <div class="stepper" role="group" aria-labelledby="lbl-size">
+          <button id="size-down" class="icon-btn" type="button" data-i18n-aria="smaller_text" data-i18n-title="smaller_text"></button>
+          <output id="size-val" aria-live="polite"></output>
+          <button id="size-up" class="icon-btn" type="button" data-i18n-aria="larger_text" data-i18n-title="larger_text"></button>
+        </div>
+      </div>
+      <div class="set-row col">
+        <span class="set-label" id="lbl-font" data-i18n="font"></span>
+        <div class="segmented wide five" role="radiogroup" aria-labelledby="lbl-font" id="seg-font"></div>
+      </div>
+      <div class="set-row">
+        <span class="set-label" id="lbl-lh" data-i18n="line_spacing"></span>
+        <div class="slider-wrap">
+          <input type="range" id="slider-lh" min="1.1" max="2.4" step="0.05" value="1.55" aria-labelledby="lbl-lh">
+          <output id="lh-val" aria-live="polite">1.55</output>
+        </div>
+      </div>
+      <div class="set-row">
+        <span class="set-label" id="lbl-margin-v" data-i18n="margin_v"></span>
+        <div class="slider-wrap">
+          <input type="range" id="slider-margin-v" min="10" max="30" step="1" value="10" aria-labelledby="lbl-margin-v">
+          <output id="margin-v-val" aria-live="polite">10%</output>
+        </div>
+      </div>
+      <div class="set-row">
+        <span class="set-label" id="lbl-margin-h" data-i18n="margin_h"></span>
+        <div class="slider-wrap">
+          <input type="range" id="slider-margin-h" min="10" max="60" step="1" value="20" aria-labelledby="lbl-margin-h">
+          <output id="margin-h-val" aria-live="polite">20%</output>
+        </div>
+      </div>
+      <div class="set-row">
+        <span class="set-label" id="lbl-justify" data-i18n="justify"></span>
+        <div class="segmented" role="radiogroup" aria-labelledby="lbl-justify" id="seg-justify"></div>
+      </div>
+      <div class="set-row col" id="row-theme">
+        <span class="set-label" id="lbl-theme" data-i18n="theme"></span>
+        <div class="swatches" role="radiogroup" aria-labelledby="lbl-theme" id="seg-theme"></div>
+      </div>
+      <div class="set-row">
+        <span class="set-label" id="lbl-mode" data-i18n="layout"></span>
+        <div class="segmented" role="radiogroup" aria-labelledby="lbl-mode" id="seg-mode"></div>
+      </div>
+      <div class="set-row col" id="row-spread">
+        <span class="set-label" id="lbl-spread" data-i18n="pages_per_screen"></span>
+        <div class="segmented wide three" role="radiogroup" aria-labelledby="lbl-spread" id="seg-spread"></div>
+      </div>
+      <div class="set-row col" id="row-turn">
+        <span class="set-label" id="lbl-turn" data-i18n="page_turn"></span>
+        <div class="segmented wide three" role="radiogroup" aria-labelledby="lbl-turn" id="seg-turn"></div>
+      </div>
+      <div class="set-row">
+        <span class="set-label" id="lbl-own" data-i18n="book_only"></span>
+        <button id="own-style" class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="lbl-own"></button>
+      </div>
+      <div class="set-row">
+        <button id="btn-keys" class="tool" type="button" data-i18n="keyboard_shortcuts"></button>
       </div>
     </div>
-    <div class="set-row col">
-      <span class="set-label" id="lbl-font" data-i18n="font"></span>
-      <div class="segmented wide five" role="radiogroup" aria-labelledby="lbl-font" id="seg-font"></div>
-    </div>
-    <div class="set-row">
-      <span class="set-label" id="lbl-lh" data-i18n="line_spacing"></span>
-      <div class="slider-wrap">
-        <input type="range" id="slider-lh" min="1.1" max="2.4" step="0.05" value="1.55" aria-labelledby="lbl-lh">
-        <output id="lh-val" aria-live="polite">1.55</output>
-      </div>
-    </div>
-    <div class="set-row">
-      <span class="set-label" id="lbl-margin-v" data-i18n="margin_v"></span>
-      <div class="slider-wrap">
-        <input type="range" id="slider-margin-v" min="10" max="30" step="1" value="10" aria-labelledby="lbl-margin-v">
-        <output id="margin-v-val" aria-live="polite">10%</output>
-      </div>
-    </div>
-    <div class="set-row">
-      <span class="set-label" id="lbl-margin-h" data-i18n="margin_h"></span>
-      <div class="slider-wrap">
-        <input type="range" id="slider-margin-h" min="10" max="60" step="1" value="20" aria-labelledby="lbl-margin-h">
-        <output id="margin-h-val" aria-live="polite">20%</output>
-      </div>
-    </div>
-    <div class="set-row">
-      <span class="set-label" id="lbl-justify" data-i18n="justify"></span>
-      <div class="segmented" role="radiogroup" aria-labelledby="lbl-justify" id="seg-justify"></div>
-    </div>
-    <div class="set-row col" id="row-theme">
-      <span class="set-label" id="lbl-theme" data-i18n="theme"></span>
-      <div class="swatches" role="radiogroup" aria-labelledby="lbl-theme" id="seg-theme"></div>
-    </div>
-    <div class="set-row">
-      <span class="set-label" id="lbl-mode" data-i18n="layout"></span>
-      <div class="segmented" role="radiogroup" aria-labelledby="lbl-mode" id="seg-mode"></div>
-    </div>
-    <div class="set-row col" id="row-spread">
-      <span class="set-label" id="lbl-spread" data-i18n="pages_per_screen"></span>
-      <div class="segmented wide three" role="radiogroup" aria-labelledby="lbl-spread" id="seg-spread"></div>
-    </div>
-    <div class="set-row col" id="row-turn">
-      <span class="set-label" id="lbl-turn" data-i18n="page_turn"></span>
-      <div class="segmented wide three" role="radiogroup" aria-labelledby="lbl-turn" id="seg-turn"></div>
-    </div>
-    <div class="set-row">
-      <span class="set-label" id="lbl-own" data-i18n="book_only"></span>
-      <button id="own-style" class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="lbl-own"></button>
-    </div>
-    <div class="set-row">
-      <button id="btn-keys" class="tool" type="button" data-i18n="keyboard_shortcuts"></button>
-    </div>
-  </div>
+  </aside>
 </div>
 
 <dialog id="keys" class="keys" aria-labelledby="keys-title">

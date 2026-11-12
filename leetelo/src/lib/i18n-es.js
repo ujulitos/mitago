@@ -145,6 +145,7 @@ export default {
   "delete_bookmark": "Eliminar marcador",
   "marks_empty": "Aún no hay marcadores. Pulsa B mientras lees para añadir uno.",
   "close_panel": "Cerrar",
+  "settings_title": "Ajustes",
   "reading_settings": "Texto y diseño",
   "text_size": "Tamaño del texto",
   "smaller_text": "Texto más pequeño",
