@@ -569,10 +569,10 @@ function initSettings() {
   $('size-up').addEventListener('click', () => bumpSize(1));
   const fontOptions = [
     ['condensed', 'Roboto Condensed', 'Roboto', '"Roboto Condensed", "Arial Narrow", sans-serif'],
-    ['source_sans', 'Source Sans 3', 'Source Sans', '"Source Sans 3", sans-serif'],
-    ['fira_condensed', 'Fira Sans Condensed', 'Fira Sans', '"Fira Sans Condensed", sans-serif'],
-    ['noto_sans', 'Noto Sans', 'Noto', '"Noto Sans", sans-serif'],
     ['asap_condensed', 'Asap Condensed', 'Asap', '"Asap Condensed", sans-serif'],
+    ['fira_condensed', 'Fira Sans Condensed', 'Fira Sans', '"Fira Sans Condensed", sans-serif'],
+    ['source_sans', 'Source Sans 3', 'Source Sans', '"Source Sans 3", sans-serif'],
+    ['noto_sans', 'Noto Sans', 'Noto', '"Noto Sans", sans-serif'],
     ['atkinson', 'Atkinson Hyperlegible', 'Atkinson', '"Atkinson Hyperlegible", sans-serif'],
   ];
   segs.font = radioGroup($('seg-font'), fontOptions.map(([v, label, shortLabel, fontCss]) => ({
