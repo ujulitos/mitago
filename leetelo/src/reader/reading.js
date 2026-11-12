@@ -500,10 +500,12 @@ function showTip(f) {
   const track = $('rail-track').getBoundingClientRect();
   const rail = $('rail').getBoundingClientRect();
   const rawX = track.left - rail.left + f * track.width;
-  const clampedX = Math.max(70, Math.min((rail.width || window.innerWidth) - 70, rawX));
-  tip.style.left = `${clampedX}px`;
   tip.style.top = '';
   tip.hidden = false;
+  const half = Math.min(130, (tip.offsetWidth || 140) / 2) + 8;
+  const railW = rail.width || window.innerWidth;
+  const clampedX = Math.max(half, Math.min(railW - half, rawX));
+  tip.style.left = `${clampedX}px`;
 }
 
 let dragTarget = null;
