@@ -419,6 +419,10 @@ export function applyReadingTheme(choice) {
   if (rp.view && rp.view.style.forceColors !== forced) rp.view.setStyle({ forceColors: forced });
   segs.theme?.set(rp.theme);
   segs.libTheme?.set(rp.theme);
+  const toggle = $('lib-theme-toggle');
+  const lbl = $('lib-theme-label');
+  if (toggle) toggle.dataset.value = rp.theme;
+  if (lbl) lbl.textContent = t('theme');
   return forced;
 }
 
@@ -604,6 +608,12 @@ function initSettings() {
     setStyle({ marginH: v });
   });
   initAnalogClock();
+  const closeLibThemeDropdown = () => {
+    const dd = $('lib-theme-dropdown');
+    const toggle = $('lib-theme-toggle');
+    if (dd) dd.classList.remove('open');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  };
   const setupThemeGroup = (id) => {
     const elSwatches = $(id);
     if (!elSwatches) return null;
@@ -618,6 +628,27 @@ function initSettings() {
   };
   segs.theme = setupThemeGroup('seg-theme');
   segs.libTheme = setupThemeGroup('lib-theme');
+  const libThemeToggle = $('lib-theme-toggle');
+  if (libThemeToggle) {
+    const chev = $('lib-theme-chevron');
+    if (chev && !chev.hasChildNodes()) chev.append(icon('chevron', 14));
+    libThemeToggle.setAttribute('aria-label', t('theme'));
+    libThemeToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dd = $('lib-theme-dropdown');
+      const isOpen = dd?.classList.toggle('open');
+      libThemeToggle.setAttribute('aria-expanded', String(!!isOpen));
+    });
+    document.addEventListener('pointerdown', (e) => {
+      const dd = $('lib-theme-dropdown');
+      if (dd?.classList.contains('open') && !e.target.closest('#lib-theme-dropdown')) {
+        closeLibThemeDropdown();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLibThemeDropdown();
+    });
+  }
   segs.mode = radioGroup($('seg-mode'), [['scroll', 'scroll'], ['paged', 'pages']].map(([v, ic]) => ({
     value: v, label: t(`mode_${v}`), content: [icon(ic, 16), el('span', { textContent: t(`mode_${v}`) })],
   })), (v) => rp.setMode(v));

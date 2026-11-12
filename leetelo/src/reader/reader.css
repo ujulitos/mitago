@@ -6,12 +6,8 @@
 /* Sepia: bg: #F0DEC6; text: #614D34; */
 :root,
 :root[data-theme="sepia"] {
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --safe-left: env(safe-area-inset-left, 0px);
-    --safe-right: env(safe-area-inset-right, 0px);
-    --rp-progress: salmon;
-    /* #fa8072 */
+    --rp-progress: darksalmon;
+    /* #e9967a */
     --rp-paper: #F0DEC6;
     --rp-ink: #614D34;
     --rp-soft: #826d53;
@@ -36,6 +32,7 @@
 
 /* Crepúsculo: bg: #2B2B2B; text: #ACBAC3; */
 :root[data-theme="twilight"] {
+    --rp-progress: salmon;
     --rp-paper: #2B2B2B;
     --rp-ink: #ACBAC3;
     --rp-soft: #8997a0;
@@ -59,6 +56,7 @@
 
 /* Niebla: bg: #313745; text: #FFFFFB; */
 :root[data-theme="fog"] {
+    --rp-progress: salmon;
     --rp-paper: #313745;
     --rp-ink: #FFFFFB;
     --rp-soft: #b8c0d0;
@@ -82,6 +80,7 @@
 
 /* Madera: bg: #17181b; text: #d6d8dc; */
 :root[data-theme="wood"] {
+    --rp-progress: salmon;
     --rp-paper: #17181b;
     --rp-ink: #d6d8dc;
     --rp-soft: #9a9fa8;
@@ -105,6 +104,7 @@
 
 /* Contraste: bg: #000000; text: #F2F2F2; */
 :root[data-theme="contrast"] {
+    --rp-progress: salmon;
     --rp-paper: #000000;
     --rp-ink: #F2F2F2;
     --rp-soft: #a8a8a8;
@@ -128,6 +128,7 @@
 
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
+        --rp-progress: salmon;
         --rp-paper: #000000;
         --rp-ink: #F2F2F2;
         --rp-soft: #a8a8a8;
@@ -152,10 +153,10 @@
 
 html {
     background: var(--paper);
-    scroll-padding-top: var(--safe-top);
-    scroll-padding-bottom: var(--safe-bottom);
-    scroll-padding-left: var(--safe-left);
-    scroll-padding-right: var(--safe-right);
+    scroll-padding-top: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px));
+    scroll-padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
+    scroll-padding-left: max(env(safe-area-inset-left, 0px), var(--safe-left, 0px));
+    scroll-padding-right: max(env(safe-area-inset-right, 0px), var(--safe-right, 0px));
 }
 
 html,
@@ -184,6 +185,7 @@ body {
 .brand {
     display: inline-flex;
     align-items: center;
+    min-height: 56px;
     gap: 10px;
     font-size: 18px;
     font-weight: 680;
@@ -212,7 +214,7 @@ button.primary:hover {
     min-height: 100%;
     max-width: 1120px;
     margin: 0 auto;
-    padding: calc(88px + var(--safe-top)) calc(32px + var(--safe-right)) var(--safe-bottom) calc(32px + var(--safe-left));
+    padding: calc(142px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(32px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(32px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
 }
 
 .lib-head {
@@ -221,8 +223,9 @@ button.primary:hover {
     left: 0;
     right: 0;
     z-index: 50;
-    height: calc(72px + var(--safe-top));
-    padding-top: var(--safe-top);
+    height: auto;
+    min-height: calc(72px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
+    padding: calc(10px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 12px;
     display: flex;
     align-items: center;
     background: color-mix(in srgb, var(--paper) 92%, transparent);
@@ -235,19 +238,106 @@ button.primary:hover {
     width: 100%;
     max-width: 1120px;
     margin: 0 auto;
-    padding: 0 calc(32px + var(--safe-right)) 0 calc(32px + var(--safe-left));
+    padding: 0 calc(32px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 0 calc(32px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 10px;
 }
 
 .lib-tools {
-    flex: 1;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 14px;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+}
+
+.lib-theme-dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.lib-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.lib-theme-toggle:focus,
+.lib-theme-toggle:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.lib-theme-chevron {
+    display: inline-flex;
+    align-items: center;
+    color: var(--muted);
+    transition: transform 160ms ease;
+}
+
+.lib-theme-dropdown.open .lib-theme-chevron {
+    transform: rotate(180deg);
+}
+
+#lib-theme.swatches {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: max-content;
+    min-width: 132px;
+    max-width: none;
+    padding: 7px;
+    gap: 5px;
+    border-radius: 12px;
+    border: 1px solid var(--panel-line, var(--line));
+    background: var(--panel-bg, var(--card));
+    box-shadow: var(--shadow);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 150ms ease, transform 150ms ease, visibility 150ms;
+}
+
+.lib-theme-dropdown.open #lib-theme.swatches {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+#lib-theme.swatches button {
+    flex: none;
+    width: 100%;
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+    justify-content: center;
 }
 
 .lib-main {
@@ -633,19 +723,19 @@ body.dragging .drop-art .pane-fill {
 .read-line span {
     display: block;
     height: 100%;
-    background: salmon !important;
+    background: var(--rp-progress, salmon) !important;
     border-radius: 2px;
     position: relative;
     z-index: 1;
 }
 
 .read-line.has-progress::before {
-    background: salmon !important;
+    background: var(--rp-progress, salmon) !important;
     opacity: 1;
 }
 
 .read-line.is-complete::after {
-    background: salmon !important;
+    background: var(--rp-progress, salmon) !important;
     opacity: 1;
 }
 
@@ -693,7 +783,7 @@ body.dragging .drop-art .pane-fill {
 }
 
 .meta .format-size .meta-pct {
-    color: salmon !important;
+    color: var(--rp-progress, salmon) !important;
     font-weight: 600;
     opacity: 1;
 }
@@ -730,17 +820,17 @@ body.dragging .drop-art .pane-fill {
 }
 
 .book-action-btn:hover {
-    color: salmon !important;
+    color: var(--rp-progress, salmon) !important;
     background: transparent !important;
     transform: none !important;
 }
 
 .book-action-btn:hover svg {
-    color: salmon !important;
+    color: var(--rp-progress, salmon) !important;
 }
 
 .book-action-btn:hover svg path {
-    stroke: salmon !important;
+    stroke: var(--rp-progress, salmon) !important;
 }
 
 .book-action-btn svg {
@@ -752,27 +842,27 @@ body.dragging .drop-art .pane-fill {
     stroke-width: 1.75;
 }
 
-/* Todos los botones activos en color #salmon y SIN fondo de color */
+/* Todos los botones activos en color de progreso y SIN fondo de color */
 .book-action-btn.active {
-    color: salmon !important;
+    color: var(--rp-progress, salmon) !important;
     background: transparent !important;
 }
 
 .book-action-btn.active svg {
-    color: salmon !important;
+    color: var(--rp-progress, salmon) !important;
 }
 
 .book-action-btn.active svg path {
-    stroke: salmon !important;
+    stroke: var(--rp-progress, salmon) !important;
 }
 
 .book-action-btn.btn-delete:hover {
-    color: salmon !important;
+    color: var(--rp-progress, salmon) !important;
     background: transparent !important;
 }
 
 .book-action-btn.btn-delete:hover svg path {
-    stroke: salmon !important;
+    stroke: var(--rp-progress, salmon) !important;
 }
 
 /* Shelf category sections */
@@ -864,8 +954,8 @@ body.dragging .drop-art .pane-fill {
 
 .shelf-sort-btn.active {
     background: var(--hover);
-    color: salmon;
-    border-color: color-mix(in srgb, salmon 50%, var(--line));
+    color: var(--rp-progress, salmon);
+    border-color: color-mix(in srgb, var(--rp-progress, salmon) 50%, var(--line));
 }
 
 .row-scroll-nav {
@@ -1250,8 +1340,8 @@ body.dragging .shelf-dropzone {
 }
 
 #view.rp-scroll-view {
-    padding-top: calc(max(var(--rp-pad-y, 5vh), var(--safe-top)) + 8px) !important;
-    padding-bottom: max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + var(--safe-bottom))) !important;
+    padding-top: calc(max(var(--rp-pad-y, 5vh), calc(max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) + 14px)) + 8px) !important;
+    padding-bottom: max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)))) !important;
 }
 
 .reading.paged #view {
@@ -1270,7 +1360,7 @@ body.dragging .shelf-dropzone {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    padding: calc(10px + var(--safe-top)) calc(16px + var(--safe-right)) 16px calc(16px + var(--safe-left));
+    padding: calc(10px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 16px calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     background: var(--panel-bg);
     /* opaque: the book scrolls under it */
     border-bottom: 1px solid var(--panel-line);
@@ -1387,7 +1477,7 @@ body.dragging .shelf-dropzone {
     top: 0;
     left: 0;
     right: 0;
-    height: max(var(--rp-pad-y, 5vh), var(--safe-top));
+    height: max(var(--rp-pad-y, 5vh), calc(max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) + 14px));
     background: var(--rp-paper);
     pointer-events: none;
 }
@@ -1410,8 +1500,8 @@ body.dragging .shelf-dropzone {
 
 .rail-track {
     position: absolute;
-    left: calc(16px + var(--safe-left));
-    right: calc(16px + var(--safe-right));
+    left: calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+    right: calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
     top: 50%;
     height: 3px;
     margin-top: -1.5px;
@@ -1504,7 +1594,7 @@ body.dragging .shelf-dropzone {
     bottom: 0;
     height: auto;
     min-height: 38px;
-    padding-bottom: var(--safe-bottom);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -1521,7 +1611,7 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: space-between;
     padding-block: 0;
-    padding-inline: calc(16px + var(--safe-left)) calc(6px + var(--safe-right));
+    padding-inline: calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(6px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
     flex-shrink: 0;
     background: var(--rp-paper);
 }
@@ -1532,7 +1622,7 @@ body.dragging .shelf-dropzone {
     bottom: 0;
     left: 0;
     right: 0;
-    height: max(var(--rp-pad-y, 5vh), var(--safe-bottom));
+    height: max(var(--rp-pad-y, 5vh), max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)));
     min-height: 100%;
     background: var(--rp-paper);
     pointer-events: none;
@@ -1870,9 +1960,9 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    height: calc(56px + var(--safe-top));
-    padding-block: var(--safe-top) 0;
-    padding-inline: 20px calc(10px + var(--safe-right));
+    height: calc(56px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
+    padding-block: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) 0;
+    padding-inline: 20px calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
     border-bottom: 1px solid var(--line);
     flex: none;
 }
@@ -1888,7 +1978,7 @@ body.dragging .shelf-dropzone {
     display: flex;
     flex-direction: column;
     overflow: auto;
-    padding: 10px calc(10px + var(--safe-right)) calc(24px + var(--safe-bottom)) 10px;
+    padding: 10px calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) calc(24px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px))) 10px;
 }
 
 .empty {
@@ -2246,7 +2336,7 @@ body.dragging .shelf-dropzone {
 /* Settings pane */
 #settings.pane {
     gap: 4px;
-    padding: 10px calc(18px + var(--safe-right)) calc(24px + var(--safe-bottom)) 18px;
+    padding: 10px calc(18px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) calc(24px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px))) 18px;
 }
 
 /* In a short window the pane scrolls; its rows keep their height instead of squeezing into each other. */
@@ -2392,7 +2482,7 @@ body.dragging .shelf-dropzone {
     display: inline-flex;
     padding: 2px;
     border: 0px solid var(--line);
-    border-radius: 6px;
+    border-radius: 20px;
     background: var(--card);
 }
 
@@ -2418,7 +2508,7 @@ body.dragging .shelf-dropzone {
     min-width: 36px;
     padding: 0 9px;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: 20px;
     background: none;
     color: var(--muted);
     font-size: 12.5px;
@@ -2464,14 +2554,22 @@ body.dragging .shelf-dropzone {
     gap: 4px;
     height: 22px;
     padding: 0 7px;
-    border-radius: 6px;
+    border-radius: 20px;
     border: 1px solid var(--line);
     font-size: 11px;
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
     white-space: nowrap;
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
     transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.swatches button:focus,
+.swatches button:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 .swatches button:hover {
@@ -2657,11 +2755,16 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 640px) {
     .library {
-        padding: calc(82px + var(--safe-top)) calc(16px + var(--safe-right)) var(--safe-bottom) calc(16px + var(--safe-left));
+        padding: calc(132px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+    }
+
+    .lib-head {
+        padding: calc(8px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 10px;
     }
 
     .lib-head-inner {
-        padding: 0 calc(16px + var(--safe-right)) 0 calc(16px + var(--safe-left));
+        padding: 0 calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 0 calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        gap: 8px;
     }
 
     .books,
@@ -2694,7 +2797,25 @@ body.dragging .shelf-dropzone {
     }
 
     .lib-tools {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: nowrap;
         gap: 8px;
+    }
+
+    .lib-theme-toggle {
+        height: 34px;
+        padding: 0 12px;
+        font-size: 12px;
+    }
+
+    .shelf-search-bar {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: none;
+        height: 34px;
     }
 
     .lib-tools .open-btn span {
@@ -2712,7 +2833,7 @@ body.dragging .shelf-dropzone {
     .bar {
         height: auto;
         gap: 8px;
-        padding: calc(10px + var(--safe-top)) calc(10px + var(--safe-right)) 14px calc(10px + var(--safe-left));
+        padding: calc(10px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 14px calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .bar-controls {
@@ -2771,18 +2892,18 @@ body.dragging .shelf-dropzone {
     }
 
     #settings.pane {
-        padding: 10px calc(16px + var(--safe-right)) calc(24px + var(--safe-bottom)) 16px;
+        padding: 10px calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) calc(24px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px))) 16px;
     }
 
     .reading-foot {
         height: auto;
         min-height: 36px;
-        padding-bottom: var(--safe-bottom);
+        padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
     }
 
     .reading-foot-row {
         height: 36px;
-        padding-inline: 10px 8px;
+        padding-inline: calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
         gap: 6px;
         justify-content: space-between;
     }
@@ -2802,8 +2923,8 @@ body.dragging .shelf-dropzone {
     }
 
     .rail-track {
-        left: 16px;
-        right: 16px;
+        left: calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        right: calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
     }
 
     .rail-tip {
@@ -2873,15 +2994,16 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 480px) {
     .library {
-        padding: calc(74px + var(--safe-top)) calc(16px + var(--safe-right)) var(--safe-bottom) calc(16px + var(--safe-left));
+        padding: calc(130px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .lib-head {
-        height: calc(64px + var(--safe-top));
+        height: auto;
+        min-height: calc(64px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
     }
 
     .lib-tools {
-        gap: 6px;
+        gap: 7px;
     }
 
     .swatches {
@@ -2892,6 +3014,16 @@ body.dragging .shelf-dropzone {
         height: 20px;
         padding: 0 6px;
         font-size: 10.5px;
+    }
+
+    #lib-theme.swatches {
+        gap: 5px;
+    }
+
+    #lib-theme.swatches button {
+        height: 28px;
+        padding: 0 10px;
+        font-size: 12px;
     }
 
     .lib-foot {
@@ -2907,7 +3039,7 @@ body.dragging .shelf-dropzone {
     .bar {
         height: auto;
         gap: 8px;
-        padding: calc(8px + var(--safe-top)) calc(8px + var(--safe-right)) 14px calc(8px + var(--safe-left));
+        padding: calc(8px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 14px calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .bar-controls {
@@ -2986,7 +3118,7 @@ body.dragging .shelf-dropzone {
 
     .reading-foot-row {
         height: 34px;
-        padding-inline: calc(8px + var(--safe-left)) calc(8px + var(--safe-right));
+        padding-inline: calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
         gap: 4px;
     }
 
@@ -2999,8 +3131,8 @@ body.dragging .shelf-dropzone {
     }
 
     .rail-track {
-        left: calc(14px + var(--safe-left));
-        right: calc(14px + var(--safe-right));
+        left: calc(14px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        right: calc(14px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
     }
 
     .rail-thumb {
@@ -3145,7 +3277,7 @@ body.dragging .shelf-dropzone {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: calc(20px + var(--safe-top)) calc(20px + var(--safe-right)) calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left));
+    padding: calc(20px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(20px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) calc(20px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px))) calc(20px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     box-sizing: border-box;
     overscroll-behavior: contain;
 }
@@ -3168,7 +3300,7 @@ body.dragging .shelf-dropzone {
     width: 60vw;
     max-width: 1000px;
     min-width: 320px;
-    max-height: min(85vh, calc(100dvh - 40px - var(--safe-top) - var(--safe-bottom)));
+    max-height: min(85vh, calc(100dvh - 40px - max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) - max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px))));
     overflow-y: auto;
     overscroll-behavior: contain;
     background: var(--card);

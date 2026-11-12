@@ -9,7 +9,7 @@
 <link rel="manifest" href="app.webmanifest">
 <meta name="theme-color" content="#17181b">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Léetelo">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" type="image/jpeg" href="icons/libro.jpg">
@@ -39,7 +39,13 @@
     <div class="lib-head-inner">
       <h1 class="brand" id="brand"><span>Léetelo</span></h1>
       <div class="lib-tools">
-        <div class="swatches" role="radiogroup" aria-labelledby="lbl-theme" id="lib-theme"></div>
+        <div class="lib-theme-dropdown" id="lib-theme-dropdown">
+          <button id="lib-theme-toggle" class="lib-theme-toggle" type="button" aria-haspopup="true" aria-expanded="false">
+            <span id="lib-theme-label" class="lib-theme-label" data-i18n="theme">Tema</span>
+            <span id="lib-theme-chevron" class="lib-theme-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="swatches" role="radiogroup" aria-labelledby="lbl-theme" id="lib-theme"></div>
+        </div>
         <div id="shelf-search-wrap" class="shelf-search-bar" role="search">
           <span id="shelf-search-icon" class="shelf-search-icon" aria-hidden="true"></span>
           <input id="shelf-search" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="shelf_search_placeholder" data-i18n-aria="shelf_search_placeholder">
@@ -327,10 +333,20 @@
 
 <!-- WebApp Scripts: Service Worker & Sync -->
 <script>
-  // 1. PWA Service Worker Registration
+  // 1. PWA Service Worker Registration (network check + reload when an updated SW takes over)
   if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (hadController && !reloaded) {
+        reloaded = true;
+        location.reload();
+      }
+    });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+        .then((reg) => reg?.update?.())
+        .catch(() => {});
     });
   }
 

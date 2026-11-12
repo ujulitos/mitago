@@ -4,7 +4,7 @@
 
 :root,
 :root[data-theme="sepia"] {
-  --rp-progress: salmon; /* #fa8072 */
+  --rp-progress: darksalmon; /* #e9967a */
   color-scheme: light;
   /* Sepia: bg: #F0DEC6; text: #614D34; */
   --paper: #F0DEC6;
@@ -37,6 +37,7 @@
 
 /* Crepúsculo: bg: #2B2B2B; text: #ACBAC3; */
 :root[data-theme="twilight"] {
+  --rp-progress: salmon; /* #fa8072 */
   color-scheme: dark;
   --paper: #2B2B2B;
   --card: #333333;
@@ -58,6 +59,7 @@
 
 /* Niebla: bg: #313745; text: #FFFFFB; */
 :root[data-theme="fog"] {
+  --rp-progress: salmon; /* #fa8072 */
   color-scheme: dark;
   --paper: #313745;
   --card: #394050;
@@ -79,6 +81,7 @@
 
 /* Madera: bg: #17181b; text: #d6d8dc; */
 :root[data-theme="wood"] {
+  --rp-progress: salmon; /* #fa8072 */
   color-scheme: dark;
   --paper: #17181b;
   --card: #202227;
@@ -100,6 +103,7 @@
 
 /* Contraste: bg: #000000; text: #F2F2F2; */
 :root[data-theme="contrast"] {
+  --rp-progress: salmon; /* #fa8072 */
   color-scheme: dark;
   --paper: #000000;
   --card: #121212;
@@ -120,6 +124,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
+    --rp-progress: salmon; /* #fa8072 */
     color-scheme: dark;
     --paper: #000000;
     --card: #121212;

@@ -1,7 +1,7 @@
 // PWA Service Worker for Léetelo WebApp
 // Enables offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'leetelo-pwa-v44';
+const CACHE_NAME = 'leetelo-pwa-v52';
 
 const STATIC_ASSETS = [
   './',
@@ -81,6 +81,28 @@ self.addEventListener('fetch', (event) => {
 
   // Do not intercept non-GET or API requests
   if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // App shell (HTML, CSS, JS, manifest) uses Network-First so installed iOS PWAs receive updates immediately
+  const isAppShell = event.request.mode === 'navigate'
+    || (url.origin === self.location.origin && /\.(?:html|css|js|mjs|webmanifest)$/i.test(url.pathname))
+    || (url.origin === self.location.origin && url.pathname.endsWith('/'));
+
+  if (isAppShell) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-cache' }).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const copy = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return networkResponse;
+      }).catch(() => caches.match(event.request).then((cached) => (
+        cached || (event.request.mode === 'navigate'
+          ? caches.match('./index.html').then((m) => m || caches.match('./'))
+          : undefined)
+      )))
+    );
     return;
   }
 

@@ -27,6 +27,42 @@ import {
 const rp = (window.__rp = { errors: [], timings: {}, ready: false });
 const storeReady = openStore();
 
+/**
+ * Guard against an iOS standalone PWA WebKit bug where `env(safe-area-inset-top)` resolves
+ * to 0px on cold launch under `black-translucent`. Measures native `env()` directly and
+ * applies `--safe-top` / `--safe-bottom` fallbacks only when needed on iOS standalone.
+ */
+function syncSafeAreaFallback(notify = true) {
+  const root = document.documentElement;
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPhone|iPod|iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isStandalone = navigator.standalone === true || matchMedia?.('(display-mode: standalone)')?.matches;
+  if (!isIOS || !isStandalone) return;
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)';
+  (document.body || root).appendChild(probe);
+  const pcs = getComputedStyle(probe);
+  const envTop = parseFloat(pcs.paddingTop) || 0;
+  const envBottom = parseFloat(pcs.paddingBottom) || 0;
+  probe.remove();
+
+  const portrait = window.innerHeight >= window.innerWidth;
+  const expectedFullH = (portrait ? Math.max(screen.width || 0, screen.height || 0) : Math.min(screen.width || 0, screen.height || 0));
+  const fullViewport = expectedFullH > 0 && window.innerHeight >= expectedFullH - 20;
+  const maxDim = Math.max(screen.width || 0, screen.height || 0);
+  const wantTop = (!fullViewport || envTop >= 20) ? '' : (!portrait ? '' : `${maxDim >= 852 ? 59 : maxDim >= 812 ? 47 : 20}px`);
+  const wantBottom = (!fullViewport || envBottom > 0) ? '' : (maxDim >= 812 ? `${portrait ? 34 : 21}px` : '');
+  const prevTop = root.style.getPropertyValue('--safe-top');
+  const prevBottom = root.style.getPropertyValue('--safe-bottom');
+  if (wantTop) root.style.setProperty('--safe-top', wantTop); else root.style.removeProperty('--safe-top');
+  if (wantBottom) root.style.setProperty('--safe-bottom', wantBottom); else root.style.removeProperty('--safe-bottom');
+  if (notify && (wantTop !== prevTop || wantBottom !== prevBottom)) window.dispatchEvent(new Event('resize'));
+}
+syncSafeAreaFallback(false);
+addEventListener('pageshow', () => syncSafeAreaFallback(true));
+addEventListener('orientationchange', () => syncSafeAreaFallback(true));
+addEventListener('resize', () => syncSafeAreaFallback(false));
+
 // ---- position saving ----------------------------------------------------------------
 let saveTimer = 0;
 let pending = null;

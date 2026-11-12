@@ -97,8 +97,8 @@ const FXL_CSS = `
 // Page-level rules for the view element itself.
 const VIEW_CSS = `
 .rp-scroll-view { overflow-y: auto; overflow-x: hidden; overflow-anchor: none;
-  padding-block: calc(max(var(--rp-pad-y, 5vh), var(--safe-top, 0px)) + 8px) max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + var(--safe-bottom, 0px))) !important;
-  padding-inline: max(var(--rp-margin-x, 10vw), var(--safe-left, 0px)) max(var(--rp-margin-x, 10vw), var(--safe-right, 0px)) !important; box-sizing: border-box; }
+  padding-block: calc(max(var(--rp-pad-y, 5vh), calc(max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) + 14px)) + 8px) max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)))) !important;
+  padding-inline: max(var(--rp-margin-x, 10vw), max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) max(var(--rp-margin-x, 10vw), max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) !important; box-sizing: border-box; }
 .rp-scroll-view > .rp-section { display: block; }
 .rp-paged-view { overflow: hidden !important; padding: 0 !important; }
 .rp-paged-view > .rp-section { display: block; width: 100%; height: 100%; }
@@ -230,7 +230,8 @@ class ContinuousView {
     const rawMv = Number(this.ctx.style.marginV ?? 10);
     const mvPct = (rawMv > 30 || rawMv < 10) ? 10 : rawMv;
     const base = Math.round((window.innerHeight * (mvPct / 2)) / 100);
-    return Math.max(base, Math.ceil(safeInsets().top));
+    const safeTop = safeInsets().top;
+    return Math.max(base, safeTop > 0 ? Math.ceil(safeTop) + 14 : 0);
   }
 
   /** The reading edge: the view's top plus the vertical margin area kept clear for page chrome. */
@@ -518,7 +519,7 @@ class PagedView {
     const basePadY = Math.round((window.innerHeight * (mvPct / 2)) / 100);
     const padY = Math.max(
       basePadY,
-      safe.top > 0 ? Math.ceil(safe.top) + 8 : 0,
+      safe.top > 0 ? Math.ceil(safe.top) + 14 : 0,
       safe.bottom > 0 ? Math.ceil(safe.bottom) + 36 : 0,
     );
     const cw = pw / g.span;
