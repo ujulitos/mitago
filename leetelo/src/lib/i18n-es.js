@@ -206,6 +206,7 @@ export default {
   "page_of_chapter": "Página $1 de $2 en este capítulo",
   "folio_spread": "Páginas $1–$2 de $3",
   "folio_spread_chapter": "Páginas $1–$2 de $3 en este capítulo",
+  "toc_page": "Pág. $1",
   "pages_per_screen": "Diseño",
   "spread_auto": "Auto",
   "spread_auto_hint": "Auto: dos páginas una junto a otra cuando la ventana es lo bastante ancha",

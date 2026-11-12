@@ -209,6 +209,7 @@ export default {
 "page_of_chapter": "Page $1 of $2 in this chapter",
 "folio_spread": "Pages $1–$2 of $3",
 "folio_spread_chapter": "Pages $1–$2 of $3 in this chapter",
+"toc_page": "p. $1",
 "pages_per_screen": "Layout",
 "spread_auto": "Auto",
 "spread_auto_hint": "Auto: two pages side by side when the window is wide enough",

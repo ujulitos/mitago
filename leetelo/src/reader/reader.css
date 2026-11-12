@@ -1329,6 +1329,23 @@ body.dragging .shelf-dropzone {
     display: none;
 }
 
+.chapter-pages {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--rp-soft);
+    font-size: 11.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+}
+
+.chapter-pages:empty {
+    display: none;
+}
+
 .bar-tools {
     display: flex;
     align-items: center;
@@ -1355,7 +1372,7 @@ body.dragging .shelf-dropzone {
     left: 0;
     right: 0;
     width: 100%;
-    height: 20px;
+    height: 42px;
     background: var(--rp-paper);
     cursor: pointer;
     touch-action: none;
@@ -1611,7 +1628,7 @@ body.dragging .shelf-dropzone {
 
 .analog-clock {
     position: absolute;
-    bottom: calc(100% + 32px);
+    bottom: calc(100% + 54px);
     left: 50%;
     transform: translateX(-50%);
     width: 131px;
@@ -1858,7 +1875,10 @@ body.dragging .shelf-dropzone {
 }
 
 .toc button {
-    display: block;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
     width: 100%;
     padding-block: 8px;
     padding-inline: calc(12px + var(--depth, 0) * 16px) 12px;
@@ -1870,6 +1890,24 @@ body.dragging .shelf-dropzone {
     font-size: 13.5px;
     line-height: 1.4;
     cursor: pointer;
+}
+
+.toc-label {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.toc-page {
+    flex: none;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.toc-page:empty {
+    display: none;
 }
 
 .toc button:hover {
@@ -2272,21 +2310,35 @@ body.dragging .shelf-dropzone {
     flex: 1 1 auto;
     width: 100%;
     min-width: 0;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--line);
+    height: 36px;
+    background: transparent;
     outline: none;
     cursor: pointer;
     margin: 0;
     padding: 0;
     border: none;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.slider-wrap input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+}
+
+.slider-wrap input[type="range"]::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
 }
 
 .slider-wrap input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
+    margin-top: -8px;
     border-radius: 50%;
     background: var(--ink);
     cursor: pointer;
@@ -2301,8 +2353,8 @@ body.dragging .shelf-dropzone {
 }
 
 .slider-wrap input[type="range"]::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: var(--ink);
     cursor: pointer;
@@ -2682,6 +2734,10 @@ body.dragging .shelf-dropzone {
         font-size: 12px;
     }
 
+    .chapter-pages {
+        font-size: 11px;
+    }
+
     .page-btn {
         display: none;
     }
@@ -2732,7 +2788,7 @@ body.dragging .shelf-dropzone {
     }
 
     .rail {
-        height: 20px;
+        height: 38px;
     }
 
     .rail-track {
@@ -2756,7 +2812,7 @@ body.dragging .shelf-dropzone {
     .analog-clock {
         width: 78px;
         height: 78px;
-        bottom: calc(100% + 32px);
+        bottom: calc(100% + 50px);
     }
 
     .clock-segmented {
@@ -2868,6 +2924,10 @@ body.dragging .shelf-dropzone {
         font-size: 11.5px;
     }
 
+    .chapter-pages {
+        font-size: 10.5px;
+    }
+
     #view {
         top: 0;
         bottom: 0;
@@ -2883,7 +2943,7 @@ body.dragging .shelf-dropzone {
     }
 
     .slider-wrap {
-        max-width: 150px;
+        max-width: min(195px, 56%);
         gap: 8px;
     }
 
@@ -2916,7 +2976,7 @@ body.dragging .shelf-dropzone {
     }
 
     .rail {
-        height: 18px;
+        height: 36px;
     }
 
     .rail-track {
@@ -2945,7 +3005,7 @@ body.dragging .shelf-dropzone {
     .analog-clock {
         width: 64px;
         height: 64px;
-        bottom: calc(100% + 30px);
+        bottom: calc(100% + 48px);
     }
 
     .clock-segmented {

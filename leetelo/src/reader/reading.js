@@ -9,6 +9,7 @@ import { THEMES, applyTheme } from '../lib/theme.js';
 import { STYLE_DEFAULTS } from '../core/render.js';
 import { EFFECTS, reducedMotion } from '../core/turn.js';
 import { indexSection, search } from '../core/search.js';
+import { byId } from '../core/anchor.js';
 import { atProgress, samePlace, walkPath } from '../core/position.js';
 import { $, el, labelled, radioGroup } from './dom.js';
 import { chapterTicks, percent, tocIndexAt } from './logic.js';
@@ -58,6 +59,7 @@ export function openPanel(which) {
   wake();
   if (which === 'search') { $('q').focus(); $('q').select(); }
   if (which === 'toc') {
+    refreshTocPages();
     const cur = $('toc').querySelector('[aria-current="true"]') ?? $('toc').querySelector('button');
     cur?.scrollIntoView({ block: 'center' });
     cur?.focus();
@@ -80,11 +82,117 @@ function togglePanel(which) {
 }
 
 // ------------------------------------------------------------------------------------ ToC
+const spinePagesCache = new Map();
+let tocLayoutKey = '';
+
+function syncPagedLayoutCache() {
+  if (!rp?.view || !rp?.book) return;
+  const impl = rp.view.impl;
+  const s = rp.view.style;
+  const key = `${rp.bookId}|${rp.view.mode}|${impl?.cw ?? 0}|${impl?.colH ?? 0}|${impl?.m ?? 0}|${s.fontSize}|${s.lineHeight}|${s.fontFamily}|${s.wordSpacing}|${s.justify}`;
+  if (key !== tocLayoutKey) {
+    spinePagesCache.clear();
+    tocLayoutKey = key;
+  }
+  if (rp.view.mode === 'paged' && impl && !impl.pair && impl.root && Number.isInteger(impl.spine)) {
+    spinePagesCache.set(impl.spine, Math.max(1, impl.pages || 1));
+  }
+}
+
+function tocEntryPage(e, ctx) {
+  if (e.spine < 0) return null;
+  if (ctx.onePerSpine) return e.spine + 1;
+  if (ctx.mode === 'scroll') {
+    const host = ctx.hosts?.[e.spine];
+    if (!host) return null;
+    let relTop = Math.max(0, host.offsetTop - ctx.baseTop);
+    const frag = e.href?.includes('#') ? decodeURIComponent(e.href.split('#')[1]) : '';
+    if (frag && host.rp?.live && host.shadowRoot?.firstElementChild) {
+      const target = byId(host.shadowRoot.firstElementChild, frag);
+      if (target) relTop += Math.max(0, target.getBoundingClientRect().top - host.getBoundingClientRect().top);
+    }
+    return Math.min(ctx.totalBookPages, Math.max(1, Math.floor(relTop / ctx.pageH) + 1));
+  }
+  let page = ctx.spineStartPage[e.spine] ?? 1;
+  const frag = e.href?.includes('#') ? decodeURIComponent(e.href.split('#')[1]) : '';
+  if (frag && e.spine === ctx.impl?.spine && ctx.impl?.root) {
+    const target = byId(ctx.impl.root, frag);
+    if (target) {
+      const col = Math.max(0, Math.min((ctx.impl.pages || 1) - 1, ctx.impl.colOf(target.getBoundingClientRect().left + 1)));
+      page += col;
+    }
+  }
+  return page;
+}
+
+function buildTocPageContext() {
+  if (!rp?.view || !rp?.book) return null;
+  const impl = rp.view.impl;
+  if (rp.book.tocPages || impl?.pair || rp.book.format === 'cbz' || rp.book.fixedLayout) {
+    return { onePerSpine: true };
+  }
+  if (rp.view.mode === 'scroll') {
+    const hosts = impl?.hosts ?? [];
+    const pageH = Math.max(100, (impl?.el?.clientHeight || window.innerHeight) - (impl?.ctx?.inset || 0));
+    const baseTop = hosts[0]?.offsetTop ?? 0;
+    const totalBookPages = Math.max(1, impl?.folio?.[2] ?? Math.ceil((impl?.el?.scrollHeight || pageH) / pageH));
+    return { mode: 'scroll', hosts, pageH, baseTop, totalBookPages };
+  }
+  syncPagedLayoutCache();
+  const s = rp.view.style;
+  const fs = Number(s.fontSize ?? 18);
+  const lh = Number(s.lineHeight ?? 1.55);
+  const textW = Math.max(80, (impl?.cw || window.innerWidth) - 2 * (impl?.m || 24));
+  const textH = Math.max(80, impl?.colH || window.innerHeight * 0.8);
+  const linesPerPage = Math.max(1, textH / (fs * lh));
+  const charsPerLine = Math.max(12, textW / (fs * 0.52));
+  const geomBytes = Math.max(400, (linesPerPage * charsPerLine * 0.85) / 0.62);
+  let obsBytes = 0;
+  let obsPages = 0;
+  for (const [sp, pg] of spinePagesCache) {
+    const sz = rp.book.spine[sp]?.size ?? 0;
+    if (sz >= 2000 && pg >= 2) {
+      obsBytes += sz;
+      obsPages += pg;
+    }
+  }
+  const bytesPerPage = obsPages > 0
+    ? Math.min(geomBytes * 2.5, Math.max(geomBytes * 0.4, obsBytes / obsPages))
+    : geomBytes;
+  const spineStartPage = [];
+  let acc = 1;
+  for (let sp = 0; sp < rp.book.spine.length; sp++) {
+    spineStartPage.push(acc);
+    const sz = rp.book.spine[sp]?.size ?? 0;
+    const pg = spinePagesCache.get(sp) ?? Math.max(1, Math.round(sz / bytesPerPage));
+    acc += pg;
+  }
+  return { mode: 'paged', impl, spineStartPage };
+}
+
+function refreshTocPages() {
+  const tocEl = $('toc');
+  if (!tocEl || !rp?.book?.toc?.length) return;
+  const ctx = buildTocPageContext();
+  if (!ctx) return;
+  const buttons = tocEl.querySelectorAll('button[data-index]');
+  for (const b of buttons) {
+    const idx = Number(b.dataset.index);
+    const entry = rp.book.toc[idx];
+    const span = b.querySelector('.toc-page');
+    if (!entry || !span) continue;
+    const p = tocEntryPage(entry, ctx);
+    span.textContent = p ? t('toc_page', p) : '';
+  }
+}
+
 function renderToc() {
   const toc = rp.book.toc;
   $('toc-empty').hidden = toc.length > 0;
   $('toc').replaceChildren(...toc.map((e, i) => {
-    const b = el('button', { type: 'button', dataset: { index: i, depth: Math.min(e.depth, 4) }, style: `--depth:${Math.min(e.depth, 4)}`, textContent: e.label || t('untitled') });
+    const labelSpan = el('span', { className: 'toc-label', textContent: e.label || t('untitled') });
+    const pageSpan = el('span', { className: 'toc-page' });
+    const b = el('button', { type: 'button', dataset: { index: i, depth: Math.min(e.depth, 4) }, style: `--depth:${Math.min(e.depth, 4)}` }, labelSpan, pageSpan);
     if (e.spine < 0) { b.disabled = true; b.title = t('toc_missing'); }
     b.addEventListener('click', async () => {
       await rp.view.goToHref(e.href);
@@ -93,6 +201,7 @@ function renderToc() {
     });
     return el('li', {}, b);
   }));
+  refreshTocPages();
   // Arrow keys move through the list; Home/End jump.
   $('toc').onkeydown = (e) => {
     const all = [...$('toc').querySelectorAll('button:not(:disabled)')];
@@ -405,6 +514,49 @@ function initKeys() {
   $('btn-keys').addEventListener('click', openKeys);
 }
 
+function wireSlider(slider, onValue) {
+  if (!slider) return;
+  const apply = () => onValue(Number(slider.value));
+  slider.addEventListener('input', apply);
+  slider.addEventListener('change', apply);
+  let dragging = false;
+  const setFromPointer = (clientX) => {
+    const r = slider.getBoundingClientRect();
+    if (!r.width) return;
+    const min = Number(slider.min || 0);
+    const max = Number(slider.max || 100);
+    const step = Number(slider.step || 1);
+    const thumbPad = 11;
+    const usable = Math.max(1, r.width - 2 * thumbPad);
+    const rawFrac = Math.min(1, Math.max(0, (clientX - r.left - thumbPad) / usable));
+    const rtl = getComputedStyle(slider).direction === 'rtl';
+    const frac = rtl ? 1 - rawFrac : rawFrac;
+    const raw = min + frac * (max - min);
+    const snapped = min + Math.round((raw - min) / step) * step;
+    const decimals = (String(slider.step).split('.')[1] || '').length;
+    const next = Number(Math.min(max, Math.max(min, snapped)).toFixed(decimals));
+    if (Number(slider.value) !== next) {
+      slider.value = String(next);
+      onValue(next);
+    }
+  };
+  slider.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    dragging = true;
+    slider.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+    setFromPointer(e.clientX);
+  });
+  slider.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    setFromPointer(e.clientX);
+  });
+  const stop = () => { dragging = false; };
+  slider.addEventListener('pointerup', stop);
+  slider.addEventListener('pointercancel', stop);
+}
+
 function initSettings() {
   $('size-down').append(icon('minus', 16));
   $('size-up').append(icon('plus', 16));
@@ -420,14 +572,10 @@ function initSettings() {
   segs.font = radioGroup($('seg-font'), ['publisher', 'serif', 'sans', 'readable', 'condensed'].map((v) => ({
     value: v, label: t(`font_${v}`), content: [el('span', { style: `font-family:${fam[v]}`, textContent: t(`font_${v}_short`) })],
   })), (v) => setStyle({ fontFamily: v }));
-  const sliderLh = $('slider-lh');
-  if (sliderLh) {
-    sliderLh.addEventListener('input', (e) => {
-      const v = Number(e.target.value);
-      if ($('lh-val')) $('lh-val').textContent = v.toFixed(2);
-      setStyle({ lineHeight: v });
-    });
-  }
+  wireSlider($('slider-lh'), (v) => {
+    if ($('lh-val')) $('lh-val').textContent = v.toFixed(2);
+    setStyle({ lineHeight: v });
+  });
   const steps = (id, values, icons, key) => $(id) && radioGroup($(id), values.map((v, i) => ({
     value: v, label: t(['spacing_book', 'spacing_wide', 'spacing_wider'][i]), content: [icon(icons[i], 18)],
   })), (v) => setStyle({ [key]: v }));
@@ -446,22 +594,14 @@ function initSettings() {
   segs.spread = radioGroup($('seg-spread'), [['auto', 'spread_auto_hint', 'spread_auto'], ['1', 'spread_one'], ['2', 'spread_two']].map(([v, k, short = k]) => ({
     value: v, label: t(k), content: [el('span', { textContent: t(short) })],
   })), (v) => setStyle({ spread: v }));
-  const sliderMv = $('slider-margin-v');
-  if (sliderMv) {
-    sliderMv.addEventListener('input', (e) => {
-      const v = Number(e.target.value);
-      if ($('margin-v-val')) $('margin-v-val').textContent = `${v}%`;
-      setStyle({ marginV: v });
-    });
-  }
-  const sliderMh = $('slider-margin-h');
-  if (sliderMh) {
-    sliderMh.addEventListener('input', (e) => {
-      const v = Number(e.target.value);
-      if ($('margin-h-val')) $('margin-h-val').textContent = `${v}%`;
-      setStyle({ marginH: v });
-    });
-  }
+  wireSlider($('slider-margin-v'), (v) => {
+    if ($('margin-v-val')) $('margin-v-val').textContent = `${v}%`;
+    setStyle({ marginV: v });
+  });
+  wireSlider($('slider-margin-h'), (v) => {
+    if ($('margin-h-val')) $('margin-h-val').textContent = `${v}%`;
+    setStyle({ marginH: v });
+  });
   initAnalogClock();
   const setupThemeGroup = (id) => {
     const elSwatches = $(id);
@@ -739,6 +879,30 @@ export function onPosition(pos, progress) {
   $('book-fill').style.width = `${progress * 100}%`;
 }
 
+function paintChapterPages() {
+  const el = $('chapter-pages');
+  if (!el) return;
+  if (!rp?.view || !rp?.book || rp.book.tocPages) { el.textContent = ''; return; }
+  const impl = rp.view.impl;
+  if (rp.view.mode === 'paged' && impl?.folio) {
+    const [a, b, n] = impl.folio;
+    el.textContent = a === b ? t('page_of', a, n) : t('folio_spread', a, b, n);
+    return;
+  }
+  const spine = rp.view.position?.spine ?? 0;
+  const host = impl?.hosts?.[spine];
+  const viewEl = impl?.el;
+  if (!host || !viewEl) { el.textContent = ''; return; }
+  const pageH = Math.max(100, viewEl.clientHeight - (impl.ctx?.inset || 0));
+  const rect = host.getBoundingClientRect();
+  const secH = Math.max(pageH, rect.height || host.offsetHeight || pageH);
+  const total = Math.max(1, Math.ceil(secH / pageH));
+  const passed = Math.max(0, (impl.top ?? viewEl.getBoundingClientRect().top) - rect.top);
+  let cur = total <= 1 ? 1 : Math.min(total, Math.floor(passed / pageH) + 1);
+  if (impl.atEnd || rp.view.position?.frac >= 0.9995) cur = total;
+  el.textContent = t('page_of', cur, total);
+}
+
 /** Page arrows and page numbers: after a move, or a re-pagination in place. */
 export function paintFolio() {
   if (!rp.view) return;
@@ -752,13 +916,18 @@ export function paintFolio() {
     $('folio').textContent = a === b ? t('page_of', a, n) : t('folio_spread', a, b, n);
     $('folio').title = book ? $('folio').textContent : a === b ? t('page_of_chapter', a, n) : t('folio_spread_chapter', a, b, n);
   }
+  syncPagedLayoutCache();
+  paintChapterPages();
   pageLine(rp.view.position);
   paintChapterTime();
+  if (!$('panel').hidden && $('panel').dataset.pane === 'toc') refreshTocPages();
 }
 
 /** A book was just laid out: fill everything that depends on it. */
 export async function setupBook() {
   tocCurrent = -1;
+  spinePagesCache.clear();
+  tocLayoutKey = '';
   $('reading').classList.remove('mobile-ui-visible');
   $('book-title').textContent = rp.book.title || t('untitled');
   $('results').replaceChildren();
