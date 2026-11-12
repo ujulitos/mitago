@@ -50,7 +50,9 @@ function syncSafeAreaFallback(notify = true) {
   const expectedFullH = (portrait ? Math.max(screen.width || 0, screen.height || 0) : Math.min(screen.width || 0, screen.height || 0));
   const fullViewport = expectedFullH > 0 && window.innerHeight >= expectedFullH - 20;
   const maxDim = Math.max(screen.width || 0, screen.height || 0);
-  const wantTop = (!fullViewport || envTop >= 20) ? '' : (!portrait ? '' : `${maxDim >= 852 ? 59 : maxDim >= 812 ? 47 : 20}px`);
+  const statusBarStyle = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.getAttribute('content') || 'default';
+  const translucentBar = statusBarStyle === 'black-translucent';
+  const wantTop = (!translucentBar || !fullViewport || envTop >= 20) ? '' : (!portrait ? '' : `${maxDim >= 852 ? 59 : maxDim >= 812 ? 47 : 20}px`);
   const wantBottom = (!fullViewport || envBottom > 0) ? '' : (maxDim >= 812 ? `${portrait ? 34 : 21}px` : '');
   const prevTop = root.style.getPropertyValue('--safe-top');
   const prevBottom = root.style.getPropertyValue('--safe-bottom');

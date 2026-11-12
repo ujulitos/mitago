@@ -185,7 +185,7 @@ body {
 .brand {
     display: inline-flex;
     align-items: center;
-    min-height: 56px;
+    min-height: 34px;
     gap: 10px;
     font-size: 18px;
     font-weight: 680;
@@ -214,7 +214,7 @@ button.primary:hover {
     min-height: 100%;
     max-width: 1120px;
     margin: 0 auto;
-    padding: calc(142px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(32px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(32px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+    padding: calc(108px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(32px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(32px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
 }
 
 .lib-head {
@@ -224,8 +224,8 @@ button.primary:hover {
     right: 0;
     z-index: 50;
     height: auto;
-    min-height: calc(72px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
-    padding: calc(10px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 12px;
+    min-height: calc(64px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
+    padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 8px;
     display: flex;
     align-items: center;
     background: color-mix(in srgb, var(--paper) 92%, transparent);
@@ -243,7 +243,7 @@ button.primary:hover {
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    gap: 10px;
+    gap: 6px;
 }
 
 .lib-tools {
@@ -1359,8 +1359,8 @@ body.dragging .shelf-dropzone {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
-    padding: calc(10px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 16px calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+    gap: 6px;
+    padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     background: var(--panel-bg);
     /* opaque: the book scrolls under it */
     border-bottom: 1px solid var(--panel-line);
@@ -2755,16 +2755,16 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 640px) {
     .library {
-        padding: calc(132px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: calc(104px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .lib-head {
-        padding: calc(8px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 10px;
+        padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 8px;
     }
 
     .lib-head-inner {
         padding: 0 calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 0 calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
-        gap: 8px;
+        gap: 6px;
     }
 
     .books,
@@ -2832,8 +2832,8 @@ body.dragging .shelf-dropzone {
 
     .bar {
         height: auto;
-        gap: 8px;
-        padding: calc(10px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 14px calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        gap: 5px;
+        padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .bar-controls {
@@ -2994,12 +2994,12 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 480px) {
     .library {
-        padding: calc(130px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: calc(102px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .lib-head {
         height: auto;
-        min-height: calc(64px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
+        min-height: calc(56px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
     }
 
     .lib-tools {
@@ -3038,8 +3038,8 @@ body.dragging .shelf-dropzone {
 
     .bar {
         height: auto;
-        gap: 8px;
-        padding: calc(8px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 14px calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        gap: 5px;
+        padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .bar-controls {
