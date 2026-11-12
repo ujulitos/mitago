@@ -1,15 +1,19 @@
-// Theme choices: only the 3 reading palettes (Sepia, Crepúsculo, Contraste).
-export const THEMES = Object.freeze(['sepia', 'twilight', 'contrast']);
+// Theme choices: the 5 reading palettes (Sepia, Crepúsculo, Niebla, Contraste, Madera).
+export const THEMES = Object.freeze(['sepia', 'twilight', 'fog', 'wood', 'contrast']);
 
 const THEME_BG = {
-  sepia: '#F4ECD8',
-  twilight: '#111923',
-  contrast: '#17181b',
+  sepia: '#F0DEC6',
+  twilight: '#2B2B2B',
+  fog: '#313745',
+  wood: '#17181b',
+  contrast: '#000000',
 };
 
 export function resolveTheme(theme) {
   if (THEMES.includes(theme)) return theme;
   if (theme === 'crepusculo') return 'twilight';
+  if (theme === 'niebla' || theme === 'mist') return 'fog';
+  if (theme === 'madera') return 'wood';
   if (theme === 'contraste' || theme === 'dark') return 'contrast';
   if (theme === 'light') return 'sepia';
   try {
@@ -20,7 +24,7 @@ export function resolveTheme(theme) {
   return 'sepia';
 }
 
-// Apply a theme choice ('sepia' | 'twilight' | 'contrast') and mirror it for theme-boot.js.
+// Apply a theme choice ('sepia' | 'twilight' | 'fog' | 'contrast' | 'wood') and mirror it for theme-boot.js.
 export function applyTheme(theme) {
   const choice = resolveTheme(theme);
   const root = document.documentElement.dataset;
@@ -33,8 +37,8 @@ export function applyTheme(theme) {
   return choice;
 }
 
-/** Whether the page currently renders a dark theme ('twilight' or 'contrast'). */
+/** Whether the page currently renders a dark theme ('twilight', 'fog', 'contrast' or 'wood'). */
 export function isDark() {
   const forced = document.documentElement.dataset.theme;
-  return forced === 'twilight' || forced === 'contrast';
+  return forced === 'twilight' || forced === 'fog' || forced === 'contrast' || forced === 'wood';
 }

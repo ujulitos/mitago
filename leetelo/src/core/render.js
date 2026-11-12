@@ -19,7 +19,7 @@ import { pageGeometry, spreadStart } from './spread.js';
 // running text (hyphenated where the language is known). spread: pages per screen in the
 // paged view, 'auto' | '1' | '2' (src/core/spread.js).
 export const STYLE_DEFAULTS = Object.freeze({
-  fontSize: 18, fontFamily: 'publisher', lineHeight: 1.55, margin: 120, marginV: 36, marginH: 120, maxWidth: 900, forceColors: false,
+  fontSize: 18, fontFamily: 'publisher', lineHeight: 1.55, margin: 120, marginV: 10, marginH: 20, maxWidth: 900, forceColors: false,
   letterSpacing: 0, wordSpacing: 0, justify: false, spread: 'auto',
 });
 const FAMILIES = {
@@ -97,8 +97,8 @@ const FXL_CSS = `
 // Page-level rules for the view element itself.
 const VIEW_CSS = `
 .rp-scroll-view { overflow-y: auto; overflow-x: hidden; overflow-anchor: none;
-  padding-block: var(--rp-pad-y, 36px) 35vh !important;
-  padding-inline: var(--rp-margin-x, 120px) !important; box-sizing: border-box; }
+  padding-block: calc(var(--rp-pad-y, 5vh) + 8px) max(35vh, calc(var(--rp-pad-y, 5vh) + 24px)) !important;
+  padding-inline: var(--rp-margin-x, 10vw) !important; box-sizing: border-box; }
 .rp-scroll-view > .rp-section { display: block; }
 .rp-paged-view { overflow: hidden !important; padding: 0 !important; }
 .rp-paged-view > .rp-section { display: block; width: 100%; height: 100%; }
@@ -211,8 +211,14 @@ class ContinuousView {
     this.hostRO = new ResizeObserver(() => this.restore());
   }
 
-  /** The reading edge: the view's top plus the inset kept clear for page chrome. */
-  get top() { return this.el.getBoundingClientRect().top + this.el.clientTop + this.ctx.inset; }
+  padYPx() {
+    const rawMv = Number(this.ctx.style.marginV ?? 10);
+    const mvPct = (rawMv > 30 || rawMv < 10) ? 10 : rawMv;
+    return Math.round((window.innerHeight * (mvPct / 2)) / 100);
+  }
+
+  /** The reading edge: the view's top plus the vertical margin area kept clear for page chrome. */
+  get top() { return this.el.getBoundingClientRect().top + this.el.clientTop + this.padYPx() + 8; }
 
   get atEnd() {
     if (!this.hosts?.length) return false;
@@ -222,7 +228,7 @@ class ContinuousView {
     const lastHost = this.hosts[lastIndex];
     if (!lastHost) return false;
     const r = lastHost.getBoundingClientRect();
-    const viewBottom = this.el.getBoundingClientRect().bottom;
+    const viewBottom = this.el.getBoundingClientRect().bottom - this.padYPx();
     const lastHostFinished = (this.hostAtTop() === lastIndex) && (r.bottom <= viewBottom + 25 || isBottom);
     return isBottom || lastHostFinished;
   }
@@ -482,15 +488,21 @@ class PagedView {
     // to CSS px: at a fractional width every page would sit a fraction further over).
     const dpr = devicePixelRatio || 1;
     const width = Math.round(this.el.getBoundingClientRect().width * dpr) / dpr;
+    const rawMh = Number(s.marginH ?? 20);
+    const mhPct = rawMh > 60 ? 20 : Math.min(60, Math.max(10, rawMh));
+    const sidePx = Math.round((window.innerWidth * (mhPct / 2)) / 100);
     // A book of single-page sections that cannot pair shows them one per screen in Auto.
     const auto = String(s.spread ?? 'auto') === 'auto';
-    const g = pageGeometry(width, this.imagePages && this.noPair && auto ? { ...s, spread: '1' } : s);
+    const g = pageGeometry(width, this.imagePages && this.noPair && auto ? { ...s, marginH: sidePx, margin: sidePx, spread: '1' } : { ...s, marginH: sidePx, margin: sidePx });
     const pw = Math.round((width - 2 * g.off) * dpr) / dpr;
     const ph = this.el.clientHeight;
-    const padY = s.marginV !== undefined ? s.marginV : Math.round(Math.min(48, Math.max(16, ph * 0.04)));
-    const m = s.marginH !== undefined ? s.marginH : g.m;
+    const rawMv = Number(s.marginV ?? 10);
+    const mvPct = (rawMv > 30 || rawMv < 10) ? 10 : rawMv;
+    const padY = Math.round((window.innerHeight * (mvPct / 2)) / 100);
+    const cw = pw / g.span;
+    const m = g.span === 2 ? Math.round((cw * (mhPct / 2)) / 100) : sidePx;
     Object.assign(this, {
-      span: g.span, off: g.off, m, pw, ph, padY, colH: ph - 2 * padY, cw: pw / g.span,
+      span: g.span, off: g.off, m, pw, ph, padY, colH: ph - 2 * padY, cw,
       pair: g.span === 2 && this.imagePages && !this.noPair,
       rev: g.span === 2 && this.book.dir === 'rtl',
     });
@@ -505,6 +517,7 @@ class PagedView {
     el.style.borderLeft = el.style.borderRight = off ? `${off}px solid transparent` : '';
     el.style.direction = rev ? 'rtl' : 'ltr';
     el.style.setProperty('--rp-pad-y', `${padY}px`);
+    el.parentElement?.style.setProperty('--rp-pad-y', `${padY}px`);
     el.style.setProperty('--rp-margin-x', `${m}px`);
     for (const h of this.panes()) {
       h.classList.toggle('rp-rev', rev && !pair);
@@ -708,11 +721,18 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
 
   function applyStyle() {
     const s = ctx.style;
+    const rawMh = Number(s.marginH ?? 20);
+    const mhPct = rawMh > 60 ? 20 : Math.min(60, Math.max(10, rawMh));
+    const sideVw = `${mhPct / 2}vw`;
+    const rawMv = Number(s.marginV ?? 10);
+    const mvPct = (rawMv > 30 || rawMv < 10) ? 10 : rawMv;
+    const padYVh = `${mvPct / 2}vh`;
     el.style.setProperty('--rp-font-size', `${s.fontSize}px`);
     el.style.setProperty('--rp-line-height', String(s.lineHeight));
-    el.style.setProperty('--rp-margin', `${s.marginH ?? s.margin ?? 120}px`);
-    el.style.setProperty('--rp-margin-x', `${s.marginH ?? s.margin ?? 120}px`);
-    el.style.setProperty('--rp-pad-y', `${s.marginV ?? 36}px`);
+    el.style.setProperty('--rp-margin', sideVw);
+    el.style.setProperty('--rp-margin-x', sideVw);
+    el.style.setProperty('--rp-pad-y', padYVh);
+    el.parentElement?.style.setProperty('--rp-pad-y', padYVh);
     el.style.setProperty('--rp-max-width', `${s.maxWidth ?? 900}px`);
     const fam = FAMILIES[s.fontFamily] ?? (s.fontFamily !== 'publisher' ? s.fontFamily : null);
     const spacing = s.fontFamily === 'readable' ? '.rp-body { letter-spacing: 0.02em; word-spacing: 0.12em; }' : '';

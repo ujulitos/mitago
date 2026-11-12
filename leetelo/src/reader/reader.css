@@ -3,38 +3,38 @@
    a search match, red = a problem, Ko-fi orange = support (card, footer pill, reading-bar pill). */
 
 /* ------------------------------------------------------------ reading tokens */
-/* Sepia: bg: #F4ECD8; text: #3E2723; */
+/* Sepia: bg: #F0DEC6; text: #614D34; */
 :root,
 :root[data-theme="sepia"] {
     --rp-progress: salmon;
     /* #fa8072 */
-    --rp-paper: #F4ECD8;
-    --rp-ink: #3E2723;
-    --rp-soft: #735d4b;
+    --rp-paper: #F0DEC6;
+    --rp-ink: #614D34;
+    --rp-soft: #826d53;
     --rp-link: #8A4B12;
-    --rp-rule: #dfd5bc;
-    --rp-sel-bg: #e4d3ab;
-    --rp-sel-ink: #3E2723;
+    --rp-rule: #ded0b8;
+    --rp-sel-bg: #dfc8a8;
+    --rp-sel-ink: #614D34;
     --rp-img-filter: none;
     --rp-hit-bg: #ffe27a;
-    --rp-hit-ink: #3E2723;
+    --rp-hit-ink: #614D34;
     /* Highlights: translucent over the paper, the text keeps its own ink (render.js ::highlight). */
     --rp-hl-yellow: rgb(255 212 0 / 0.42);
     --rp-hl-green: rgb(70 200 110 / 0.36);
     --rp-hl-blue: rgb(70 150 255 / 0.32);
     --rp-hl-pink: rgb(255 90 170 / 0.30);
     --mark: #27346a;
-    --shadow: 0 10px 30px rgba(62, 39, 35, 0.14), 0 1px 3px rgba(62, 39, 35, 0.1);
+    --shadow: 0 10px 30px rgba(97, 77, 52, 0.14), 0 1px 3px rgba(97, 77, 52, 0.1);
 }
 
-/* Crepúsculo: bg: #111923; text: #edf2f8; */
+/* Crepúsculo: bg: #2B2B2B; text: #ACBAC3; */
 :root[data-theme="twilight"] {
-    --rp-paper: #111923;
-    --rp-ink: #edf2f8;
-    --rp-soft: #97a6b8;
+    --rp-paper: #2B2B2B;
+    --rp-ink: #ACBAC3;
+    --rp-soft: #8997a0;
     --rp-link: #8ab4f8;
-    --rp-rule: #243242;
-    --rp-sel-bg: #284566;
+    --rp-rule: #3d3d3d;
+    --rp-sel-bg: #3d4f5c;
     --rp-sel-ink: #edf2f8;
     --rp-img-filter: brightness(0.86) contrast(1.03);
     --rp-hit-bg: #7a6210;
@@ -47,8 +47,28 @@
     --shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-/* Contraste: bg: #17181b; text: #d6d8dc; */
-:root[data-theme="contrast"] {
+/* Niebla: bg: #313745; text: #FFFFFB; */
+:root[data-theme="fog"] {
+    --rp-paper: #313745;
+    --rp-ink: #FFFFFB;
+    --rp-soft: #b8c0d0;
+    --rp-link: #8ab4f8;
+    --rp-rule: #434b5d;
+    --rp-sel-bg: #485675;
+    --rp-sel-ink: #FFFFFB;
+    --rp-img-filter: brightness(0.9) contrast(1.02);
+    --rp-hit-bg: #7a6210;
+    --rp-hit-ink: #ffffff;
+    --mark: #b8c4ec;
+    --rp-hl-yellow: rgb(230 190 30 / 0.34);
+    --rp-hl-green: rgb(60 190 100 / 0.32);
+    --rp-hl-blue: rgb(80 140 255 / 0.36);
+    --rp-hl-pink: rgb(240 90 160 / 0.34);
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Madera: bg: #17181b; text: #d6d8dc; */
+:root[data-theme="wood"] {
     --rp-paper: #17181b;
     --rp-ink: #d6d8dc;
     --rp-soft: #9a9fa8;
@@ -67,13 +87,33 @@
     --shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
+/* Contraste: bg: #000000; text: #F2F2F2; */
+:root[data-theme="contrast"] {
+    --rp-paper: #000000;
+    --rp-ink: #F2F2F2;
+    --rp-soft: #a8a8a8;
+    --rp-link: #9ab8f0;
+    --rp-rule: #262626;
+    --rp-sel-bg: #3b5684;
+    --rp-sel-ink: #ffffff;
+    --rp-img-filter: brightness(0.82) contrast(1.04);
+    --rp-hit-bg: #7a6210;
+    --rp-hit-ink: #ffffff;
+    --mark: #b8c4ec;
+    --rp-hl-yellow: rgb(230 190 30 / 0.34);
+    --rp-hl-green: rgb(60 190 100 / 0.32);
+    --rp-hl-blue: rgb(80 140 255 / 0.36);
+    --rp-hl-pink: rgb(240 90 160 / 0.34);
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
-        --rp-paper: #17181b;
-        --rp-ink: #d6d8dc;
-        --rp-soft: #9a9fa8;
+        --rp-paper: #000000;
+        --rp-ink: #F2F2F2;
+        --rp-soft: #a8a8a8;
         --rp-link: #9ab8f0;
-        --rp-rule: #34373e;
+        --rp-rule: #262626;
         --rp-sel-bg: #3b5684;
         --rp-sel-ink: #ffffff;
         --rp-img-filter: brightness(0.82) contrast(1.04);
@@ -1167,8 +1207,8 @@ body.dragging .shelf-dropzone {
 
 #view {
     position: absolute;
-    top: 56px;
-    bottom: 38px;
+    top: 0;
+    bottom: 0;
     left: 0;
     right: 0;
     outline: none;
@@ -1182,18 +1222,18 @@ body.dragging .shelf-dropzone {
 }
 
 #view.rp-scroll-view {
-    padding-top: 20px !important;
-    padding-bottom: 35vh !important;
+    padding-top: calc(var(--rp-pad-y, 5vh) + 8px) !important;
+    padding-bottom: max(35vh, calc(var(--rp-pad-y, 5vh) + 24px)) !important;
 }
 
 .reading.paged #view {
-    top: 56px;
-    bottom: 32px;
+    top: 0;
+    bottom: 0;
 }
 
 .bar {
     position: absolute;
-    z-index: 20;
+    z-index: 25;
     top: 0;
     left: 0;
     right: 0;
@@ -1269,26 +1309,40 @@ body.dragging .shelf-dropzone {
     margin-inline-start: auto;
 }
 
-/* Progress rail: the book's own scrollbar. Drag, click or arrow keys. */
+.bar-margin {
+    position: absolute;
+    z-index: 18;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--rp-pad-y, 5vh);
+    background: var(--rp-paper);
+    pointer-events: none;
+}
+
+/* Progress rail: horizontal bar in the footer just above pagination, chapter time and progress %. */
 .rail {
     position: absolute;
-    z-index: 15;
-    top: 72px;
-    bottom: 44px;
-    inset-inline-end: 4px;
-    width: 28px;
+    z-index: 26;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 20px;
+    background: var(--rp-paper);
     cursor: pointer;
     touch-action: none;
     outline: none;
+    pointer-events: auto;
 }
 
 .rail-track {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 3px;
-    margin-left: -1.5px;
+    left: 16px;
+    right: 16px;
+    top: 50%;
+    height: 3px;
+    margin-top: -1.5px;
     border-radius: 2px;
     background: var(--rp-rule);
 }
@@ -1296,10 +1350,11 @@ body.dragging .shelf-dropzone {
 .rail-fill {
     position: absolute;
     top: 0;
+    bottom: 0;
     left: 0;
-    right: 0;
+    width: 0;
     border-radius: 2px;
-    background: color-mix(in srgb, var(--rp-progress, salmon) 60%, transparent) !important;
+    background: color-mix(in srgb, var(--rp-ink) 60%, transparent) !important;
 }
 
 .ticks {
@@ -1309,29 +1364,29 @@ body.dragging .shelf-dropzone {
 
 .ticks i {
     position: absolute;
-    left: -4px;
-    width: 11px;
-    height: 1.5px;
-    margin-top: -0.75px;
+    top: -4px;
+    width: 1.5px;
+    height: 11px;
+    margin-left: -0.75px;
     background: var(--rp-soft);
     opacity: 0.55;
 }
 
 .rail-thumb {
     position: absolute;
-    left: 50%;
-    width: 12px;
-    height: 26px;
-    margin: -13px 0 0 -6px;
+    top: 50%;
+    width: 26px;
+    height: 12px;
+    margin: -6px 0 0 -13px;
     border-radius: 6px;
-    background: var(--rp-progress, salmon) !important;
+    background: var(--rp-ink) !important;
     box-shadow: 0 0 0 3px var(--rp-paper);
     transition: transform 120ms ease;
 }
 
 .rail:hover .rail-thumb,
 .rail.dragging .rail-thumb {
-    transform: scaleX(1.25);
+    transform: scaleY(1.25);
 }
 
 .rail:focus-visible .rail-thumb {
@@ -1341,10 +1396,11 @@ body.dragging .shelf-dropzone {
 
 .rail-tip {
     position: absolute;
-    inset-inline-end: 32px;
+    bottom: calc(100% + 8px);
+    left: 50%;
     max-width: 260px;
     padding: 6px 10px;
-    transform: translateY(-50%);
+    transform: translateX(-50%);
     border-radius: 8px;
     background: var(--rp-ink);
     color: var(--rp-paper);
@@ -1367,17 +1423,69 @@ body.dragging .shelf-dropzone {
     opacity: 0.8;
 }
 
-.pct {
+/* Reading footer: horizontal rail on top, then chapter time, pagination (folio), clock button and progress % */
+.reading-foot {
     position: absolute;
+    z-index: 20;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 38px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background: var(--rp-paper);
+    pointer-events: none;
+}
+
+.reading-foot-row {
+    position: relative;
     z-index: 25;
-    inset-inline-end: 6px;
-    bottom: 14px;
+    width: 100%;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: 0;
+    padding-inline: 16px 6px;
+    flex-shrink: 0;
+}
+
+.foot-margin {
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--rp-pad-y, 5vh);
+    min-height: 100%;
+    background: var(--rp-paper);
+    pointer-events: none;
+}
+
+.reading-foot-right {
+    position: relative;
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-inline-start: auto;
+}
+
+.pct {
+    position: relative;
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 38px;
+    height: 24px;
     text-align: center;
     color: var(--rp-progress, salmon) !important;
     font-size: 11.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
     pointer-events: none;
 }
 
@@ -1403,9 +1511,13 @@ body.dragging .shelf-dropzone {
     position: absolute;
     z-index: 16;
     left: 50%;
-    transform: translateX(-50%);
-    bottom: 8px;
-    padding: 3px 12px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 12px;
     border-radius: 12px;
     background: color-mix(in srgb, var(--rp-paper) 88%, transparent);
     backdrop-filter: blur(6px);
@@ -1416,6 +1528,7 @@ body.dragging .shelf-dropzone {
     font-size: 11.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
     pointer-events: none;
     white-space: nowrap;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -1423,11 +1536,13 @@ body.dragging .shelf-dropzone {
 
 /* Chapter remaining time on the bottom left */
 .chapter-time {
-    position: absolute;
+    position: relative;
     z-index: 16;
-    inset-inline-start: 16px;
-    bottom: 8px;
-    padding: 3px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 12px;
     border-radius: 12px;
     background: color-mix(in srgb, var(--rp-paper) 88%, transparent);
     backdrop-filter: blur(6px);
@@ -1438,23 +1553,21 @@ body.dragging .shelf-dropzone {
     font-size: 11.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
     pointer-events: none;
     white-space: nowrap;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* Clock widget: circular analog clock with switch centered underneath */
+/* Clock widget: circular analog clock floating above the switch aligned in the footer */
 .clock-widget {
-    position: absolute;
+    position: relative;
     z-index: 15;
-    inset-inline-end: 48px;
-    bottom: 8px;
     width: 131px;
-    display: flex;
-    flex-direction: column;
+    height: 24px;
+    display: inline-flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
+    justify-content: center;
     pointer-events: none;
 }
 
@@ -1463,7 +1576,10 @@ body.dragging .shelf-dropzone {
 }
 
 .analog-clock {
-    position: relative;
+    position: absolute;
+    bottom: calc(100% + 26px);
+    left: 50%;
+    transform: translateX(-50%);
     width: 131px;
     height: 131px;
     display: flex;
@@ -1588,13 +1704,13 @@ body.dragging .shelf-dropzone {
 }
 
 /* Modo prendido (reloj visible): idéntico a botón de fuente seleccionado (sin mouseover) */
-.clock-bar-toggle[aria-checked="true"],
+/* .clock-bar-toggle[aria-checked="true"],
 .clock-bar-toggle[aria-pressed="true"] {
     /* background: var(--hover) !important; */
-    color: var(--ink) !important;
-    /* border: 0 !important; */
-    /* box-shadow: inset 0 0 0 1px var(--line) !important; */
-}
+/* color: var(--ink) !important; */
+/* border: 0 !important; */
+/* box-shadow: inset 0 0 0 1px var(--line) !important; */
+/* } */
 
 /* Page mode: turn buttons at the edges, quiet until wanted. */
 .page-btn {
@@ -1631,15 +1747,6 @@ body.dragging .shelf-dropzone {
 }
 
 .page-btn.next {
-    right: 38px;
-}
-
-/* RTL UI: the rail is on the left, so the gap for it moves too (page order follows the book). */
-:root[dir="rtl"] .page-btn.prev {
-    left: 38px;
-}
-
-:root[dir="rtl"] .page-btn.next {
     right: 8px;
 }
 
@@ -2254,7 +2361,7 @@ body.dragging .shelf-dropzone {
 
 .swatches {
     display: inline-flex;
-    gap: 8px;
+    gap: 5px;
     align-items: center;
 }
 
@@ -2263,14 +2370,14 @@ body.dragging .shelf-dropzone {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    height: 26px;
-    padding: 0 10px;
-    border-radius: 8px;
+    gap: 4px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 6px;
     border: 1px solid var(--line);
-    font-size: 12.5px;
+    font-size: 11px;
     font-weight: 600;
-    /* line-height: 1; */
+    line-height: 1;
     cursor: pointer;
     white-space: nowrap;
     transition: transform 120ms ease, box-shadow 120ms ease;
@@ -2281,21 +2388,33 @@ body.dragging .shelf-dropzone {
 }
 
 .swatches [data-value="sepia"] {
-    background: #F4ECD8 !important;
-    color: #3E2723 !important;
-    border-color: rgba(62, 39, 35, 0.25);
+    background: #F0DEC6 !important;
+    color: #614D34 !important;
+    border-color: rgba(97, 77, 52, 0.3);
 }
 
 .swatches [data-value="twilight"] {
-    background: #111923 !important;
-    color: #edf2f8 !important;
-    border-color: rgba(237, 242, 248, 0.25);
+    background: #2B2B2B !important;
+    color: #ACBAC3 !important;
+    border-color: rgba(172, 186, 195, 0.28);
+}
+
+.swatches [data-value="fog"] {
+    background: #313745 !important;
+    color: #FFFFFB !important;
+    border-color: rgba(255, 255, 251, 0.28);
 }
 
 .swatches [data-value="contrast"] {
+    background: #000000 !important;
+    color: #F2F2F2 !important;
+    border-color: rgba(242, 242, 242, 0.28);
+}
+
+.swatches [data-value="wood"] {
     background: #17181b !important;
     color: #d6d8dc !important;
-    border-color: rgba(214, 216, 220, 0.25);
+    border-color: rgba(214, 216, 220, 0.28);
 }
 
 .swatches button[aria-checked="true"],
@@ -2304,17 +2423,19 @@ body.dragging .shelf-dropzone {
     border-color: var(--ink) !important;
 }
 
-/* In settings popover, theme buttons take full row width in 3 balanced columns */
+/* In settings popover, theme buttons take full row width in 5 small columns */
 #seg-theme.swatches {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     width: 100%;
-    gap: 6px;
+    gap: 5px;
 }
 
 #seg-theme.swatches button {
     width: 100%;
+    height: 22px;
     padding: 0 4px;
+    font-size: 11px;
 }
 
 /* Library: reading stats, export / import, time read per book */
@@ -2525,13 +2646,17 @@ body.dragging .shelf-dropzone {
     }
 
     #view {
-        top: 52px;
-        bottom: 36px;
+        top: 0;
+        bottom: 0;
     }
 
     .reading.paged #view {
-        top: 52px;
-        bottom: 30px;
+        top: 0;
+        bottom: 0;
+    }
+
+    .bar-margin {
+        top: 0;
     }
 
     .popover {
@@ -2542,16 +2667,33 @@ body.dragging .shelf-dropzone {
         max-height: calc(100vh - 66px);
     }
 
+    .reading-foot {
+        height: 36px;
+    }
+
+    .reading-foot-row {
+        height: 36px;
+        padding-inline: 10px 4px;
+    }
+
+    .rail {
+        height: 18px;
+    }
+
+    .rail-track {
+        left: 10px;
+        right: 10px;
+    }
+
     .clock-widget {
         width: 82px;
-        inset-inline-end: 44px;
-        bottom: 8px;
-        gap: 4px;
+        height: 22px;
     }
 
     .analog-clock {
         width: 82px;
         height: 82px;
+        bottom: calc(100% + 22px);
     }
 
     .clock-segmented {
@@ -2565,13 +2707,23 @@ body.dragging .shelf-dropzone {
     }
 
     .chapter-time {
-        inset-inline-start: 10px;
-        bottom: 8px;
+        height: 22px;
         font-size: 10.5px;
-        padding: 2px 8px;
+        padding: 0 8px;
         max-width: 140px;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .folio {
+        height: 22px;
+        font-size: 11px;
+        padding: 0 10px;
+    }
+
+    .pct {
+        height: 22px;
+        font-size: 11px;
     }
 }
 
@@ -2588,10 +2740,14 @@ body.dragging .shelf-dropzone {
         gap: 6px;
     }
 
+    .swatches {
+        gap: 4px;
+    }
+
     .swatches button {
-        height: 28px;
-        padding: 0 8px;
-        font-size: 11.5px;
+        height: 20px;
+        padding: 0 6px;
+        font-size: 10.5px;
     }
 
     .lib-foot {
@@ -2634,13 +2790,17 @@ body.dragging .shelf-dropzone {
     }
 
     #view {
-        top: 48px;
-        bottom: 34px;
+        top: 0;
+        bottom: 0;
     }
 
     .reading.paged #view {
-        top: 48px;
-        bottom: 28px;
+        top: 0;
+        bottom: 0;
+    }
+
+    .bar-margin {
+        top: 0;
     }
 
     .slider-wrap {
@@ -2661,22 +2821,39 @@ body.dragging .shelf-dropzone {
         min-height: 40px;
     }
 
+    .reading-foot {
+        height: 34px;
+    }
+
+    .reading-foot-row {
+        height: 34px;
+        padding-inline: 6px 4px;
+    }
+
+    .rail {
+        height: 16px;
+    }
+
+    .rail-track {
+        left: 8px;
+        right: 8px;
+    }
+
     .folio {
-        bottom: 6px;
-        font-size: 11px;
-        padding: 2px 10px;
+        height: 20px;
+        font-size: 10.5px;
+        padding: 0 8px;
     }
 
     .clock-widget {
         width: 68px;
-        inset-inline-end: 40px;
-        bottom: 6px;
-        gap: 3px;
+        height: 20px;
     }
 
     .analog-clock {
         width: 60px;
         height: 60px;
+        bottom: calc(100% + 20px);
     }
 
     .clock-segmented {
@@ -2690,19 +2867,56 @@ body.dragging .shelf-dropzone {
     }
 
     .chapter-time {
-        inset-inline-start: 6px;
-        bottom: 6px;
+        height: 20px;
         font-size: 10px;
-        padding: 2px 6px;
+        padding: 0 6px;
         max-width: 110px;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .pct {
+        height: 20px;
+        font-size: 10.5px;
     }
 
     .shelf-dropzone {
         padding: 16px 14px;
         margin: 20px 0 10px;
     }
+}
+
+#bar,
+#rail {
+    transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+}
+
+#reading:not(.mobile-ui-visible) #bar {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-100%);
+}
+
+#reading:not(.mobile-ui-visible) #rail {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(6px);
+}
+
+#reading.mobile-ui-visible #bar {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+#reading.mobile-ui-visible #rail {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
 }
 
 @media (max-width: 380px) {

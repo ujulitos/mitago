@@ -14,7 +14,7 @@ import { $, el, labelled, radioGroup } from './dom.js';
 import { chapterTicks, percent, tocIndexAt } from './logic.js';
 
 export const MEASURES = { narrow: 30, medium: 35, wide: 44 }; // em: ~62, ~72, ~90 characters per line
-export const READER_DEFAULTS = { ...STYLE_DEFAULTS, marginV: 36, marginH: 120 };
+export const READER_DEFAULTS = { ...STYLE_DEFAULTS, marginV: 10, marginH: 20 };
 const SIZES = { min: 12, max: 36, step: 2 };
 const LINE_HEIGHTS = [1.3, 1.55, 1.9];
 const WORD_SPACINGS = [0, 0.12, 0.25];
@@ -354,13 +354,15 @@ function syncSettings() {
   if ($('slider-lh')) $('slider-lh').value = String(lh);
   if ($('lh-val')) $('lh-val').textContent = lh.toFixed(2);
 
-  const mv = Number(s.marginV ?? 36);
+  const rawMv = Number(s.marginV ?? 10);
+  const mv = (rawMv > 30 || rawMv < 10) ? 10 : rawMv;
   if ($('slider-margin-v')) $('slider-margin-v').value = String(mv);
-  if ($('margin-v-val')) $('margin-v-val').textContent = `${mv} px`;
+  if ($('margin-v-val')) $('margin-v-val').textContent = `${mv}%`;
 
-  const mh = Number(s.marginH ?? 120);
+  const rawMh = Number(s.marginH ?? 20);
+  const mh = rawMh > 60 ? 20 : Math.min(60, Math.max(10, rawMh));
   if ($('slider-margin-h')) $('slider-margin-h').value = String(mh);
-  if ($('margin-h-val')) $('margin-h-val').textContent = `${mh} px`;
+  if ($('margin-h-val')) $('margin-h-val').textContent = `${mh}%`;
 
   segs.ws?.set(s.wordSpacing);
   segs.justify?.set(String(!!s.justify));
@@ -448,7 +450,7 @@ function initSettings() {
   if (sliderMv) {
     sliderMv.addEventListener('input', (e) => {
       const v = Number(e.target.value);
-      if ($('margin-v-val')) $('margin-v-val').textContent = `${v} px`;
+      if ($('margin-v-val')) $('margin-v-val').textContent = `${v}%`;
       setStyle({ marginV: v });
     });
   }
@@ -456,7 +458,7 @@ function initSettings() {
   if (sliderMh) {
     sliderMh.addEventListener('input', (e) => {
       const v = Number(e.target.value);
-      if ($('margin-h-val')) $('margin-h-val').textContent = `${v} px`;
+      if ($('margin-h-val')) $('margin-h-val').textContent = `${v}%`;
       setStyle({ marginH: v });
     });
   }
@@ -485,9 +487,9 @@ function initSettings() {
 let ticks = [];
 const sizesOf = () => rp.book.spine.map((s) => s.size);
 
-function railFrac(clientY) {
+function railFrac(clientX) {
   const r = $('rail-track').getBoundingClientRect();
-  return Math.min(1, Math.max(0, (clientY - r.top) / r.height));
+  return Math.min(1, Math.max(0, (clientX - r.left) / (r.width || 1)));
 }
 
 function showTip(f) {
@@ -497,7 +499,10 @@ function showTip(f) {
   tip.replaceChildren(el('b', { textContent: t('percent', percent(f)) }), el('span', { textContent: label }));
   const track = $('rail-track').getBoundingClientRect();
   const rail = $('rail').getBoundingClientRect();
-  tip.style.top = `${track.top - rail.top + f * track.height}px`;
+  const rawX = track.left - rail.left + f * track.width;
+  const clampedX = Math.max(70, Math.min((rail.width || window.innerWidth) - 70, rawX));
+  tip.style.left = `${clampedX}px`;
+  tip.style.top = '';
   tip.hidden = false;
 }
 
@@ -521,14 +526,14 @@ function initRail() {
     if (!rp.view) return;
     rail.setPointerCapture(e.pointerId);
     rail.classList.add('dragging');
-    const f = railFrac(e.clientY);
+    const f = railFrac(e.clientX);
     showTip(f);
     paintRail(f);
     dragTo(f);
   });
   rail.addEventListener('pointermove', (e) => {
     if (!rp.view) return;
-    const f = railFrac(e.clientY);
+    const f = railFrac(e.clientX);
     showTip(f);
     if (rail.classList.contains('dragging')) { paintRail(f); dragTo(f); }
   });
@@ -551,12 +556,14 @@ function initRail() {
 
 function renderTicks() {
   ticks = chapterTicks(rp.book.toc, sizesOf());
-  $('ticks').replaceChildren(...ticks.map((k) => el('i', { style: `top:${(k.at * 100).toFixed(3)}%` })));
+  $('ticks').replaceChildren(...ticks.map((k) => el('i', { style: `left:${(k.at * 100).toFixed(3)}%` })));
 }
 
 function paintRail(p) {
-  $('rail-thumb').style.top = `${p * 100}%`;
-  $('rail-fill').style.height = `${p * 100}%`;
+  $('rail-thumb').style.left = `${p * 100}%`;
+  $('rail-thumb').style.top = '';
+  $('rail-fill').style.width = `${p * 100}%`;
+  $('rail-fill').style.height = '';
 }
 
 // ------------------------------------------------------------------------------ position
@@ -750,6 +757,7 @@ export function paintFolio() {
 /** A book was just laid out: fill everything that depends on it. */
 export async function setupBook() {
   tocCurrent = -1;
+  $('reading').classList.remove('mobile-ui-visible');
   $('book-title').textContent = rp.book.title || t('untitled');
   $('results').replaceChildren();
   $('search-status').textContent = '';
@@ -850,9 +858,24 @@ export function initReading(state, deps) {
   $('bar').addEventListener('focusin', wake);
   document.addEventListener('pointermove', (e) => { if (e.clientY < 72 && !$('reading').hidden) wake(); }, { passive: true });
   // Click outside the settings popover closes it.
+  let tapStartX = 0;
+  let tapStartY = 0;
+  let overlayWasOpen = false;
   document.addEventListener('pointerdown', (e) => {
+    tapStartX = e.clientX;
+    tapStartY = e.clientY;
+    overlayWasOpen = !$('settings').hidden || !$('panel').hidden || !$('hl-bar').hidden;
     if (!$('settings').hidden && !e.target.closest('#settings, #btn-settings')) closeSettings(false);
     if (!$('panel').hidden && !e.target.closest('#panel, [aria-controls="panel"], #panel-close')) closePanel(false);
+  });
+  $('reading').addEventListener('click', (e) => {
+    if (overlayWasOpen) return;
+    if (e.target.closest('#bar, #rail, #clock-widget, #page-prev, #page-next, #panel, #settings, #hl-bar')) return;
+    if (Math.hypot(e.clientX - tapStartX, e.clientY - tapStartY) > 12) return;
+    const sel = window.getSelection?.();
+    if (sel && !sel.isCollapsed && String(sel).trim().length > 0) return;
+    if (e.composedPath().some((n) => n.tagName === 'A' || n.dataset?.rpHref)) return;
+    $('reading').classList.toggle('mobile-ui-visible');
   });
   initSettings();
   initKeys();

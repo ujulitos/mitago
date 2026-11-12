@@ -133,6 +133,8 @@ async function show(book, id, { push = false } = {}) {
   const own = await store.getSetting(`book:${id}`, null);
   rp.ownStyle = !!own?.style;
   const rawStyle = { ...READER_DEFAULTS, ...(own?.style ?? await store.getSetting('style', {})) };
+  if (typeof rawStyle.marginV === 'number' && (rawStyle.marginV > 30 || rawStyle.marginV < 10)) rawStyle.marginV = 10;
+  if (typeof rawStyle.marginH === 'number' && (rawStyle.marginH > 60 || rawStyle.marginH < 10)) rawStyle.marginH = 20;
   const em = typeof rawStyle.measure === 'number' ? rawStyle.measure : (MEASURES[rawStyle.measure] ?? 35);
   const maxWidth = Math.round(em * (rawStyle.fontSize ?? 18));
   const style = { ...rawStyle, maxWidth, forceColors };
