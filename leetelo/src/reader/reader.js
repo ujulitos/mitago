@@ -260,12 +260,15 @@ const pageLabel = (n) => { const s = t('comic_page', n); return s === 'comic_pag
 
 /** Guarda físicamente el libro importado en la carpeta /libros del servidor. */
 export async function saveBookPhysically(file) {
-  if (!file) return;
+  if (!file || (typeof navigator !== 'undefined' && navigator.onLine === false)) return;
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 2500);
   try {
     const filename = file.name || 'libro.epub';
     const res = await fetch(`/api/upload?name=${encodeURIComponent(filename)}`, {
       method: 'POST',
       body: file,
+      signal: ac.signal,
       headers: {
         'Content-Type': 'application/octet-stream',
         'X-Filename': encodeURIComponent(filename)
@@ -276,6 +279,8 @@ export async function saveBookPhysically(file) {
     }
   } catch (err) {
     console.warn('[Léetelo] No se pudo guardar el libro físicamente en /libros:', err);
+  } finally {
+    clearTimeout(timer);
   }
 }
 

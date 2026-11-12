@@ -36,9 +36,3 @@ export function applyTheme(theme) {
   } catch { /* storage unavailable */ }
   return choice;
 }
-
-/** Whether the page currently renders a dark theme ('twilight', 'fog', 'contrast' or 'wood'). */
-export function isDark() {
-  const forced = document.documentElement.dataset.theme;
-  return forced === 'twilight' || forced === 'fog' || forced === 'contrast' || forced === 'wood';
-}

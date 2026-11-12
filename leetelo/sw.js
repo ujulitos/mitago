@@ -1,7 +1,7 @@
 // PWA Service Worker for Léetelo WebApp
-// Enables offline reading on any device (phone, tablet, computer)
+// Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'leetelo-pwa-v63';
+const CACHE_NAME = 'leetelo-pwa-v65';
 
 const STATIC_ASSETS = [
   './',
@@ -18,6 +18,7 @@ const STATIC_ASSETS = [
   './icons/libro.jpg',
   './src/lib/theme-boot.js',
   './src/lib/base.css',
+  './src/lib/fonts.css',
   './src/lib/chrome-shim.js',
   './src/lib/i18n.js',
   './src/lib/i18n-es.js',
@@ -51,92 +52,145 @@ const STATIC_ASSETS = [
   './src/core/anchor.js',
   './src/core/xml.js',
   './src/core/zip.js',
-  './src/core/zipwrite.js'
+  './src/core/zipwrite.js',
+  './fonts/asap-condensed-italic-400-latin.woff2',
+  './fonts/asap-condensed-italic-400-latin-ext.woff2',
+  './fonts/asap-condensed-italic-500-latin.woff2',
+  './fonts/asap-condensed-italic-500-latin-ext.woff2',
+  './fonts/asap-condensed-italic-600-latin.woff2',
+  './fonts/asap-condensed-italic-600-latin-ext.woff2',
+  './fonts/asap-condensed-italic-700-latin.woff2',
+  './fonts/asap-condensed-italic-700-latin-ext.woff2',
+  './fonts/asap-condensed-normal-400-latin.woff2',
+  './fonts/asap-condensed-normal-400-latin-ext.woff2',
+  './fonts/asap-condensed-normal-500-latin.woff2',
+  './fonts/asap-condensed-normal-500-latin-ext.woff2',
+  './fonts/asap-condensed-normal-600-latin.woff2',
+  './fonts/asap-condensed-normal-600-latin-ext.woff2',
+  './fonts/asap-condensed-normal-700-latin.woff2',
+  './fonts/asap-condensed-normal-700-latin-ext.woff2',
+  './fonts/atkinson-hyperlegible-italic-400-latin.woff2',
+  './fonts/atkinson-hyperlegible-italic-400-latin-ext.woff2',
+  './fonts/atkinson-hyperlegible-italic-700-latin.woff2',
+  './fonts/atkinson-hyperlegible-italic-700-latin-ext.woff2',
+  './fonts/atkinson-hyperlegible-normal-400-latin.woff2',
+  './fonts/atkinson-hyperlegible-normal-400-latin-ext.woff2',
+  './fonts/atkinson-hyperlegible-normal-700-latin.woff2',
+  './fonts/atkinson-hyperlegible-normal-700-latin-ext.woff2',
+  './fonts/fira-sans-condensed-italic-400-latin.woff2',
+  './fonts/fira-sans-condensed-italic-400-latin-ext.woff2',
+  './fonts/fira-sans-condensed-italic-500-latin.woff2',
+  './fonts/fira-sans-condensed-italic-500-latin-ext.woff2',
+  './fonts/fira-sans-condensed-italic-600-latin.woff2',
+  './fonts/fira-sans-condensed-italic-600-latin-ext.woff2',
+  './fonts/fira-sans-condensed-italic-700-latin.woff2',
+  './fonts/fira-sans-condensed-italic-700-latin-ext.woff2',
+  './fonts/fira-sans-condensed-normal-400-latin.woff2',
+  './fonts/fira-sans-condensed-normal-400-latin-ext.woff2',
+  './fonts/fira-sans-condensed-normal-500-latin.woff2',
+  './fonts/fira-sans-condensed-normal-500-latin-ext.woff2',
+  './fonts/fira-sans-condensed-normal-600-latin.woff2',
+  './fonts/fira-sans-condensed-normal-600-latin-ext.woff2',
+  './fonts/fira-sans-condensed-normal-700-latin.woff2',
+  './fonts/fira-sans-condensed-normal-700-latin-ext.woff2',
+  './fonts/noto-sans-italic-300-700-latin.woff2',
+  './fonts/noto-sans-italic-300-700-latin-ext.woff2',
+  './fonts/noto-sans-normal-300-700-latin.woff2',
+  './fonts/noto-sans-normal-300-700-latin-ext.woff2',
+  './fonts/roboto-condensed-italic-300-700-latin.woff2',
+  './fonts/roboto-condensed-italic-300-700-latin-ext.woff2',
+  './fonts/roboto-condensed-normal-300-700-latin.woff2',
+  './fonts/roboto-condensed-normal-300-700-latin-ext.woff2',
+  './fonts/source-sans-3-italic-300-700-latin.woff2',
+  './fonts/source-sans-3-italic-300-700-latin-ext.woff2',
+  './fonts/source-sans-3-normal-300-700-latin.woff2',
+  './fonts/source-sans-3-normal-300-700-latin-ext.woff2',
 ];
+
+async function matchCached(request) {
+  const exact = await caches.match(request);
+  if (exact) return exact;
+  if (request.mode === 'navigate') {
+    return (await caches.match('./index.html'))
+      || (await caches.match('./'))
+      || caches.match(request, { ignoreSearch: true });
+  }
+  return caches.match(request, { ignoreSearch: true });
+}
+
+function fetchWithTimeout(request, init, ms = 3500) {
+  if (typeof AbortController === 'undefined') return fetch(request, init);
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), ms);
+  return fetch(request, { ...init, signal: ac.signal }).finally(() => clearTimeout(timer));
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(STATIC_ASSETS.map((url) => new Request(url, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(keys.map((key) => (key !== CACHE_NAME ? caches.delete(key) : undefined))))
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Do not intercept non-GET or API requests
-  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+  // Do not intercept non-GET, cross-origin, or API requests
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/')) {
     return;
   }
 
-  // App shell (HTML, CSS, JS, manifest) uses Network-First so installed iOS PWAs receive updates immediately
+  // App shell (HTML, CSS, JS, manifest) uses Network-First with fast timeout and offline cache fallback
   const isAppShell = event.request.mode === 'navigate'
-    || (url.origin === self.location.origin && /\.(?:html|css|js|mjs|webmanifest)$/i.test(url.pathname))
-    || (url.origin === self.location.origin && url.pathname.endsWith('/'));
+    || /\.(?:html|css|js|mjs|webmanifest)$/i.test(url.pathname)
+    || url.pathname.endsWith('/');
 
   if (isAppShell) {
     event.respondWith(
-      fetch(event.request, { cache: 'no-cache' }).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          const copy = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        }
-        return networkResponse;
-      }).catch(() => caches.match(event.request).then((cached) => (
-        cached || (event.request.mode === 'navigate'
-          ? caches.match('./index.html').then((m) => m || caches.match('./'))
-          : undefined)
-      )))
+      fetchWithTimeout(event.request, { cache: 'no-cache' }, 3500)
+        .then(async (networkResponse) => {
+          if (networkResponse && networkResponse.ok && networkResponse.type === 'basic') {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            return networkResponse;
+          }
+          return (await matchCached(event.request)) || networkResponse;
+        })
+        .catch(() => matchCached(event.request))
     );
     return;
   }
 
+  // Static assets (fonts, icons, images): Cache-First for instant offline availability
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    matchCached(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Return cached asset, and optionally update in background
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse);
-            });
-          }
-        }).catch(() => {});
+        if (self.navigator?.onLine !== false) {
+          fetch(event.request).then((networkResponse) => {
+            if (networkResponse && networkResponse.ok && networkResponse.type === 'basic') {
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
+            }
+          }).catch(() => {});
+        }
         return cachedResponse;
       }
 
-      // Not in cache: fetch from network and store in cache
       return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+        if (response && response.ok && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
         }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
         return response;
-      }).catch(() => {
-        // Offline fallback for HTML navigation
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html') || caches.match('./');
-        }
-      });
+      }).catch(() => matchCached(event.request));
     })
   );
 });
-

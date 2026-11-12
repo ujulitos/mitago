@@ -19,9 +19,6 @@ export function fileProblem(file) {
   return (ext && EXT_PROBLEMS[ext]) ?? null;
 }
 
-/** Problems that are the file's nature, not a failure of ours (no rating "trouble"). */
-export const WRONG_TYPE = new Set(['pdf', 'acsm', 'mobi', 'text', 'other-type', 'not-zip', 'empty', 'no-file', 'cbr', 'cb7']);
-
 /**
  * Codes whose messages are still pending translation (i18n/pending/formats.json) show
  * the nearest existing message meanwhile: damaged FB2/CBZ -> damaged, RAR/7-Zip -> wrong type.

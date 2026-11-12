@@ -13,13 +13,6 @@ import { $, el, formatSize } from './dom.js';
 
 /** Bigger downloads stop with "too-big": the book is held in memory, like a picked file. */
 export const MAX_BYTES = 500 * 1024 * 1024;
-
-/**
- * contextMenus targetUrlPatterns (path and query are matched): any link with ".epub"
- * anywhere (Gutenberg /ebooks/11.epub3.images, x.epub?token=…), a "/epub" path segment
- * (OPDS /download/12/epub) or an "=epub" query value; also .fb2 (.fb2.zip), .fbz and .cbz links.
- */
-export const EPUB_LINKS = ['*://*/*.epub*', '*://*/*.EPUB*', '*://*/*/epub*', '*://*/*=epub*', '*://*/*.fb2*', '*://*/*.fbz*', '*://*/*.cbz*'];
 const BOOK_NAME = /\.(epub|fb2|fbz|cbz)$/i;
 
 

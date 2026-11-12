@@ -122,27 +122,3 @@ export function logo(size = 28) {
   img.style.verticalAlign = 'middle';
   return img;
 }
-
-export const MARK = '<defs>'
-  + '<linearGradient id="lt-bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1f2837"/><stop offset="50%" stop-color="#141a24"/><stop offset="100%" stop-color="#0d1117"/></linearGradient>'
-  + '<linearGradient id="lt-glow" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.12"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0.02"/></linearGradient>'
-  + '<linearGradient id="lt-pLeft" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FCF8EE"/><stop offset="100%" stop-color="#EADBCA"/></linearGradient>'
-  + '<linearGradient id="lt-pRight" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#E2E7ED"/></linearGradient>'
-  + '<linearGradient id="lt-cBase" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#C53929"/><stop offset="50%" stop-color="#FF6B52"/><stop offset="100%" stop-color="#C53929"/></linearGradient>'
-  + '<linearGradient id="lt-ribbon" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FF7A64"/><stop offset="100%" stop-color="#D93B26"/></linearGradient>'
-  + '</defs>'
-  + '<rect x="4" y="4" width="120" height="120" rx="28" fill="url(#lt-bg)"/>'
-  + '<rect x="5" y="5" width="118" height="118" rx="27" fill="url(#lt-glow)"/>'
-  + '<rect x="4.5" y="4.5" width="119" height="119" rx="27.5" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>'
-  + '<path d="M 21 86 C 35 81 50 81 64 86 C 78 81 93 81 107 86 L 107 91.5 C 93 86.5 78 86.5 64 91.5 C 50 86.5 35 86.5 21 91.5 Z" fill="url(#lt-cBase)"/>'
-  + '<path d="M 23 83.5 C 36 79 50 79 64 84 C 78 79 92 79 105 83.5 L 105 86 C 92 81.5 78 81.5 64 86.5 C 50 81.5 36 81.5 23 86 Z" fill="#b09f87" opacity="0.6"/>'
-  + '<path d="M 64 84 C 50 78.5 34 78.5 22 82 C 21 68 21 54 22 41 C 34 37.5 50 37.5 64 43 Z" fill="url(#lt-pLeft)"/>'
-  + '<path d="M 64 84 C 78 78.5 94 78.5 106 82 C 107 68 107 54 106 41 C 94 37.5 78 37.5 64 43 Z" fill="url(#lt-pRight)"/>'
-  + '<path d="M 63.2 43 C 63.6 57 63.6 70 63.2 84 L 64.8 84 C 64.4 70 64.4 57 64.8 43 Z" fill="#cfbeaa"/>'
-  + '<path d="M 61 41.5 L 61 69 L 64 65.5 L 67 69 L 67 41.5 Z" fill="url(#lt-ribbon)"/>'
-  + '<line x1="32" y1="51" x2="54" y2="52.5" stroke="#3E2723" stroke-width="2.75" stroke-linecap="round" opacity="0.32"/>'
-  + '<line x1="32" y1="60" x2="54" y2="61.5" stroke="#3E2723" stroke-width="2.75" stroke-linecap="round" opacity="0.32"/>'
-  + '<line x1="32" y1="69" x2="48" y2="70.5" stroke="#3E2723" stroke-width="2.75" stroke-linecap="round" opacity="0.32"/>'
-  + '<line x1="74" y1="52.5" x2="96" y2="51" stroke="#17181b" stroke-width="2.75" stroke-linecap="round" opacity="0.25"/>'
-  + '<line x1="74" y1="61.5" x2="96" y2="60" stroke="#17181b" stroke-width="2.75" stroke-linecap="round" opacity="0.25"/>'
-  + '<line x1="74" y1="70.5" x2="90" y2="69" stroke="#17181b" stroke-width="2.75" stroke-linecap="round" opacity="0.25"/>';

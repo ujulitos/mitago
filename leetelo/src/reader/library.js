@@ -421,10 +421,14 @@ function confirmDelete(li, book, del, categories) {
   box.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
   yes.addEventListener('click', async () => {
     await ctx.store.deleteBook(book.id);
-    if (book.fileName) {
+    if (book.fileName && navigator.onLine !== false) {
+      const ac = new AbortController();
+      const timer = setTimeout(() => ac.abort(), 2000);
       try {
-        await fetch(`/api/libros?name=${encodeURIComponent(book.fileName)}`, { method: 'DELETE' });
-      } catch {}
+        await fetch(`/api/libros?name=${encodeURIComponent(book.fileName)}`, { method: 'DELETE', signal: ac.signal });
+      } catch {} finally {
+        clearTimeout(timer);
+      }
     }
     if (categories && categories[book.id]) {
       delete categories[book.id];
@@ -531,9 +535,12 @@ function closeWhatsNew() {
 // ---- render ----------------------------------------------------------------------------
 let syncDone = false;
 async function syncFromLibros(store) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 2500);
   try {
-    let res = await fetch('/api/libros');
-    if (!res.ok) res = await fetch('/api/books');
+    let res = await fetch('/api/libros', { signal: ac.signal });
+    if (!res.ok) res = await fetch('/api/books', { signal: ac.signal });
     if (!res.ok) return false;
     const list = await res.json();
     if (!Array.isArray(list) || list.length === 0) return false;
@@ -560,6 +567,8 @@ async function syncFromLibros(store) {
     return anyAdded;
   } catch {
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
 

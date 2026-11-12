@@ -192,16 +192,6 @@ body {
     letter-spacing: -0.015em;
 }
 
-.open-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 38px;
-    padding: 0 16px 0 13px !important;
-    border-radius: 10px !important;
-    font-size: 14px;
-}
-
 button.primary:hover {
     opacity: 0.9;
 }
@@ -395,12 +385,6 @@ button.primary:hover {
     font-size: 13px;
 }
 
-.big-open {
-    height: 46px !important;
-    padding: 0 22px 0 18px !important;
-    font-size: 15px;
-}
-
 .drop-art-img {
     display: block;
     width: 130px;
@@ -417,30 +401,10 @@ body.dragging .drop-art-img {
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
-.drop-art svg {
-    display: block;
-    width: 168px;
-    height: auto;
-    color: var(--muted);
-}
-
-.drop-art .pane-fill {
-    fill: var(--hover);
-    transition: fill 140ms ease;
-}
-
 body.dragging .dropzone {
     border-color: var(--ink);
     border-style: solid;
     background: var(--hover);
-}
-
-body.dragging .drop-art svg {
-    color: var(--ink);
-}
-
-body.dragging .drop-art .pane-fill {
-    fill: var(--card);
 }
 
 /* An open that failed: said where it happened, with the next step. */
@@ -651,42 +615,6 @@ body.dragging .drop-art .pane-fill {
     height: 100%;
     object-fit: cover;
     filter: var(--rp-img-filter);
-}
-
-/* No cover image: a typeset title page. */
-.typeset {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-    padding: 14px 12px 12px 14px;
-    text-align: start;
-    color: var(--ink);
-}
-
-.typeset .t {
-    font: 600 14px/1.22 Georgia, "Iowan Old Style", "Times New Roman", serif;
-    overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-line-clamp: 6;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.typeset .a {
-    font-size: 11px;
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.typeset .rule {
-    width: 22px;
-    height: 2px;
-    margin: 8px 0 auto;
-    background: var(--ink);
-    opacity: 0.6;
 }
 
 .read-line {
@@ -1168,25 +1096,6 @@ body.dragging .shelf-dropzone {
     text-align: left;
 }
 
-.shelf-dropzone-title {
-    margin: 0;
-    font-size: 14.5px;
-    font-weight: 650;
-    color: var(--ink);
-}
-
-.shelf-dropzone-sub {
-    margin: 0;
-    font-size: 12.5px;
-    color: var(--muted);
-}
-
-.drop-line {
-    margin: 26px 0 0;
-    color: var(--muted);
-    font-size: 12.5px;
-}
-
 /* Quiet cards: file access, pin hint. */
 .cards {
     display: flex;
@@ -1203,11 +1112,6 @@ body.dragging .shelf-dropzone {
     border: 1px solid var(--line);
     border-radius: 14px;
     background: var(--card);
-}
-
-.quiet-card.slim {
-    align-items: center;
-    padding-block: 10px;
 }
 
 .quiet-card .lead {
@@ -2516,10 +2420,6 @@ body.dragging .shelf-dropzone {
     grid-template-columns: repeat(4, 1fr);
 }
 
-.segmented.five {
-    grid-template-columns: repeat(5, 1fr);
-}
-
 .segmented.three {
     grid-template-columns: repeat(3, 1fr);
 }
@@ -2551,12 +2451,6 @@ body.dragging .shelf-dropzone {
 .segmented.wide button {
     font-size: 14px;
     font-weight: 500;
-}
-
-.segmented.five button {
-    font-size: 12px;
-    padding: 0 4px;
-    white-space: nowrap;
 }
 
 .segmented.three button {
@@ -2697,13 +2591,6 @@ body.dragging .shelf-dropzone {
 .stats-list dd {
     font-size: 17px;
     font-weight: 620;
-    font-variant-numeric: tabular-nums;
-}
-
-.meta .time-read {
-    grid-column: 1 / -1;
-    color: var(--muted);
-    font-size: 12px;
     font-variant-numeric: tabular-nums;
 }
 
@@ -2859,14 +2746,6 @@ body.dragging .shelf-dropzone {
         width: auto;
         max-width: none;
         height: 34px;
-    }
-
-    .lib-tools .open-btn span {
-        display: none;
-    }
-
-    .lib-tools .open-btn {
-        padding: 0 10px !important;
     }
 
     .reading {

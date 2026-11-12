@@ -4,7 +4,6 @@
 
 import { icon } from '../lib/icons.js';
 import { t, tn } from '../lib/i18n.js';
-import { showToast } from '../lib/toast.js';
 import { THEMES, applyTheme } from '../lib/theme.js';
 import { STYLE_DEFAULTS } from '../core/render.js';
 import { EFFECTS, reducedMotion } from '../core/turn.js';
@@ -17,7 +16,6 @@ import { chapterTicks, percent, tocIndexAt } from './logic.js';
 export const MEASURES = { narrow: 30, medium: 35, wide: 44 }; // em: ~62, ~72, ~90 characters per line
 export const READER_DEFAULTS = { ...STYLE_DEFAULTS, marginV: 10, marginH: 20 };
 const SIZES = { min: 12, max: 36, step: 2 };
-const LINE_HEIGHTS = [1.3, 1.4, 1.9];
 const WORD_SPACINGS = [0, 0.12, 0.25];
 
 let rp;
@@ -30,9 +28,6 @@ let lastFocus = null;
 /** Show the bar (bar is always visible). */
 export function wake() { $('reading').classList.remove('calm'); }
 export function hideChrome() { $('reading')?.classList.remove('mobile-ui-visible'); }
-function calm() {
-  // #bar never hides
-}
 export const settle = () => { hideChrome(); };
 
 let lastTop = 0;
@@ -404,9 +399,6 @@ export async function toggleBookmark() {
 }
 
 // ------------------------------------------------------------------------------- settings
-function openSettings() {
-  openPanel('settings');
-}
 export function closeSettings(restore = true) {
   if ($('panel').hidden || $('panel').dataset.pane !== 'settings') return false;
   return closePanel(restore);

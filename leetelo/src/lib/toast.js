@@ -99,9 +99,3 @@ export function showToast({ level = 'ok', text, details = [] }) {
   started = performance.now();
   timer = setTimeout(hideToast, remaining);
 }
-
-/** First sentence of a longer message: what happened, without the explanation. */
-export function firstSentence(message) {
-  const m = /^(.+?[.!?])(\s|$)/.exec(message ?? '');
-  return (m ? m[1] : message ?? '').replace(/\.$/, '');
-}
