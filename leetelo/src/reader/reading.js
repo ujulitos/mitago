@@ -703,7 +703,7 @@ async function dragTo(f) {
 function initRail() {
   const rail = $('rail');
   rail.addEventListener('pointerdown', (e) => {
-    if (!rp.view) return;
+    if (!rp.view || !$('reading')?.classList.contains('mobile-ui-visible')) return;
     rail.setPointerCapture(e.pointerId);
     rail.classList.add('dragging');
     const f = railFrac(e.clientX);
@@ -1041,26 +1041,39 @@ export function initReading(state, deps) {
   for (const id of ['page-prev', 'page-next']) $(id).addEventListener('pointerdown', (e) => e.preventDefault());
 
   // Touch swipe gestures for mobile / tablet reading (especially in paged mode)
+  let touchId = null;
   let touchStartX = 0;
   let touchStartY = 0;
   let touchStartTime = 0;
   $('view').addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = performance.now();
+    if (e.touches.length !== 1 || !$('panel').hidden || !$('hl-bar').hidden) {
+      touchId = null;
+      return;
     }
+    const t = e.touches[0];
+    touchId = t.identifier;
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    touchStartTime = performance.now();
   }, { passive: true });
+  $('view').addEventListener('touchcancel', () => { touchId = null; }, { passive: true });
   $('view').addEventListener('touchend', (e) => {
-    if (e.changedTouches.length === 1 && rp.view?.mode === 'paged') {
-      const deltaX = e.changedTouches[0].clientX - touchStartX;
-      const deltaY = e.changedTouches[0].clientY - touchStartY;
-      const elapsed = performance.now() - touchStartTime;
-      if (elapsed < 600 && Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
-        const rtl = rp.book?.dir === 'rtl';
-        const dir = deltaX < 0 ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
-        rp.turn(dir);
-      }
+    if (touchId === null || rp.view?.mode !== 'paged' || e.touches.length > 0) {
+      touchId = null;
+      return;
+    }
+    const t = [...e.changedTouches].find((c) => c.identifier === touchId);
+    touchId = null;
+    if (!t || !$('panel').hidden || !$('hl-bar').hidden) return;
+    const sel = window.getSelection?.();
+    if (sel && !sel.isCollapsed && String(sel).trim().length > 0) return;
+    const deltaX = t.clientX - touchStartX;
+    const deltaY = t.clientY - touchStartY;
+    const elapsed = performance.now() - touchStartTime;
+    if (elapsed < 550 && Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+      const rtl = rp.book?.dir === 'rtl';
+      const dir = deltaX < 0 ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
+      rp.turn(dir);
     }
   }, { passive: true });
   $('view').addEventListener('scroll', onViewScroll, { passive: true });

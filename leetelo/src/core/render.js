@@ -221,17 +221,41 @@ class ContinuousView {
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (this.hosts) this.evict(); });
     };
     el.addEventListener('scroll', this.onScroll);
-    // Viewport resize: scale unmeasured placeholders, then put the anchor back.
+    // Viewport resize: scale unmeasured placeholders and re-anchor only when width changes.
+    // On phones, browser toolbars hiding/showing during scroll changes clientHeight without
+    // changing width or wrapping; calling restore() there cancels momentum and jumps scrollTop.
     this.viewRO = new ResizeObserver(() => {
       const w = this.el.clientWidth;
-      if (w && this.width && w !== this.width) { this.scalePlaceholders(this.width / w); this.line = 0; }
-      this.width = w;
-      this.restore();
+      if (w && this.width && w !== this.width) {
+        this.scalePlaceholders(this.width / w);
+        this.line = 0;
+        this.width = w;
+        this.restore();
+      } else if (w) {
+        this.width = w;
+      }
       this.ctx.onLayout?.();
     });
     this.viewRO.observe(el);
-    // Live section resize (late image decode, font load): keep the anchor still.
-    this.hostRO = new ResizeObserver(() => this.restore());
+    // Live section resize (late image decode, font load) above or at the anchor: keep the anchor still.
+    this.hostRO = new ResizeObserver((entries) => {
+      const curSpine = this.position?.spine ?? 0;
+      let changedAbove = false;
+      for (const entry of entries) {
+        const h = entry.target;
+        if (!h.rp?.live) continue;
+        const nextH = entry.borderBoxSize?.[0]?.blockSize ?? h.getBoundingClientRect().height;
+        const prevH = h.rp.height;
+        if (prevH !== null && Math.abs(nextH - prevH) >= 1) {
+          h.rp.height = nextH;
+          if (Number(h.dataset.spine) <= curSpine) changedAbove = true;
+        }
+      }
+      if (changedAbove) {
+        this.sync();
+        this.restore();
+      }
+    });
   }
 
   padYPx() {
@@ -292,7 +316,7 @@ class ContinuousView {
     if (rr.bottom <= edge || rr.top > edge) return { spine: i, path: null, offset: 0, frac };
     const pos = { spine: i, ...capture(root, edge, (b) => b.bottom), frac };
     const c = locate(root, pos);
-    this.line = c.height ? Math.max(-4, Math.min(1, (edge - 1 - c.top) / c.height)) : 0;
+    this.line = c.height ? Math.max(-50, Math.min(1, (edge - 1 - c.top) / c.height)) : 0;
     return pos;
   }
 
@@ -334,17 +358,19 @@ class ContinuousView {
         this.measured.px += h;
         this.measured.bytes += Math.max(1, this.book.spine[i].size);
         this.pxPerByte = this.measured.px / this.measured.bytes;
-        // Early on, re-estimate unmeasured placeholders so the scrollbar is honest.
+        // Early on, re-estimate unmeasured placeholders below the anchor so the scrollbar is honest
+        // without shifting content above the reading edge during momentum scrolling.
         if (++this.measured.count <= 8) {
+          const curSpine = this.position?.spine ?? 0;
           for (const [j, x] of this.hosts.entries()) {
-            if (x.rp.height === null && !x.rp.live) x.style.height = `${Math.max(40, this.book.spine[j].size * this.pxPerByte)}px`;
+            if (j > curSpine && x.rp.height === null && !x.rp.live) x.style.height = `${Math.max(40, this.book.spine[j].size * this.pxPerByte)}px`;
           }
           this.ctx.onLayout?.();
         }
       }
       host.rp.height = h;
       this.hostRO.observe(host);
-      this.restore();
+      if (i <= (this.position?.spine ?? 0)) this.restore();
       // The anchor was captured over this section's placeholder (coarse frac):
       // pin it to the character now at the top, or a restyle would drift.
       if (i === this.position?.spine && !this.position.path) {
@@ -362,7 +388,6 @@ class ContinuousView {
     this.sync();
     const vh = this.el.clientHeight;
     const top = this.top;
-    let dropped = false;
     for (const host of this.hosts) {
       if (!host.rp.live) continue;
       const r = host.getBoundingClientRect();
@@ -373,12 +398,8 @@ class ContinuousView {
         host.shadowRoot.replaceChildren();
         host.rp.live = false;
         this.stats.evicted++;
-        dropped = true;
       }
     }
-    // A placeholder takes the section's exact height, so nothing moves; re-anchor only
-    // after a real eviction (never on every scroll frame).
-    if (dropped) this.restore();
   }
 
   scalePlaceholders(ratio) {
@@ -481,10 +502,19 @@ class PagedView {
     this.host = this.makeHost();
     this.host2 = null; // pair mode: the spread's second section
     el.replaceChildren(this.host);
-    this.ro = new ResizeObserver(() => this.relayout());
+    this.ro = new ResizeObserver(() => {
+      const dpr = devicePixelRatio || 1;
+      const w = Math.round(this.el.getBoundingClientRect().width * dpr) / dpr;
+      const h = this.el.clientHeight;
+      if (w === this.pw && h === this.ph) return;
+      this.relayout();
+    });
     this.ro.observe(el);
     // overflow:hidden is still programmatically scrollable (focus, selection): pin it.
-    this.onScroll = () => { if (this.el.scrollLeft) this.el.scrollLeft = 0; };
+    this.onScroll = () => {
+      if (this.el.scrollLeft) this.el.scrollLeft = 0;
+      if (this.el.scrollTop) this.el.scrollTop = 0;
+    };
     el.addEventListener('scroll', this.onScroll);
   }
 
@@ -586,8 +616,8 @@ class PagedView {
     const y0 = b.top + this.padY;
     const { cw, colH } = this;
     return this.rev
-      ? (r) => Math.floor((b.right - r.left - 1) / cw) * colH + (r.bottom - y0)
-      : (r) => Math.floor((r.right - 1 - b.left) / cw) * colH + (r.bottom - y0);
+      ? (r) => Math.floor((b.right - r.left - 1) / cw) * colH + Math.min(colH, Math.max(1, r.bottom - y0))
+      : (r) => Math.floor((r.right - 1 - b.left) / cw) * colH + Math.min(colH, Math.max(1, r.bottom - y0));
   }
 
   setPage(p) {
@@ -628,7 +658,9 @@ class PagedView {
   pageOf(pos) {
     if (!this.root || this.pair) return 0;
     if (!pos.path) return Math.min(this.pages - 1, Math.floor(clamp01(pos.frac ?? 0) * this.pages));
-    return this.colOf(locate(this.root, pos).left + 1);
+    const r = locate(this.root, pos);
+    if (!r.width && !r.height) return Math.min(this.pages - 1, Math.floor(clamp01(pos.frac ?? 0) * this.pages));
+    return this.colOf(this.rev ? r.right - 1 : r.left + 1);
   }
 
   captureAt() {
@@ -640,6 +672,9 @@ class PagedView {
 
   async relayout() {
     if (!this.root) return;
+    const prevSpan = this.span;
+    const prevPage = this.page;
+    const prevPages = this.pages;
     const before = `${this.span} ${this.page} ${this.pages}`;
     this.measure();
     const spine = this.position.spine;
@@ -650,7 +685,8 @@ class PagedView {
       if (this.overflow) { this.noPair = true; await this.show(spine); }
     }
     if (!this.host) return;
-    this.setPage(this.pageOf(this.position));
+    const sameGrid = this.span === prevSpan && this.pages === prevPages && this.spine === spine && !this.overflow;
+    this.setPage(sameGrid ? prevPage : this.pageOf(this.position));
     if (`${this.span} ${this.page} ${this.pages}` !== before) {
       this.position = this.captureAt();
       this.ctx.emit(this.position);

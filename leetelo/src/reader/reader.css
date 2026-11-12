@@ -771,21 +771,32 @@ body.dragging .drop-art .pane-fill {
 }
 
 .meta .format-size {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
     color: var(--muted);
     font-size: 10.5px;
-    opacity: 0.85;
     height: 1.35em;
     line-height: 1.35;
+    margin: 1px 0 0;
+}
+
+.meta .format-size .fmt-txt {
+    opacity: 0.85;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin: 1px 0 0;
 }
 
 .meta .format-size .meta-pct {
     color: var(--rp-progress, salmon) !important;
     font-weight: 600;
-    opacity: 1;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    margin-inline-start: auto;
 }
 
 /* Book action buttons (Leyendo, Por leer, Leído, Sinopsis, Eliminar) */
@@ -1341,7 +1352,7 @@ body.dragging .shelf-dropzone {
 
 #view.rp-scroll-view {
     padding-top: calc(max(var(--rp-pad-y, 5vh), calc(max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) + 14px)) + 8px) !important;
-    padding-bottom: max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)))) !important;
+    padding-bottom: max(35vh, calc(var(--rp-pad-y, 5vh) + 48px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)))) !important;
 }
 
 .reading.paged #view {
@@ -1628,6 +1639,19 @@ body.dragging .shelf-dropzone {
     pointer-events: none;
 }
 
+.reading:not(.paged) .foot-margin {
+    height: calc(100% + var(--rp-pad-y, 5vh));
+}
+
+.reading-foot-left {
+    position: relative;
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
 .reading-foot-right {
     position: relative;
     z-index: 25;
@@ -1729,15 +1753,16 @@ body.dragging .shelf-dropzone {
     display: none;
 }
 
-/* Clock widget: circular analog clock floating above the switch aligned in the footer */
+/* Clock widget: circular analog clock floating above the switch on the left side of the footer */
 .clock-widget {
     position: relative;
     z-index: 15;
-    width: 131px;
+    width: auto;
     height: 24px;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    flex-shrink: 0;
     pointer-events: none;
 }
 
@@ -1748,8 +1773,8 @@ body.dragging .shelf-dropzone {
 .analog-clock {
     position: absolute;
     bottom: calc(100% + var(--rail-h, 42px) + 10px);
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    transform: translateY(0);
     width: 131px;
     height: 131px;
     display: flex;
@@ -2908,6 +2933,12 @@ body.dragging .shelf-dropzone {
         justify-content: space-between;
     }
 
+    .reading-foot-left {
+        gap: 6px;
+        flex: 0 1 auto;
+        min-width: 0;
+    }
+
     .reading-foot-right {
         flex-shrink: 0;
         gap: 6px;
@@ -3122,6 +3153,10 @@ body.dragging .shelf-dropzone {
         gap: 4px;
     }
 
+    .reading-foot-left {
+        gap: 4px;
+    }
+
     .reading-foot-right {
         gap: 4px;
     }
@@ -3212,7 +3247,7 @@ body.dragging .shelf-dropzone {
 }
 
 #reading:not(.mobile-ui-visible) #analog-clock {
-    transform: translateX(-50%) translateY(var(--rail-h, 42px));
+    transform: translateY(var(--rail-h, 42px));
 }
 
 #reading.mobile-ui-visible #bar {
@@ -3230,7 +3265,7 @@ body.dragging .shelf-dropzone {
 }
 
 #reading.mobile-ui-visible #analog-clock {
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
 }
 
 /* ------------------------------------------------------------ what's new */

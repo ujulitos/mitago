@@ -284,12 +284,10 @@ function bookItem(book, pos, stat, category, categories) {
   const isDone = pct >= 100;
 
   const format = (book.fileName || '').split('.').pop().toUpperCase() || 'EPUB';
-  const sizeStr = book.size ? formatSize(book.size, uiLanguage()) : '';
-  const formatSizeText = [format, sizeStr].filter(Boolean).join(', ');
 
   const formatSizeEl = el('span', { class: 'format-size' },
-    formatSizeText ? el('span', { class: 'fmt-txt', textContent: formatSizeText }) : null,
-    pct > 0 ? el('span', { class: 'meta-pct', textContent: ` · ${pct}%` }) : null
+    format ? el('span', { class: 'fmt-txt', textContent: format }) : null,
+    pct > 0 ? el('span', { class: 'meta-pct', textContent: `${pct}%` }) : null
   );
 
   const meta = el('div', { class: 'meta' },
