@@ -17,7 +17,7 @@ import { chapterTicks, percent, tocIndexAt } from './logic.js';
 export const MEASURES = { narrow: 30, medium: 35, wide: 44 }; // em: ~62, ~72, ~90 characters per line
 export const READER_DEFAULTS = { ...STYLE_DEFAULTS, marginV: 10, marginH: 20 };
 const SIZES = { min: 12, max: 36, step: 2 };
-const LINE_HEIGHTS = [1.3, 1.55, 1.9];
+const LINE_HEIGHTS = [1.3, 1.4, 1.9];
 const WORD_SPACINGS = [0, 0.12, 0.25];
 
 let rp;
@@ -150,7 +150,7 @@ function buildTocPageContext() {
   syncPagedLayoutCache();
   const s = rp.view.style;
   const fs = Number(s.fontSize ?? 18);
-  const lh = Number(s.lineHeight ?? 1.55);
+  const lh = Number(s.lineHeight ?? 1.4);
   const textW = Math.max(80, (impl?.cw || window.innerWidth) - 2 * (impl?.m || 24));
   const textH = Math.max(80, impl?.colH || window.innerHeight * 0.8);
   const linesPerPage = Math.max(1, textH / (fs * lh));
@@ -464,7 +464,7 @@ function syncSettings() {
   labelled(up, up.disabled ? t('largest_size') : `${t('larger_text')} (+)`);
   segs.font?.set(s.fontFamily);
 
-  const lh = Number(s.lineHeight ?? 1.55);
+  const lh = Number(s.lineHeight ?? 1.4);
   if ($('slider-lh')) $('slider-lh').value = String(lh);
   if ($('lh-val')) $('lh-val').textContent = lh.toFixed(2);
 

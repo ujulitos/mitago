@@ -167,6 +167,15 @@ async function show(book, id, { push = false } = {}) {
     }
   } catch {}
   const forceColors = applyReadingTheme(await store.getSetting('theme', null));
+  if (!(await store.getSetting('defaults_v2', false))) {
+    const savedStyle = await store.getSetting('style', null);
+    if (savedStyle) {
+      if (savedStyle.lineHeight === 1.55) savedStyle.lineHeight = 1.4;
+      if (savedStyle.fontFamily === 'publisher') savedStyle.fontFamily = 'condensed';
+      await store.setSetting('style', savedStyle);
+    }
+    await store.setSetting('defaults_v2', true);
+  }
   // This book's own text settings (P1-4) replace the global ones entirely.
   const own = await store.getSetting(`book:${id}`, null);
   rp.ownStyle = !!own?.style;

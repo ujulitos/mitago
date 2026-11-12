@@ -1,52 +1,50 @@
 {
-  "name": "Léetelo — Lector de Libros Web",
-  "short_name": "Léetelo",
-  "description": "Lector web moderno y ligero para libros EPUB, FB2 y CBZ sin conexión.",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#17181b",
-  "theme_color": "#17181b",
-  "orientation": "any",
-  "categories": ["books", "productivity", "utilities"],
-  "icons": [
-    {
-      "src": "icons/icon-16.png",
-      "sizes": "16x16",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-32.png",
-      "sizes": "32x32",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-48.png",
-      "sizes": "48x48",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
-    }
-  ]
+    "name": "Léetelo",
+    "short_name": "Léetelo",
+    "description": "Lector web moderno y ligero para libros EPUB, FB2 y CBZ sin conexión.",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#17181b",
+    "theme_color": "#17181b",
+    "orientation": "any",
+    "categories": ["books", "productivity", "utilities"],
+    "icons": [{
+            "src": "icons/icon-16.png",
+            "sizes": "16x16",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-32.png",
+            "sizes": "32x32",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-48.png",
+            "sizes": "48x48",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icons/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        }
+    ]
 }
-

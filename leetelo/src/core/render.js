@@ -19,7 +19,7 @@ import { pageGeometry, spreadStart } from './spread.js';
 // running text (hyphenated where the language is known). spread: pages per screen in the
 // paged view, 'auto' | '1' | '2' (src/core/spread.js).
 export const STYLE_DEFAULTS = Object.freeze({
-  fontSize: 18, fontFamily: 'publisher', lineHeight: 1.55, margin: 120, marginV: 10, marginH: 20, maxWidth: 900, forceColors: false,
+  fontSize: 18, fontFamily: 'condensed', lineHeight: 1.4, margin: 120, marginV: 10, marginH: 20, maxWidth: 900, forceColors: false,
   letterSpacing: 0, wordSpacing: 0, justify: false, spread: 'auto',
 });
 const FAMILIES = {
