@@ -468,7 +468,9 @@ function syncSettings() {
   up.disabled = s.fontSize >= SIZES.max;
   labelled(down, down.disabled ? t('smallest_size') : `${t('smaller_text')} (−)`);
   labelled(up, up.disabled ? t('largest_size') : `${t('larger_text')} (+)`);
-  segs.font?.set(s.fontFamily);
+  const validFonts = new Set(['condensed', 'source_sans', 'fira_condensed', 'atkinson', 'noto_sans', 'asap_condensed']);
+  const activeFont = validFonts.has(s.fontFamily) ? s.fontFamily : (s.fontFamily === 'readable' ? 'atkinson' : 'condensed');
+  segs.font?.set(activeFont);
 
   const lh = Number(s.lineHeight ?? 1.4);
   if ($('slider-lh')) $('slider-lh').value = String(lh);
@@ -573,15 +575,18 @@ function initSettings() {
   $('size-up').append(icon('plus', 16));
   $('size-down').addEventListener('click', () => bumpSize(-1));
   $('size-up').addEventListener('click', () => bumpSize(1));
-  const fam = {
-    publisher: 'inherit',
-    serif: 'Georgia, serif',
-    sans: 'system-ui, sans-serif',
-    readable: 'Verdana, Tahoma, sans-serif',
-    condensed: '"Roboto Condensed", "Arial Narrow", sans-serif',
-  };
-  segs.font = radioGroup($('seg-font'), ['publisher', 'serif', 'sans', 'readable', 'condensed'].map((v) => ({
-    value: v, label: t(`font_${v}`), content: [el('span', { style: `font-family:${fam[v]}`, textContent: t(`font_${v}_short`) })],
+  const fontOptions = [
+    ['condensed', 'Roboto Condensed', 'Roboto', '"Roboto Condensed", "Arial Narrow", sans-serif'],
+    ['source_sans', 'Source Sans 3', 'Source Sans', '"Source Sans 3", sans-serif'],
+    ['fira_condensed', 'Fira Sans Condensed', 'Fira Sans', '"Fira Sans Condensed", sans-serif'],
+    ['noto_sans', 'Noto Sans', 'Noto', '"Noto Sans", sans-serif'],
+    ['asap_condensed', 'Asap Condensed', 'Asap', '"Asap Condensed", sans-serif'],
+    ['atkinson', 'Atkinson Hyperlegible', 'Atkinson', '"Atkinson Hyperlegible", sans-serif'],
+  ];
+  segs.font = radioGroup($('seg-font'), fontOptions.map(([v, label, shortLabel, fontCss]) => ({
+    value: v,
+    label,
+    content: [el('span', { style: `font-family:${fontCss}`, textContent: shortLabel })],
   })), (v) => setStyle({ fontFamily: v }));
   wireSlider($('slider-lh'), (v) => {
     if ($('lh-val')) $('lh-val').textContent = v.toFixed(2);
@@ -967,7 +972,9 @@ export async function setupBook() {
   spinePagesCache.clear();
   tocLayoutKey = '';
   $('reading').classList.remove('mobile-ui-visible');
-  $('book-title').textContent = rp.book.title || t('untitled');
+  const title = rp.book.title || t('untitled');
+  const creator = (rp.book.creator || '').trim();
+  $('book-title').textContent = creator ? `${title} - ${creator}` : title;
   $('results').replaceChildren();
   $('search-status').textContent = '';
   $('search-back').hidden = true;

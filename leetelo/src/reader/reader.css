@@ -2565,6 +2565,24 @@ body.dragging .shelf-dropzone {
     white-space: nowrap;
 }
 
+#seg-font.segmented {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    width: 100%;
+    border-radius: 14px;
+}
+
+#seg-font.segmented button {
+    height: auto;
+    min-height: 28px;
+    padding: 5px 6px;
+    font-size: 12.5px;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-align: center;
+}
+
 .swatches {
     display: inline-flex;
     gap: 5px;

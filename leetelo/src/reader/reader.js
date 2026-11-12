@@ -187,6 +187,10 @@ async function show(book, id, { push = false } = {}) {
   rawStyle.marginV = (!Number.isFinite(mvNum) || mvNum > 30 || mvNum < 10) ? 10 : mvNum;
   const mhNum = Number(rawStyle.marginH);
   rawStyle.marginH = (!Number.isFinite(mhNum) || mhNum > 60 || mhNum < 10) ? 20 : mhNum;
+  const validFonts = new Set(['condensed', 'source_sans', 'fira_condensed', 'atkinson', 'noto_sans', 'asap_condensed']);
+  if (!validFonts.has(rawStyle.fontFamily)) {
+    rawStyle.fontFamily = rawStyle.fontFamily === 'readable' ? 'atkinson' : 'condensed';
+  }
   const em = typeof rawStyle.measure === 'number' ? rawStyle.measure : (MEASURES[rawStyle.measure] ?? 35);
   const maxWidth = Math.round(em * (rawStyle.fontSize ?? 18));
   const style = { ...rawStyle, maxWidth, forceColors };

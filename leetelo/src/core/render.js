@@ -23,12 +23,12 @@ export const STYLE_DEFAULTS = Object.freeze({
   letterSpacing: 0, wordSpacing: 0, justify: false, spread: 'auto',
 });
 const FAMILIES = {
-  serif: 'Georgia, "Iowan Old Style", "Times New Roman", serif',
-  sans: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-  mono: 'ui-monospace, Menlo, Consolas, monospace',
-  // Dyslexia-friendly: installed faces only (no remote fonts), wide and open.
-  readable: '"OpenDyslexic", "Atkinson Hyperlegible", Lexend, Verdana, Tahoma, sans-serif',
   condensed: '"Roboto Condensed", "Arial Narrow", sans-serif',
+  source_sans: '"Source Sans 3", sans-serif',
+  fira_condensed: '"Fira Sans Condensed", sans-serif',
+  atkinson: '"Atkinson Hyperlegible", sans-serif',
+  noto_sans: '"Noto Sans", sans-serif',
+  asap_condensed: '"Asap Condensed", sans-serif',
 };
 const FORCED_COLORS = `
 .rp-body { color: var(--rp-ink) !important; background: transparent !important; }
@@ -806,12 +806,10 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
     el.style.setProperty('--rp-pad-y', padYVh);
     el.parentElement?.style.setProperty('--rp-pad-y', padYVh);
     el.style.setProperty('--rp-max-width', `${s.maxWidth ?? 900}px`);
-    const fam = FAMILIES[s.fontFamily] ?? (s.fontFamily !== 'publisher' ? s.fontFamily : null);
-    const spacing = s.fontFamily === 'readable' ? '.rp-body { letter-spacing: 0.02em; word-spacing: 0.12em; }' : '';
+    const fam = FAMILIES[s.fontFamily] ?? (s.fontFamily === 'readable' ? FAMILIES.atkinson : FAMILIES.condensed);
     const text = '.rp-body, .rp-body :not(code, kbd, samp, pre, pre *)';
     settingsSheet.replaceSync([
       fam ? `${text} { font-family: ${fam} !important; }` : '',
-      spacing,
       s.letterSpacing ? `${text} { letter-spacing: ${s.letterSpacing}em !important; }` : '',
       s.wordSpacing ? `${text} { word-spacing: ${s.wordSpacing}em !important; }` : '',
       s.justify ? '[data-rp-j] { text-align: justify !important; } [lang] [data-rp-j], [data-rp-j][lang] { hyphens: auto; }' : '',
