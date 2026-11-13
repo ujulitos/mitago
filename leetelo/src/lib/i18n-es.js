@@ -275,6 +275,8 @@ export default {
   "hl_save": "Guardar",
   "hl_cancel": "Cancelar",
   "hl_delete": "Eliminar subrayado",
+  "hl_copy": "Copiar subrayado y nota",
+  "hl_copied": "Subrayado copiado",
   "hl_export_md": "Exportar Markdown",
   "hl_export_json": "Exportar JSON",
   "hl_empty": "Aún no hay subrayados. Selecciona texto del libro para subrayarlo o añadir una nota (H subraya la selección).",

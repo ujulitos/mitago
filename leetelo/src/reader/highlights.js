@@ -10,6 +10,7 @@
 
 import { icon } from '../lib/icons.js';
 import { t } from '../lib/i18n.js';
+import { showToast } from '../lib/toast.js';
 import { boundaryAt, pointOf } from '../core/anchor.js';
 import { COLORS, exportName, snippet, sortHighlights, toJson, toMarkdown } from '../core/notes.js';
 import { parse, progress as progressOf, serialize } from '../core/position.js';
@@ -239,18 +240,62 @@ async function remove(h) {
   await refresh();
 }
 
+function formatNote(raw) {
+  const note = raw?.trim();
+  if (!note) return '';
+  return /^nota:\s*/i.test(note) ? note : `Nota: ${note}`;
+}
+
+function formatHighlightCopy(h) {
+  const title = (rp.book?.title || t('untitled')).trim();
+  const creator = (rp.book?.creator || '').trim();
+  const header = creator ? `${title} - ${creator}` : title;
+  return [header, h.text?.trim(), formatNote(h.note)].filter(Boolean).join('\n\n');
+}
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch { /* fallback below */ }
+  const ta = el('textarea', { value: text });
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
+  document.body.append(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { ok = false; }
+  ta.remove();
+  return ok;
+}
+
 // ------------------------------------------------------------------------------------ pane
 function renderList() {
   $('hl-empty').hidden = list.length > 0;
   $('hl-export-md').disabled = $('hl-export-json').disabled = !list.length;
   $('hl-list').replaceChildren(...list.map((h) => {
+    const noteText = formatNote(h.note);
     const jump = el('button', { type: 'button', class: 'jump', dataset: { color: h.color } },
       el('small', { textContent: `${chapterOf(h.s.spine)} · ${t('percent', percent(h.progress ?? 0))}` }),
       el('span', { class: 'quote', textContent: snippet(h.text, 180) }),
-      h.note ? el('span', { class: 'note', textContent: snippet(h.note, 240) }) : null);
+      noteText ? el('span', { class: 'note', textContent: snippet(noteText, 240) }) : null);
     jump.addEventListener('click', () => rp.view.goTo(h.s));
+    const copyBtn = labelled(el('button', { type: 'button', class: 'icon-btn hl-copy' }, icon('copy', 15)), t('hl_copy'));
+    copyBtn.addEventListener('click', async () => {
+      const ok = await copyText(formatHighlightCopy(h));
+      if (!ok) { showToast({ level: 'warn', text: t('copy_failed') }); return; }
+      copyBtn.replaceChildren(icon('check', 15));
+      copyBtn.classList.add('copied');
+      showToast({ level: 'ok', text: t('hl_copied') });
+      setTimeout(() => {
+        copyBtn.replaceChildren(icon('copy', 15));
+        copyBtn.classList.remove('copied');
+      }, 1500);
+    });
     // Keyboard twin of clicking the highlight in the text: go there, open its note.
-    const edit = labelled(el('button', { type: 'button', class: 'icon-btn' }, icon('note', 15)), t('hl_edit_note'));
+    const edit = labelled(el('button', { type: 'button', class: 'icon-btn hl-edit' }, icon('note', 15)), t('hl_edit_note'));
     edit.addEventListener('click', async () => {
       await rp.view.goTo(h.s);
       const live = list.find((x) => x.id === h.id);
@@ -258,14 +303,14 @@ function renderList() {
       showBar(visibleRects(live.range), live);
       openNote();
     });
-    const del = labelled(el('button', { type: 'button', class: 'icon-btn' }, icon('trash', 15)), t('hl_delete'));
+    const del = labelled(el('button', { type: 'button', class: 'icon-btn hl-del' }, icon('trash', 15)), t('hl_delete'));
     del.addEventListener('click', async () => {
       const li = del.closest('li');
       const i = Math.max(0, [...$('hl-list').children].indexOf(li) - (li.nextElementSibling ? 0 : 1));
       await remove(h);
       ($('hl-list').children[i]?.querySelector('.jump') ?? $('hl-export-md')).focus();
     });
-    return el('li', {}, jump, edit, del);
+    return el('li', {}, jump, copyBtn, edit, del);
   }));
 }
 

@@ -278,6 +278,8 @@ export default {
 "hl_save": "Save",
 "hl_cancel": "Cancel",
 "hl_delete": "Delete highlight",
+"hl_copy": "Copy highlight and note",
+"hl_copied": "Highlight copied",
 "hl_export_md": "Export Markdown",
 "hl_export_json": "Export JSON",
 "hl_empty": "No highlights yet. Select text in the book to highlight it or add a note (H highlights the selection).",

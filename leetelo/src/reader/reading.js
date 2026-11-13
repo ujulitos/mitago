@@ -23,6 +23,7 @@ let store;
 let marks = [];
 let segs = {};
 let lastFocus = null;
+let prevTheme = null;
 
 // ---------------------------------------------------------------------------------- chrome
 /** Show the bar (bar is always visible). */
@@ -374,10 +375,13 @@ export async function renderMarks() {
 
 function markBookmarkState() {
   const here = !!hereMark();
-  const b = $('btn-bookmark');
-  b.setAttribute('aria-pressed', String(here));
-  b.replaceChildren(icon(here ? 'bookmarkOn' : 'bookmark', 19));
-  labelled(b, `${here ? t('remove_bookmark') : t('add_bookmark')} (B)`);
+  const qb = $('quick-bookmark');
+  if (qb) {
+    qb.setAttribute('aria-pressed', String(here));
+    if (here) qb.replaceChildren(icon('bookmarkOn', 20));
+    else qb.replaceChildren();
+    labelled(qb, `${here ? t('remove_bookmark') : t('add_bookmark')} (B)`);
+  }
   $('mark-add').disabled = here;
   $('mark-reason').hidden = !here;
   $('mark-reason').textContent = here ? t('already_bookmarked') : '';
@@ -404,9 +408,28 @@ export function closeSettings(restore = true) {
   return closePanel(restore);
 }
 
+function quickThemeTarget() {
+  const current = rp?.theme;
+  if (prevTheme && prevTheme !== current && THEMES.includes(prevTheme)) return prevTheme;
+  return current === 'sepia' ? 'contrast' : 'sepia';
+}
+
+function updateQuickThemeBtn() {
+  const btn = $('quick-theme');
+  if (!btn) return;
+  const target = quickThemeTarget();
+  btn.dataset.targetTheme = target;
+  labelled(btn, `${t('theme')}: ${t(`theme_${target}`)}`);
+}
+
 /** Effective theme -> page colours and the engine's colour forcing. */
 export function applyReadingTheme(choice) {
+  const previous = rp?.theme;
   rp.theme = applyTheme(choice);
+  if (previous && previous !== rp.theme && THEMES.includes(previous)) {
+    prevTheme = previous;
+    store?.setSetting('prevTheme', prevTheme);
+  }
   const forced = true;
   if (rp.view && rp.view.style.forceColors !== forced) rp.view.setStyle({ forceColors: forced });
   segs.theme?.set(rp.theme);
@@ -415,6 +438,7 @@ export function applyReadingTheme(choice) {
   const lbl = $('lib-theme-label');
   if (toggle) toggle.dataset.value = rp.theme;
   if (lbl) lbl.textContent = t('theme');
+  updateQuickThemeBtn();
   return forced;
 }
 
@@ -910,7 +934,7 @@ export function onPosition(pos, progress) {
   const rail = $('rail');
   rail.setAttribute('aria-valuenow', String(pct));
   rail.setAttribute('aria-valuetext', `${t('percent', pct)}, ${$('chapter').textContent}`);
-  if (marks.length || $('btn-bookmark').getAttribute('aria-pressed') === 'true') markBookmarkState();
+  if (marks.length || $('quick-bookmark')?.getAttribute('aria-pressed') === 'true') markBookmarkState();
   $('book-fill').style.width = `${progress * 100}%`;
 }
 
@@ -1025,7 +1049,16 @@ export function initReading(state, deps) {
   $('btn-search').addEventListener('click', () => togglePanel('search'));
   $('btn-marks').addEventListener('click', () => togglePanel('marks'));
   $('btn-hl').addEventListener('click', () => togglePanel('hl'));
-  $('btn-bookmark').addEventListener('click', () => toggleBookmark());
+  $('quick-bookmark')?.addEventListener('click', () => toggleBookmark());
+  $('quick-theme')?.addEventListener('click', async () => {
+    const next = quickThemeTarget();
+    applyReadingTheme(next);
+    await store.setSetting('theme', next);
+  });
+  store.getSetting('prevTheme', null).then((v) => {
+    if (!prevTheme && THEMES.includes(v)) prevTheme = v;
+    updateQuickThemeBtn();
+  }).catch(() => {});
   $('btn-settings').addEventListener('click', () => togglePanel('settings'));
   $('panel-close').addEventListener('click', () => closePanel());
   $('mark-add').addEventListener('click', () => addBookmark());
@@ -1094,7 +1127,7 @@ export function initReading(state, deps) {
   });
   $('reading').addEventListener('click', (e) => {
     if (overlayWasOpen) return;
-    if (e.target.closest('#bar, #rail, #clock-widget, #page-prev, #page-next, #panel, #settings, #hl-bar')) return;
+    if (e.target.closest('#bar, #rail, #clock-widget, #page-prev, #page-next, #panel, #settings, #hl-bar, #quick-theme, #quick-bookmark')) return;
     if (Math.hypot(e.clientX - tapStartX, e.clientY - tapStartY) > 12) return;
     const sel = window.getSelection?.();
     if (sel && !sel.isCollapsed && String(sel).trim().length > 0) return;

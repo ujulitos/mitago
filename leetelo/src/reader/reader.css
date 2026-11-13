@@ -1397,6 +1397,47 @@ body.dragging .shelf-dropzone {
     pointer-events: none;
 }
 
+.corner-btn {
+    position: absolute;
+    z-index: 19;
+    top: calc(max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) + 8px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 120ms ease, opacity 150ms ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.corner-btn:active {
+    transform: scale(0.92);
+}
+
+.corner-btn:focus-visible {
+    outline: 2px solid var(--accent, var(--rp-ink));
+    outline-offset: 2px;
+}
+
+.corner-theme {
+    left: calc(max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)) + 10px);
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.corner-bookmark {
+    right: calc(max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)) + 10px);
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--rp-progress, var(--rp-ink));
+}
+
 /* Progress rail: horizontal bar in the footer just above pagination, chapter time and progress %. */
 .rail {
     position: absolute;
@@ -2244,7 +2285,15 @@ body.dragging .shelf-dropzone {
 }
 
 .hl-list li {
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
+.hl-list .icon-btn:not(.hl-del):hover {
+    color: var(--ink);
+}
+
+.hl-list .hl-copy.copied {
+    color: var(--accent, var(--ink));
 }
 
 .hl-list .quote {
