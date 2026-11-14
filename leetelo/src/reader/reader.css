@@ -1211,7 +1211,7 @@ body.dragging .dropzone {
 #todos,
 .shelf-section-all {
     margin-top: 8px;
-    padding: 0;
+    padding: 0 24px;
     border: 0;
     background: transparent;
     box-shadow: none;
@@ -3305,7 +3305,7 @@ body.dragging .shelf-dropzone {
 
     #todos,
     .shelf-section-all {
-        padding: 0;
+        padding: 0 16px;
     }
 
     .dropzone h2 {
