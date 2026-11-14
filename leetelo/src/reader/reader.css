@@ -1732,6 +1732,18 @@ body.dragging .shelf-dropzone {
     opacity: 0.2;
 }
 
+.splash-version {
+    position: absolute;
+    left: 50%;
+    bottom: max(28px, calc(18px + env(safe-area-inset-bottom, 0px)));
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 550;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
 @keyframes rp-splash-in {
     from {
         opacity: 0;

@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="src/lib/fonts.css">
 
     <!-- Core styles -->
+    <script src="src/lib/version.js"></script>
     <script src="src/lib/theme-boot.js"></script>
     <link rel="stylesheet" href="src/lib/base.css">
     <link rel="stylesheet" href="src/reader/reader.css">
@@ -42,7 +43,14 @@
                 </svg>
             </span>
         </div>
+        <div id="splash-version" class="splash-version"></div>
     </div>
+    <script>
+        if (window.APP_VERSION) {
+            const sv = document.getElementById('splash-version');
+            if (sv) sv.textContent = 'v ' + window.APP_VERSION;
+        }
+    </script>
 
     <input id="file" type="file" accept=".epub,application/epub+zip,.fb2,.fbz,.fb2.zip,.zip,.cbz" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
 
@@ -448,7 +456,7 @@
                 navigator.serviceWorker.register('./sw.js', {
                         updateViaCache: 'none'
                     })
-                    .then((reg) => reg?.update?.())
+                    .then((reg) => reg ?.update ?.())
                     .catch(() => {});
             });
         }

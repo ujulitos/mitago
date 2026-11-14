@@ -1,7 +1,7 @@
 // PWA Service Worker for Léetelo WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'leetelo-pwa-v81';
+const CACHE_NAME = 'leetelo-pwa-v83';
 
 const STATIC_ASSETS = [
   './',
@@ -16,6 +16,7 @@ const STATIC_ASSETS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/libro.jpg',
+  './src/lib/version.js',
   './src/lib/theme-boot.js',
   './src/lib/base.css',
   './src/lib/fonts.css',

@@ -1333,6 +1333,7 @@ export function initLibrary(c) {
   window.addEventListener('rp-book-saved', () => { syncDone = false; renderLibrary(); });
   window.addEventListener('rp-reload-library', () => { syncDone = false; renderLibrary(); });
   const brand = $('brand'); if (brand) brand.prepend(logo(28));
+  const appVerEl = $('app-version'); if (appVerEl && window.APP_VERSION) appVerEl.textContent = window.APP_VERSION;
   const dropArtEl = $('drop-art'); if (dropArtEl) dropArtEl.append(dropArt());
 
   const searchIconEl = $('shelf-search-icon');
