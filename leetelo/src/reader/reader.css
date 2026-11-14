@@ -902,7 +902,7 @@ body.dragging .dropzone {
     display: grid;
     width: 100%;
     grid-template-columns: repeat(auto-fill, minmax(122px, 1fr));
-    gap: 24px 18px;
+    gap: 28px 24px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -914,13 +914,13 @@ body.dragging .dropzone {
     display: grid;
     width: 100%;
     grid-template-columns: repeat(auto-fill, minmax(122px, 1fr));
-    gap: 24px 18px;
+    gap: 28px 24px;
 }
 
 .books.books-row {
     display: flex;
     flex-wrap: nowrap;
-    gap: 16px;
+    gap: 20px;
     overflow-x: auto;
     overflow-y: hidden;
     padding: 4px 2px 10px;
@@ -1202,7 +1202,7 @@ body.dragging .dropzone {
 }
 
 .shelf-section-row {
-    padding: 18px 40px 16px;
+    padding: 18px 26px 16px;
     border: 1px solid var(--line);
     border-radius: 6px;
     background: color-mix(in srgb, var(--card) 82%, transparent);
@@ -1212,7 +1212,7 @@ body.dragging .dropzone {
 #todos,
 .shelf-section-all {
     margin-top: 8px;
-    padding: 0 40px;
+    padding: 0 26px;
     border: 0;
     background: transparent;
     box-shadow: none;
@@ -3289,11 +3289,11 @@ body.dragging .shelf-dropzone {
     #todos .books,
     .books.books-all {
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        gap: 20px 14px;
+        gap: 24px 20px;
     }
 
     .books.books-row {
-        gap: 12px;
+        gap: 16px;
     }
 
     .books.books-row>.book {
@@ -3302,12 +3302,12 @@ body.dragging .shelf-dropzone {
     }
 
     .shelf-section-row {
-        padding: 14px 28px 12px;
+        padding: 14px 16px 12px;
     }
 
     #todos,
     .shelf-section-all {
-        padding: 0 28px;
+        padding: 0 16px;
     }
 
     .dropzone h2 {
