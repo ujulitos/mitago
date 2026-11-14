@@ -96,11 +96,18 @@ function syncBatchSelectionUI() {
   }
 }
 
-function enterSelectionMode(bookId) {
-  const todosEl = $('todos');
-  if (todosEl) {
-    for (const box of todosEl.querySelectorAll('.confirm')) box.remove();
+function closeAllDeleteConfirms() {
+  for (const box of document.querySelectorAll('.book .confirm')) {
+    box.remove();
   }
+  for (const btn of document.querySelectorAll('.book .btn-delete.active')) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
+  }
+}
+
+function enterSelectionMode(bookId) {
+  closeAllDeleteConfirms();
   selectionMode = true;
   if (bookId) selectedBookIds.add(bookId);
   try { navigator.vibrate?.(15); } catch {}
@@ -182,10 +189,14 @@ export function closeMetadataModal() {
   const modal = $('meta-modal');
   if (modal) modal.hidden = true;
   document.body.style.overflow = '';
+  for (const btn of document.querySelectorAll('.book .btn-meta.active')) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
+  }
   if (currentMetaTrigger) {
     currentMetaTrigger.classList.remove('active');
     currentMetaTrigger.setAttribute('aria-pressed', 'false');
-    currentMetaTrigger.focus();
+    currentMetaTrigger.blur();
   }
   currentMetaBookId = null;
   currentMetaTrigger = null;
@@ -221,8 +232,13 @@ function renderHtmlSynopsis(container, html) {
 }
 
 export function openMetadataModal(book, pos, stat, triggerBtn) {
+  closeAllDeleteConfirms();
   currentMetaBookId = book.id;
   currentMetaTrigger = triggerBtn;
+  for (const btn of document.querySelectorAll(`.book[data-id="${CSS.escape(book.id)}"] .btn-meta`)) {
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
+  }
   if (triggerBtn) {
     triggerBtn.classList.add('active');
     triggerBtn.setAttribute('aria-pressed', 'true');
@@ -562,6 +578,7 @@ function bookItem(book, pos, stat, category, categories) {
     btnDel = labelled(el('button', {
       type: 'button',
       class: 'book-action-btn btn-delete',
+      'aria-pressed': 'false',
     }, icon('trash', 18)), t('delete'));
     actionBtns.push(btnDel);
   }
@@ -649,16 +666,28 @@ function bookItem(book, pos, stat, category, categories) {
 
 /** Inline confirm on the cover itself; Keep is focused (the safe choice). */
 function confirmDelete(li, book, del, categories) {
-  li.querySelector('.confirm')?.remove();
+  const wasOpenHere = Boolean(li.querySelector('.confirm'));
+  closeAllDeleteConfirms();
+  if (wasOpenHere) {
+    del.blur();
+    return;
+  }
+  del.classList.add('active');
+  del.setAttribute('aria-pressed', 'true');
   const keep = el('button', { type: 'button', class: 'no', textContent: t('keep') });
   const yes = el('button', { type: 'button', class: 'yes', textContent: t('delete') });
   const box = el('div', { class: 'confirm', role: 'group', 'aria-label': t('delete_named', book.title || t('untitled')) },
     el('p', { textContent: t('delete_q') }),
     el('p', { class: 'frees', textContent: t('frees', formatSize(book.size ?? 0, uiLanguage())) }),
     yes, keep);
-  const close = () => { box.remove(); del.focus(); };
+  const close = () => {
+    box.remove();
+    del.classList.remove('active');
+    del.setAttribute('aria-pressed', 'false');
+    del.blur();
+  };
   keep.addEventListener('click', close);
-  box.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
+  box.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); del.focus(); } });
   yes.addEventListener('click', async () => {
     await deleteBookRecord(book, categories, true);
     selectedBookIds.delete(book.id);
