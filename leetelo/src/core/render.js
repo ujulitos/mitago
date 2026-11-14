@@ -9,9 +9,16 @@
 // mode switch). Never a scroll offset.
 
 import { capture, locate, byId } from './anchor.js';
-import { pathOf, normalize, progress as progressOf, START } from './position.js';
+import { pathOf, normalize, progress as progressOf, atProgress, START } from './position.js';
 import { prepareTurn, reducedMotion } from './turn.js';
 import { pageGeometry, spreadStart } from './spread.js';
+
+/** Readable per-section weights (cached visible-text / media weights when analyzed, else raw size). */
+export function spineWeightsOf(book) {
+  const spine = book?.spine || [];
+  if (book?._spineWeights?.length === spine.length) return book._spineWeights;
+  return spine.map((s) => Math.max(1, s.size));
+}
 
 // forceColors: the page's theme colours (--rp-ink, --rp-link) replace the book's own
 // (dark and sepia themes); false keeps the publisher's colours.
@@ -182,8 +189,23 @@ function resolveId(root, pos) {
 class ContinuousView {
   constructor(el, book, ctx) {
     Object.assign(this, { el, book, ctx, margin: 1.5, keep: 4 });
-    this.pxPerByte = 0.33;
-    this.measured = { px: 0, bytes: 0, count: 0 };
+    this.weights = spineWeightsOf(book);
+    this.width = el.clientWidth;
+    const s = ctx.style;
+    if (book.tocPages || book.fixedLayout) {
+      this.pxPerUnit = Math.max(200, (el.clientHeight || window.innerHeight) - (ctx.inset || 0));
+    } else if (book._spineWeights?.length === book.spine.length) {
+      const fs = Number(s.fontSize ?? 18);
+      const lh = Number(s.lineHeight ?? 1.4);
+      const rawMh = Number(s.marginH ?? 20);
+      const vw = this.width || window.innerWidth;
+      const textW = Math.max(120, Math.min(Number(s.maxWidth ?? 900), vw * (1 - rawMh / 100)));
+      const charsPerLine = Math.max(12, textW / (fs * 0.52));
+      this.pxPerUnit = ((fs * lh) / charsPerLine) * 1.15;
+    } else {
+      this.pxPerUnit = 0.33;
+    }
+    this.measured = { px: 0, weight: 0, count: 0 };
     this.position = { ...START };
     // Where the edge cuts the anchor character, in its heights (0 = its top). capture()
     // takes the first character whose bottom is past the edge, so its top is usually above
@@ -192,14 +214,13 @@ class ContinuousView {
     this.line = 0;
     this.knownTop = 0; // scrollTop at the last capture/restore; anything else = the user moved
     this.stats = { materialized: 0, evicted: 0, maxLive: 0, corrections: 0 };
-    this.width = el.clientWidth;
 
     el.classList.add('rp-scroll-view');
     this.hosts = book.spine.map((item, i) => {
       const host = document.createElement('section');
       host.className = 'rp-section';
       host.dataset.spine = i;
-      host.style.height = `${Math.max(40, item.size * this.pxPerByte)}px`;
+      host.style.height = `${Math.max(40, this.weights[i] * this.pxPerUnit)}px`;
       host.attachShadow({ mode: 'open' });
       host.rp = { live: false, loading: null, height: null };
       return host;
@@ -356,17 +377,19 @@ class ContinuousView {
       const h = host.getBoundingClientRect().height;
       if (host.rp.height === null) {
         this.measured.px += h;
-        this.measured.bytes += Math.max(1, this.book.spine[i].size);
-        this.pxPerByte = this.measured.px / this.measured.bytes;
-        // Early on, re-estimate unmeasured placeholders below the anchor so the scrollbar is honest
-        // without shifting content above the reading edge during momentum scrolling.
-        if (++this.measured.count <= 8) {
-          const curSpine = this.position?.spine ?? 0;
-          for (const [j, x] of this.hosts.entries()) {
-            if (j > curSpine && x.rp.height === null && !x.rp.live) x.style.height = `${Math.max(40, this.book.spine[j].size * this.pxPerByte)}px`;
+        this.measured.weight += Math.max(1, this.weights[i]);
+        this.pxPerUnit = this.measured.px / this.measured.weight;
+        this.measured.count++;
+        // Re-estimate unmeasured placeholders below the anchor so total pages and scroll range stay accurate.
+        const curSpine = this.position?.spine ?? 0;
+        let scaled = false;
+        for (const [j, x] of this.hosts.entries()) {
+          if (j > curSpine && x.rp.height === null && !x.rp.live) {
+            x.style.height = `${Math.max(40, this.weights[j] * this.pxPerUnit)}px`;
+            scaled = true;
           }
-          this.ctx.onLayout?.();
         }
+        if (scaled) this.ctx.onLayout?.();
       }
       host.rp.height = h;
       this.hostRO.observe(host);
@@ -406,7 +429,56 @@ class ContinuousView {
     for (const h of this.hosts) {
       if (!h.rp.live) h.style.height = `${Math.max(40, parseFloat(h.style.height) * ratio)}px`;
     }
-    this.pxPerByte *= ratio;
+    this.pxPerUnit *= ratio;
+  }
+
+  bookWeights() { return this.weights; }
+
+  get bookProgress() {
+    if (!this.hosts?.length) return 0;
+    if (this.atEnd) return 1;
+    const maxScroll = Math.max(0, this.el.scrollHeight - this.el.clientHeight);
+    if (maxScroll <= 10) return 1;
+    if (this.el.scrollTop <= 1) return 0;
+    return clamp01(this.el.scrollTop / maxScroll);
+  }
+
+  async goToProgress(f) {
+    if (!this.hosts?.length) return;
+    const frac = clamp01(f);
+    if (frac <= 0) {
+      await this.goTo(START);
+      if (!this.hosts) return;
+      this.el.scrollTop = 0;
+      this.position = this.capture();
+      this.knownTop = this.el.scrollTop;
+      this.ctx.emit(this.position);
+      return;
+    }
+    if (frac >= 0.9995) {
+      const last = this.hosts.length - 1;
+      await this.materialize(last);
+      if (!this.hosts) return;
+      this.el.scrollTop = Math.max(0, this.el.scrollHeight - this.el.clientHeight);
+      this.position = this.capture();
+      this.knownTop = this.el.scrollTop;
+      this.ctx.emit(this.position);
+      return;
+    }
+    const maxBefore = Math.max(0, this.el.scrollHeight - this.el.clientHeight);
+    const targetY = (this.hosts[0]?.offsetTop ?? 0) + frac * maxBefore + this.padYPx() + 1;
+    let lo = 0, hi = this.hosts.length - 1, hit = hi;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (this.hosts[mid].offsetTop + this.hosts[mid].offsetHeight > targetY) { hit = mid; hi = mid - 1; } else lo = mid + 1;
+    }
+    await this.materialize(hit);
+    if (!this.hosts) return;
+    const maxAfter = Math.max(0, this.el.scrollHeight - this.el.clientHeight);
+    this.el.scrollTop = frac * maxAfter;
+    this.position = this.capture();
+    this.knownTop = this.el.scrollTop;
+    this.ctx.emit(this.position);
   }
 
   async goTo(pos) {
@@ -498,6 +570,8 @@ class PagedView {
     this.span = 1;
     this.imagePages = book.format === 'cbz' || !!book.fixedLayout;
     this.noPair = false;
+    this.spinePages = new Map();
+    this.layoutCacheKey = '';
     el.classList.add('rp-paged-view');
     this.host = this.makeHost();
     this.host2 = null; // pair mode: the spread's second section
@@ -593,6 +667,15 @@ class PagedView {
     const count = (w) => Math.max(1, Math.ceil((w - 1) / cw));
     this.pages = !this.root ? 1 : pair ? 1 : count(el.scrollWidth);
     this.overflow = pair && this.panes().some((h) => h.shadowRoot.firstElementChild && count(h.scrollWidth) > 1);
+    const s = this.ctx.style;
+    const key = `${span}|${pair}|${Math.round(cw)}|${Math.round(this.colH)}|${m}|${padY}|${padYBottom}|${s.fontSize}|${s.lineHeight}|${s.fontFamily}|${s.letterSpacing}|${s.wordSpacing}|${s.justify}|${s.maxWidth}|${s.forceColors}`;
+    if (key !== this.layoutCacheKey) {
+      this.spinePages.clear();
+      this.layoutCacheKey = key;
+    }
+    if (!pair && this.root && Number.isInteger(this.spine) && this.spine >= 0) {
+      this.spinePages.set(this.spine, Math.max(1, this.pages || 1));
+    }
     this.place();
   }
 
@@ -713,10 +796,109 @@ class PagedView {
   get atStart() { return this.spine <= 0 && this.page <= 0; }
   get atEnd() { return this.page + this.span >= this.pages && this.spine + (this.pair ? 2 : 1) >= this.book.spine.length; }
 
-  /** Page numbers on screen: [first, last, of]; pair mode counts the book's pages (its sections). */
+  /** Per-section and total page counts across the whole book for the current paged layout. */
+  bookLayout() {
+    const spine = this.book?.spine || [];
+    const n = spine.length;
+    if (!n) return { counts: [], starts: [], total: 1 };
+    if (this.pair || this.book.tocPages || this.imagePages) {
+      const counts = spine.map(() => 1);
+      const starts = spine.map((_, i) => i);
+      return { counts, starts, total: n };
+    }
+    const s = this.ctx.style;
+    const fs = Number(s.fontSize ?? 18);
+    const lh = Number(s.lineHeight ?? 1.4);
+    const textW = Math.max(80, (this.cw || window.innerWidth) - 2 * (this.m || 24));
+    const textH = Math.max(80, this.colH || window.innerHeight * 0.8);
+    const ls = 1 + Number(s.letterSpacing ?? 0);
+    const ws = 1 + Number(s.wordSpacing ?? 0) * 0.25;
+    const linesPerCol = Math.max(1, textH / (fs * lh));
+    const charsPerLine = Math.max(10, textW / (fs * 0.52 * ls * ws));
+    const geomCharsPerPage = Math.max(200, linesPerCol * charsPerLine * 0.88);
+    const metrics = this.book._spineMetrics?.length === n ? this.book._spineMetrics : null;
+
+    let obsChars = 0;
+    let obsPages = 0;
+    for (const [sp, pg] of this.spinePages) {
+      const m = metrics?.[sp];
+      const ch = m ? m.chars : Math.round((spine[sp]?.size ?? 0) * 0.62);
+      if (!m?.imageOnly && ch >= 350 && pg >= 2) {
+        obsChars += ch;
+        obsPages += pg;
+      }
+    }
+    const charsPerPage = obsPages > 0
+      ? Math.min(geomCharsPerPage * 2.5, Math.max(geomCharsPerPage * 0.35, obsChars / obsPages))
+      : geomCharsPerPage;
+
+    const counts = new Array(n);
+    const starts = new Array(n);
+    let acc = 0;
+    for (let i = 0; i < n; i++) {
+      starts[i] = acc;
+      let pg;
+      if (i === this.spine && this.root && !this.pair) pg = Math.max(1, this.pages || 1);
+      else if (this.spinePages.has(i)) pg = this.spinePages.get(i);
+      else if (metrics?.[i]?.imageOnly) pg = 1;
+      else {
+        const ch = metrics ? metrics[i].chars : (spine[i].size ?? 0) * 0.62;
+        pg = Math.max(1, Math.round(ch / charsPerPage));
+      }
+      counts[i] = pg;
+      acc += pg;
+    }
+    return { counts, starts, total: Math.max(1, acc) };
+  }
+
+  bookWeights() { return this.bookLayout().counts; }
+
+  /** Current chapter page numbers on screen: [first, last, totalInChapter]. */
+  get chapterFolio() {
+    if (this.pair) { const n = this.book.spine.length; return [this.spine + 1, Math.min(this.spine + 2, n), n]; }
+    return [this.page + 1, Math.min(this.page + this.span, this.pages), this.pages];
+  }
+
+  /** Whole-book page numbers on screen: [first, last, totalInBook, true]. */
   get folio() {
-    if (this.pair) { const n = this.book.spine.length; return [this.spine + 1, Math.min(this.spine + 2, n), n, true]; }
-    return [this.page + 1, Math.min(this.page + this.span, this.pages), this.pages, false];
+    const n = this.book?.spine?.length || 0;
+    if (!n) return [1, 1, 1, true];
+    const { starts, total } = this.bookLayout();
+    const sp = Math.max(0, Math.min(n - 1, this.spine));
+    const a = Math.min(total, (starts[sp] ?? 0) + (this.pair ? 0 : this.page) + 1);
+    const visCount = this.pair ? (sp + 1 < n ? 2 : 1) : Math.max(1, Math.min(this.page + this.span, this.pages) - this.page);
+    const b = Math.min(total, a + visCount - 1);
+    return [a, b, total, true];
+  }
+
+  get bookProgress() {
+    if (this.atStart) return 0;
+    if (this.atEnd) return 1;
+    const { starts, total } = this.bookLayout();
+    const sp = Math.max(0, this.spine);
+    const idx = (starts[sp] ?? 0) + (this.pair ? 0 : this.page);
+    const maxIdx = Math.max(1, total - Math.min(this.span, total));
+    return clamp01(idx / maxIdx);
+  }
+
+  async goToProgress(f) {
+    const frac = clamp01(f);
+    if (frac <= 0) return this.goTo(START);
+    if (frac >= 0.9995) {
+      const last = Math.max(0, (this.book?.spine?.length ?? 1) - 1);
+      return this.goTo({ spine: last, path: null, offset: 0, frac: 1 });
+    }
+    const { counts, starts, total } = this.bookLayout();
+    const maxIdx = Math.max(1, total - Math.min(this.span, total));
+    const target = Math.min(total - 1, Math.max(0, Math.round(frac * maxIdx)));
+    let sp = 0;
+    for (let i = 0; i < starts.length; i++) {
+      if (starts[i] <= target) sp = i;
+      else break;
+    }
+    const localPage = target - starts[sp];
+    const secFrac = (localPage + 0.05) / Math.max(1, counts[sp]);
+    return this.goTo({ spine: sp, path: null, offset: 0, frac: clamp01(secFrac) });
   }
 
   async turn(dir) {
@@ -782,7 +964,7 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
     },
     emit(pos) {
       const isEnd = impl?.atEnd;
-      const p = isEnd ? 1 : progressOf(pos, sizes);
+      const p = isEnd ? 1 : (impl?.bookProgress !== undefined ? impl.bookProgress : progressOf(pos, sizes));
       const finalPos = isEnd ? { ...pos, spine: sizes.length - 1, frac: 1 } : pos;
       onPosition?.(finalPos, p);
     },
@@ -837,6 +1019,7 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
     },
     get progress() {
       if (impl?.atEnd) return 1;
+      if (impl?.bookProgress !== undefined) return impl.bookProgress;
       return progressOf(impl.position, sizes);
     },
     get style() { return { ...ctx.style }; },
@@ -845,6 +1028,11 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
     /** Page-turn effect for paged mode: none | slide | curl | fade | scroll. */
     setEffect(e) { effect = e; },
     goTo: (pos) => impl.goTo(clean(pos)),
+    goToProgress: (fraction) => {
+      const f = clamp01(fraction);
+      if (impl?.goToProgress) return impl.goToProgress(f);
+      return impl.goTo(clean(atProgress(f, impl?.bookWeights?.() ?? sizes)));
+    },
     /** Internal link or ToC href ("OEBPS/text/ch3.xhtml#frag"). Returns false if not in the spine. */
     async goToHref(href) {
       const [path, frag = ''] = href.split('#');

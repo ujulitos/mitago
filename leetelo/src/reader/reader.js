@@ -3,9 +3,9 @@
 // (?src=file:///…). Books, positions, bookmarks and settings live in IndexedDB.
 
 import '../lib/chrome-shim.js';
-import { openAny } from '../core/formats.js';
+import { openAny, extractBookStats, ensureSpineMetrics } from '../core/formats.js';
 import { createLoader } from '../core/loader.js';
-import { createView } from '../core/render.js';
+import { createView, spineWeightsOf } from '../core/render.js';
 import { openStore, bookKey } from '../core/store.js';
 import { atProgress, START } from '../core/position.js';
 import { icon } from '../lib/icons.js';
@@ -152,6 +152,7 @@ async function showLibrary() {
 /** Lay a book out at its saved place. Returns true when it had one. */
 async function show(book, id, { push = false } = {}) {
   const store = await storeReady;
+  await ensureSpineMetrics(book);
   closeReading();
   Object.assign(rp, { book, bookId: id, index: null, ready: false });
   rp.loader = createLoader(book);
@@ -295,10 +296,12 @@ async function openFile(file) {
     let kept = known || hasRoom(await estimate(), file.size);
     if (kept) {
       try {
+        const stats = await extractBookStats(book);
         await store.putBook(file, {
           id, title: book.title, creator: book.creator, language: book.language,
           description: book.description || '',
-          fileName: file.name ?? '', spineLength: book.spine.length, ...(known ? {} : { cover: await coverThumb(book) }),
+          fileName: file.name ?? '', spineLength: book.spine.length, ...stats,
+          ...(known ? {} : { cover: await coverThumb(book) }),
         });
         if (!known) askPersist();
       } catch (e) {
@@ -323,6 +326,7 @@ async function importBookOnly(file) {
     const id = await bookKey(file);
     const known = (await store.listBooks()).some((b) => b.id === id);
     if (!known) {
+      const stats = await extractBookStats(book);
       await store.putBook(file, {
         id,
         title: book.title || file.name.replace(/\.[^.]+$/, ''),
@@ -331,6 +335,7 @@ async function importBookOnly(file) {
         description: book.description || '',
         fileName: file.name ?? '',
         spineLength: book.spine.length,
+        ...stats,
         cover: await coverThumb(book),
       });
       askPersist();
@@ -434,7 +439,7 @@ rp.turn = async (dir) => {
   await (dir > 0 ? rp.view.next() : rp.view.prev());
   settle();
 };
-rp.goToProgress = (f) => rp.view.goTo(atProgress(f, rp.book.spine.map((s) => s.size)));
+rp.goToProgress = (f) => (rp.view.goToProgress ? rp.view.goToProgress(f) : rp.view.goTo(atProgress(f, spineWeightsOf(rp.book))));
 rp.setMode = async (m) => {
   if (!rp.view || m === rp.view.mode) return;
   $('reading').classList.toggle('paged', m === 'paged');

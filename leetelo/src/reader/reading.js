@@ -5,7 +5,7 @@
 import { icon } from '../lib/icons.js';
 import { t, tn } from '../lib/i18n.js';
 import { THEMES, applyTheme } from '../lib/theme.js';
-import { STYLE_DEFAULTS } from '../core/render.js';
+import { STYLE_DEFAULTS, spineWeightsOf } from '../core/render.js';
 import { EFFECTS, reducedMotion } from '../core/turn.js';
 import { indexSection, search } from '../core/search.js';
 import { byId } from '../core/anchor.js';
@@ -87,23 +87,6 @@ function togglePanel(which) {
 }
 
 // ------------------------------------------------------------------------------------ ToC
-const spinePagesCache = new Map();
-let tocLayoutKey = '';
-
-function syncPagedLayoutCache() {
-  if (!rp?.view || !rp?.book) return;
-  const impl = rp.view.impl;
-  const s = rp.view.style;
-  const key = `${rp.bookId}|${rp.view.mode}|${impl?.cw ?? 0}|${impl?.colH ?? 0}|${impl?.m ?? 0}|${s.fontSize}|${s.lineHeight}|${s.fontFamily}|${s.wordSpacing}|${s.justify}`;
-  if (key !== tocLayoutKey) {
-    spinePagesCache.clear();
-    tocLayoutKey = key;
-  }
-  if (rp.view.mode === 'paged' && impl && !impl.pair && impl.root && Number.isInteger(impl.spine)) {
-    spinePagesCache.set(impl.spine, Math.max(1, impl.pages || 1));
-  }
-}
-
 function tocEntryPage(e, ctx) {
   if (e.spine < 0) return null;
   if (ctx.onePerSpine) return e.spine + 1;
@@ -143,36 +126,11 @@ function buildTocPageContext() {
     const totalBookPages = Math.max(1, impl?.folio?.[2] ?? Math.ceil((impl?.el?.scrollHeight || pageH) / pageH));
     return { mode: 'scroll', hosts, pageH, baseTop, totalBookPages };
   }
-  syncPagedLayoutCache();
-  const s = rp.view.style;
-  const fs = Number(s.fontSize ?? 18);
-  const lh = Number(s.lineHeight ?? 1.4);
-  const textW = Math.max(80, (impl?.cw || window.innerWidth) - 2 * (impl?.m || 24));
-  const textH = Math.max(80, impl?.colH || window.innerHeight * 0.8);
-  const linesPerPage = Math.max(1, textH / (fs * lh));
-  const charsPerLine = Math.max(12, textW / (fs * 0.52));
-  const geomBytes = Math.max(400, (linesPerPage * charsPerLine * 0.85) / 0.62);
-  let obsBytes = 0;
-  let obsPages = 0;
-  for (const [sp, pg] of spinePagesCache) {
-    const sz = rp.book.spine[sp]?.size ?? 0;
-    if (sz >= 2000 && pg >= 2) {
-      obsBytes += sz;
-      obsPages += pg;
-    }
+  if (impl?.bookLayout) {
+    const { starts } = impl.bookLayout();
+    return { mode: 'paged', impl, spineStartPage: starts.map((s) => s + 1) };
   }
-  const bytesPerPage = obsPages > 0
-    ? Math.min(geomBytes * 2.5, Math.max(geomBytes * 0.4, obsBytes / obsPages))
-    : geomBytes;
-  const spineStartPage = [];
-  let acc = 1;
-  for (let sp = 0; sp < rp.book.spine.length; sp++) {
-    spineStartPage.push(acc);
-    const sz = rp.book.spine[sp]?.size ?? 0;
-    const pg = spinePagesCache.get(sp) ?? Math.max(1, Math.round(sz / bytesPerPage));
-    acc += pg;
-  }
-  return { mode: 'paged', impl, spineStartPage };
+  return null;
 }
 
 function refreshTocPages() {
@@ -684,7 +642,7 @@ function initSettings() {
 
 // ----------------------------------------------------------------------------------- rail
 let ticks = [];
-const sizesOf = () => rp.book.spine.map((s) => s.size);
+const sizesOf = () => rp.view?.impl?.bookWeights?.() ?? spineWeightsOf(rp.book);
 
 function railFrac(clientX) {
   const r = $('rail-track').getBoundingClientRect();
@@ -755,8 +713,13 @@ function initRail() {
   rail.addEventListener('blur', () => { $('rail-tip').hidden = true; });
 }
 
+let lastTicksKey = '';
 function renderTicks() {
-  ticks = chapterTicks(rp.book.toc, sizesOf());
+  const sizes = sizesOf();
+  const key = `${rp.bookId}|${rp.view?.mode}|${sizes.join(',')}`;
+  if (key === lastTicksKey) return;
+  lastTicksKey = key;
+  ticks = chapterTicks(rp.book.toc, sizes);
   $('ticks').replaceChildren(...ticks.map((k) => el('i', { style: `left:${(k.at * 100).toFixed(3)}%` })));
 }
 
@@ -807,10 +770,11 @@ export function paintChapterTime() {
   }
 
   let fracRemaining = 0;
+  const chapterFol = impl?.chapterFolio ?? impl?.folio;
   if (rp.view?.impl?.atEnd) {
     fracRemaining = 0;
-  } else if (rp.view.mode === 'paged' && impl?.folio) {
-    const [, b, n] = impl.folio;
+  } else if (rp.view.mode === 'paged' && chapterFol) {
+    const [, b, n] = chapterFol;
     fracRemaining = n > 0 ? Math.max(0, (n - b) / n) : 0;
   } else {
     fracRemaining = Math.max(0, 1 - (pos.frac || 0));
@@ -820,11 +784,11 @@ export function paintChapterTime() {
   if (wordsInChapter && wordsInChapter > 0) {
     const wordsLeft = Math.round(wordsInChapter * fracRemaining);
     mins = Math.ceil(wordsLeft / 220);
-  } else if (rp.view.mode === 'paged' && impl?.folio) {
-    const [, b, n] = impl.folio;
+  } else if (rp.view.mode === 'paged' && chapterFol) {
+    const [, b, n] = chapterFol;
     mins = Math.max(0, n - b);
   } else {
-    const size = rp.book?.spine?.[spineIndex]?.size ?? 12000;
+    const size = rp.book?._spineMetrics?.[spineIndex]?.chars ?? rp.book?.spine?.[spineIndex]?.size ?? 12000;
     const bytesLeft = Math.round(size * fracRemaining);
     mins = Math.ceil((bytesLeft / 6) / 220);
   }
@@ -943,8 +907,9 @@ function paintChapterPages() {
   if (!el) return;
   if (!rp?.view || !rp?.book || rp.book.tocPages) { el.textContent = ''; return; }
   const impl = rp.view.impl;
-  if (rp.view.mode === 'paged' && impl?.folio) {
-    const [a, b, n] = impl.folio;
+  const chapterFol = impl?.chapterFolio ?? impl?.folio;
+  if (rp.view.mode === 'paged' && chapterFol) {
+    const [a, b, n] = chapterFol;
     el.textContent = a === b ? t('page_of', a, n) : t('folio_spread', a, b, n);
     return;
   }
@@ -975,18 +940,23 @@ export function paintFolio() {
     $('folio').textContent = a === b ? t('page_of', a, n) : t('folio_spread', a, b, n);
     $('folio').title = book ? $('folio').textContent : a === b ? t('page_of_chapter', a, n) : t('folio_spread_chapter', a, b, n);
   }
-  syncPagedLayoutCache();
+  const p = rp.view.progress;
+  const pct = percent(p);
+  $('pct').textContent = t('percent', pct);
+  $('book-fill').style.width = `${p * 100}%`;
+  const rail = $('rail');
+  if (rail && !rail.classList.contains('dragging')) paintRail(p);
+  rail?.setAttribute('aria-valuenow', String(pct));
   paintChapterPages();
   pageLine(rp.view.position);
   paintChapterTime();
+  if (rp.view.mode === 'paged') renderTicks();
   if (!$('panel').hidden && $('panel').dataset.pane === 'toc') refreshTocPages();
 }
 
 /** A book was just laid out: fill everything that depends on it. */
 export async function setupBook() {
   tocCurrent = -1;
-  spinePagesCache.clear();
-  tocLayoutKey = '';
   $('reading').classList.remove('mobile-ui-visible');
   const title = rp.book.title || t('untitled');
   const creator = (rp.book.creator || '').trim();
@@ -1021,6 +991,7 @@ export function syncMode() {
   $('row-turn').hidden = !paged;
   $('row-spread').hidden = !paged;
   segs.mode?.set(rp.view.mode);
+  renderTicks();
 }
 
 export function initReading(state, deps) {

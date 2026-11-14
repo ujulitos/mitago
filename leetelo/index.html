@@ -145,6 +145,24 @@
                     <div class="modal-body" id="meta-modal-body"></div>
                 </div>
             </div>
+
+            <!-- Batch Delete Confirmation Modal -->
+            <div id="batch-confirm-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="batch-confirm-heading" hidden>
+                <div class="modal-backdrop" id="batch-confirm-backdrop"></div>
+                <div class="modal-card modal-card-compact">
+                    <header class="modal-header">
+                        <h3 id="batch-confirm-heading"></h3>
+                        <button id="batch-confirm-close" class="icon-btn modal-close" type="button" data-i18n-aria="close" data-i18n-title="close"></button>
+                    </header>
+                    <div class="modal-confirm-body">
+                        <p id="batch-confirm-text" class="modal-confirm-text"></p>
+                        <div class="modal-confirm-actions">
+                            <button id="batch-confirm-keep" class="batch-btn" type="button" data-i18n="keep">Conservar</button>
+                            <button id="batch-confirm-yes" class="batch-btn batch-delete" type="button" data-i18n="delete">Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- Hamburger Menu Drawer -->
@@ -174,17 +192,24 @@
                         </span>
                     </button>
 
-                    <section id="stats" class="stats lib-drawer-section" aria-labelledby="stats-title">
-                        <h3 id="stats-title" class="lib-drawer-section-title" data-i18n="stats_title"></h3>
-                        <dl id="stats-list" class="stats-list"></dl>
-                    </section>
-
                     <section id="lib-info" class="lib-drawer-section" aria-labelledby="lib-info-title">
                         <h3 id="lib-info-title" class="lib-drawer-section-title" data-i18n="library_info">Información de la biblioteca</h3>
                         <dl class="lib-info-list">
                             <div>
                                 <dt data-i18n="total_books_label">Libros en la biblioteca</dt>
                                 <dd id="lib-info-books">0</dd>
+                            </div>
+                            <div>
+                                <dt data-i18n="cat_reading">Leyendo ahora</dt>
+                                <dd id="lib-info-reading">0</dd>
+                            </div>
+                            <div>
+                                <dt data-i18n="cat_to_read">Por leer</dt>
+                                <dd id="lib-info-to-read">0</dd>
+                            </div>
+                            <div>
+                                <dt data-i18n="cat_read">Leídos</dt>
+                                <dd id="lib-info-read">0</dd>
                             </div>
                             <div>
                                 <dt data-i18n="storage_label">Espacio ocupado</dt>
@@ -209,13 +234,6 @@
                     <div class="batch-bar-actions">
                         <button id="batch-select-all" class="batch-btn" type="button" data-i18n="select_all">Seleccionar todos</button>
                         <button id="batch-delete" class="batch-btn batch-delete" type="button"></button>
-                    </div>
-                </div>
-                <div class="batch-confirm" id="batch-confirm" hidden>
-                    <span id="batch-confirm-text" class="batch-confirm-text"></span>
-                    <div class="batch-bar-actions">
-                        <button id="batch-confirm-keep" class="batch-btn" type="button" data-i18n="keep">Conservar</button>
-                        <button id="batch-confirm-yes" class="batch-btn batch-delete" type="button" data-i18n="delete">Eliminar</button>
                     </div>
                 </div>
             </div>

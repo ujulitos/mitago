@@ -7,11 +7,11 @@ import { icon, logo } from '../lib/icons.js';
 import { t, tn, uiLanguage } from '../lib/i18n.js';
 import { showToast } from '../lib/toast.js';
 import { $, el, formatSize, hideLoadingOverlay, labelled, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
-import { ERROR_FALLBACK, errorCode, localDay, percent } from './logic.js';
-import { hoursMinutes, libraryStats } from './stats.js';
+import { ERROR_FALLBACK, errorCode, percent } from './logic.js';
+import { hoursMinutes } from './stats.js';
 import { EXTENSION } from './libfile.js';
 import { importLibrary } from './libio.js';
-import { openAny } from '../core/formats.js';
+import { openAny, extractBookStats, STATS_VERSION } from '../core/formats.js';
 
 const local = {
   get: async (key, fallback) => { try { return (await chrome.storage.local.get(key))[key] ?? fallback; } catch { return fallback; } },
@@ -47,10 +47,9 @@ async function deleteBookRecord(book, categories, persistCategories = true) {
 }
 
 function closeBatchConfirm() {
-  const main = $('batch-bar-main');
-  const confirm = $('batch-confirm');
-  if (confirm) confirm.hidden = true;
-  if (main) main.hidden = false;
+  const modal = $('batch-confirm-modal');
+  if (modal) modal.hidden = true;
+  if ($('meta-modal')?.hidden !== false) document.body.style.overflow = '';
 }
 
 function syncBatchSelectionUI() {
@@ -137,13 +136,14 @@ function openBatchConfirm() {
   if (!count) return;
   const selected = allTodosBooks.filter((b) => selectedBookIds.has(b.id));
   const totalBytes = selected.reduce((sum, b) => sum + (b.size ?? 0), 0);
-  const confirm = $('batch-confirm');
-  const main = $('batch-bar-main');
+  const modal = $('batch-confirm-modal');
+  const heading = $('batch-confirm-heading');
   const text = $('batch-confirm-text');
-  if (!confirm || !main || !text) return;
-  text.textContent = `${tn('delete_selected_q', count)} · ${t('frees', formatSize(totalBytes, uiLanguage()))}`;
-  main.hidden = true;
-  confirm.hidden = false;
+  if (!modal || !heading || !text) return;
+  heading.textContent = tn('delete_selected_q', count);
+  text.textContent = t('frees', formatSize(totalBytes, uiLanguage()));
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
   $('batch-confirm-keep')?.focus();
 }
 
@@ -152,6 +152,7 @@ async function executeBatchDelete() {
   if (!ids.length) return;
   const yesBtn = $('batch-confirm-yes');
   if (yesBtn) yesBtn.disabled = true;
+  closeBatchConfirm();
   showLoadingOverlay(ids.length > 1 ? t('deleting_progress', 1, ids.length) : t('deleting_books'));
   await new Promise((r) => requestAnimationFrame(() => r()));
   try {
@@ -256,29 +257,40 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
   const coverWrap = el('div', { class: 'modal-cover-wrap' }, coverOf(book));
   const coverCol = el('div', { class: 'modal-cover-col' }, coverWrap);
 
-  // Info & metadata column (solo formato, tamaño, capítulos y páginas)
+  // Info & metadata column (formato, tamaño, capítulos, páginas, tiempo de lectura y última vez abierto)
   const title = el('h4', { class: 'modal-title', textContent: book.title || t('untitled') });
   const author = el('p', { class: 'modal-author', textContent: book.creator || '—' });
 
+  const hasCurrentStats = (b) => (b.metaVersion ?? 0) >= STATS_VERSION && b.chapterCount != null && b.pageCount != null;
+  const formatChapters = (b) => (hasCurrentStats(b) ? String(b.chapterCount) : '…');
+  const formatPages = (b) => {
+    if (!hasCurrentStats(b)) return '…';
+    return b.pageCountExact ? String(b.pageCount) : `~${b.pageCount}`;
+  };
+
   const format = (book.fileName || '').split('.').pop().toUpperCase() || 'EPUB';
   const size = book.size ? formatSize(book.size, uiLanguage()) : '—';
-  const chapters = book.spineLength ? String(book.spineLength) : (book.spine?.length ? String(book.spine.length) : '—');
-  const pages = book.pages
-    ? String(book.pages)
-    : (book.format === 'cbz' || (book.fileName || '').toLowerCase().endsWith('.cbz')
-      ? String(book.spineLength || chapters)
-      : (book.size ? `~${Math.max(Math.round(book.size / 2200), book.spineLength || 1)}` : '—'));
+  const chaptersVal = el('dd', { textContent: formatChapters(book) });
+  const pagesVal = el('dd', { textContent: formatPages(book) });
+  const readingTime = duration(stat?.ms ?? 0, true);
+  const wasOpened = Boolean(pos || stat?.lastAt || (book.openedAt && book.addedAt && book.openedAt > book.addedAt));
+  const lastOpenedTs = wasOpened ? Math.max(book.openedAt || 0, stat?.lastAt || 0, pos?.updatedAt || 0) : 0;
+  const lastOpened = lastOpenedTs
+    ? new Intl.DateTimeFormat(uiLanguage(), { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastOpenedTs))
+    : t('meta_never');
 
-  const row = (label, val) => [
+  const row = (label, valEl) => [
     el('dt', { textContent: label }),
-    el('dd', { textContent: val })
+    valEl,
   ];
 
   const grid = el('dl', { class: 'modal-meta-grid' },
-    ...row(t('meta_format'), format),
-    ...row(t('meta_size'), size),
-    ...row(t('meta_chapters'), chapters),
-    ...row(t('meta_pages'), pages)
+    ...row(t('meta_format'), el('dd', { textContent: format })),
+    ...row(t('meta_size'), el('dd', { textContent: size })),
+    ...row(t('meta_chapters'), chaptersVal),
+    ...row(t('meta_pages'), pagesVal),
+    ...row(t('meta_reading_time'), el('dd', { textContent: readingTime })),
+    ...row(t('meta_last_opened'), el('dd', { textContent: lastOpened }))
   );
 
   // Sinopsis en formato HTML
@@ -290,40 +302,76 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
     renderHtmlSynopsis(synopsisText, book.description);
   } else {
     synopsisText.textContent = t('loading_synopsis');
-    if (ctx?.store?.getBook) {
-      ctx.store.getBook(book.id).then(async (data) => {
-        if (data?.meta?.description) {
-          book.description = data.meta.description;
-          if (currentMetaBookId === book.id) renderHtmlSynopsis(synopsisText, book.description);
-          return;
+  }
+
+  const needsBackfill = !book.description || !hasCurrentStats(book);
+  if (needsBackfill && ctx?.store?.getBook) {
+    ctx.store.getBook(book.id).then(async (data) => {
+      if (!data) {
+        if (!book.description && currentMetaBookId === book.id) synopsisText.textContent = t('no_synopsis');
+        return;
+      }
+      const savedMeta = data.meta || {};
+      let updated = false;
+
+      if (!book.description && savedMeta.description) {
+        book.description = savedMeta.description;
+        if (currentMetaBookId === book.id) renderHtmlSynopsis(synopsisText, book.description);
+      }
+      if (!hasCurrentStats(book) && hasCurrentStats(savedMeta)) {
+        Object.assign(book, {
+          chapterCount: savedMeta.chapterCount,
+          pageCount: savedMeta.pageCount,
+          pageCountExact: savedMeta.pageCountExact,
+          metaVersion: savedMeta.metaVersion,
+        });
+        if (currentMetaBookId === book.id) {
+          chaptersVal.textContent = formatChapters(book);
+          pagesVal.textContent = formatPages(book);
         }
-        if (data?.blob) {
-          try {
-            const opened = await openAny(data.blob, book.fileName);
-            const desc = (opened?.description || '').trim();
-            if (desc) {
-              book.description = desc;
-              if (currentMetaBookId === book.id) renderHtmlSynopsis(synopsisText, desc);
-              try {
-                await ctx.store.putBook(data.blob, { ...data.meta, description: desc });
-              } catch {}
-              return;
+      }
+
+      if ((!book.description || !hasCurrentStats(book)) && data.blob) {
+        try {
+          const opened = await openAny(data.blob, book.fileName);
+          const nextMeta = { ...savedMeta };
+          if (!hasCurrentStats(book)) {
+            const stats = await extractBookStats(opened);
+            Object.assign(book, stats);
+            Object.assign(nextMeta, stats);
+            updated = true;
+            if (currentMetaBookId === book.id) {
+              chaptersVal.textContent = formatChapters(book);
+              pagesVal.textContent = formatPages(book);
             }
-          } catch (e) {
-            console.warn('Error reading book synopsis:', e);
           }
+          const desc = (book.description || opened?.description || '').trim();
+          if (!book.description && desc) {
+            book.description = desc;
+            nextMeta.description = desc;
+            updated = true;
+            if (currentMetaBookId === book.id) renderHtmlSynopsis(synopsisText, desc);
+          }
+          if (updated) {
+            try {
+              await ctx.store.putBook(data.blob, { ...nextMeta, preserveOpenedAt: true });
+            } catch {}
+          }
+        } catch (e) {
+          console.warn('Error reading book metadata:', e);
         }
-        if (currentMetaBookId === book.id) {
-          synopsisText.textContent = t('no_synopsis');
-        }
-      }).catch(() => {
-        if (currentMetaBookId === book.id) {
-          synopsisText.textContent = t('no_synopsis');
-        }
-      });
-    } else {
-      synopsisText.textContent = t('no_synopsis');
-    }
+      }
+
+      if (!book.description && currentMetaBookId === book.id) {
+        synopsisText.textContent = t('no_synopsis');
+      }
+    }).catch(() => {
+      if (!book.description && currentMetaBookId === book.id) {
+        synopsisText.textContent = t('no_synopsis');
+      }
+    });
+  } else if (!book.description) {
+    synopsisText.textContent = t('no_synopsis');
   }
 
   const infoCol = el('div', { class: 'modal-info-col' }, title, author, grid, synopsisSection);
@@ -560,7 +608,7 @@ function bookItem(book, pos, stat, category, categories) {
     type: 'button',
     class: `book-action-btn btn-meta${isMeta ? ' active' : ''}`,
     'aria-pressed': String(isMeta),
-  }, icon('books', 18)), t('btn_synopsis'));
+  }, icon('info', 18)), t('btn_synopsis'));
 
   btnMeta.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -710,17 +758,127 @@ async function renderStorage() {
   } catch { storageEl.textContent = '—'; }
 }
 
-// ---- reading stats (inside hamburger menu drawer) ----------------------
-function renderStats(stats, positions) {
-  const s = libraryStats(stats, positions, localDay(Date.now()));
-  const statsEl = $('stats');
-  if (statsEl) statsEl.hidden = false;
-  const item = (label, value) => el('div', {}, el('dt', { textContent: label }), el('dd', { textContent: value }));
-  $('stats-list')?.replaceChildren(
-    item(t('stats_total'), duration(s.total, true)),
-    item(t('stats_week'), duration(s.week, true)),
-    item(t('stats_streak'), tn('days_count', s.streak)),
-    item(t('stats_finished'), String(s.finished)));
+function enableRowDragScroll(row) {
+  let state = null;
+  let inertiaRaf = 0;
+  let suppressClickUntil = 0;
+
+  const stopInertia = () => {
+    if (inertiaRaf) {
+      cancelAnimationFrame(inertiaRaf);
+      inertiaRaf = 0;
+    }
+    row.classList.remove('is-dragging');
+  };
+
+  row.addEventListener('dragstart', (e) => e.preventDefault());
+
+  row.addEventListener('click', (e) => {
+    if (performance.now() < suppressClickUntil) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, { capture: true });
+
+  row.addEventListener('wheel', stopInertia, { passive: true });
+
+  row.addEventListener('pointerdown', (e) => {
+    // Only intercept mouse pointers so mobile/touch keeps native momentum scrolling.
+    if (e.pointerType === 'touch' || e.button !== 0) return;
+    if (e.target.closest('.confirm')) return;
+    if (row.scrollWidth <= row.clientWidth + 2) return;
+
+    stopInertia();
+    const now = performance.now();
+    state = {
+      id: e.pointerId,
+      startX: e.clientX,
+      startLeft: row.scrollLeft,
+      lastX: e.clientX,
+      lastTime: now,
+      vx: 0,
+      dragged: false,
+    };
+
+    const onMove = (ev) => {
+      if (!state || ev.pointerId !== state.id) return;
+      const dx = ev.clientX - state.startX;
+      if (!state.dragged && Math.abs(dx) >= 6) {
+        state.dragged = true;
+        row.classList.add('is-dragging');
+        try { row.setPointerCapture(state.id); } catch {}
+      }
+      if (!state.dragged) return;
+      const tNow = performance.now();
+      const dt = tNow - state.lastTime;
+      if (dt > 0) {
+        const instV = (state.lastX - ev.clientX) / dt;
+        state.vx = state.vx * 0.45 + instV * 0.55;
+        state.lastX = ev.clientX;
+        state.lastTime = tNow;
+      }
+      row.scrollLeft = state.startLeft - dx;
+    };
+
+    const onEnd = (ev) => {
+      if (!state || ev.pointerId !== state.id) return;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onEnd);
+      window.removeEventListener('pointercancel', onEnd);
+      try { if (row.hasPointerCapture(state.id)) row.releasePointerCapture(state.id); } catch {}
+
+      const wasDragged = state.dragged;
+      let v = state.vx;
+      const freshVelocity = performance.now() - state.lastTime < 90;
+      state = null;
+      if (!wasDragged) return;
+
+      suppressClickUntil = performance.now() + 120;
+      if (freshVelocity && Math.abs(v) > 0.15) {
+        let prev = performance.now();
+        const step = (ts) => {
+          const dt = Math.min(32, ts - prev);
+          prev = ts;
+          const prevLeft = row.scrollLeft;
+          row.scrollLeft += v * dt;
+          v *= Math.pow(0.92, dt / 16);
+          if (Math.abs(v) > 0.04 && Math.abs(row.scrollLeft - prevLeft) > 0.1) {
+            inertiaRaf = requestAnimationFrame(step);
+          } else {
+            stopInertia();
+          }
+        };
+        inertiaRaf = requestAnimationFrame(step);
+      } else {
+        stopInertia();
+      }
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onEnd);
+    window.addEventListener('pointercancel', onEnd);
+  });
+}
+
+// ---- library category breakdown (inside hamburger menu drawer) -----------
+function renderLibraryInfoCounts(books, posByBook, categories) {
+  let reading = 0;
+  let toRead = 0;
+  let read = 0;
+  for (const b of books) {
+    const cat = resolveCategory(b.id, posByBook?.get(b.id), categories);
+    if (cat === 'reading') reading++;
+    else if (cat === 'to_read') toRead++;
+    else if (cat === 'read') read++;
+  }
+  const setCount = (id, count) => {
+    const node = $(id);
+    if (node) node.textContent = tn('books_count', count);
+  };
+  setCount('lib-info-books', books.length);
+  setCount('lib-info-reading', reading);
+  setCount('lib-info-to-read', toRead);
+  setCount('lib-info-read', read);
 }
 
 // ---- export / import helper ---------------------------------------------
@@ -917,9 +1075,7 @@ export async function renderLibrary() {
     exitSelectionMode();
     if (shelfSections) shelfSections.replaceChildren();
     for (const u of oldUrls) URL.revokeObjectURL(u);
-    renderStats(stats, positions);
-    const infoBooksEl = $('lib-info-books');
-    if (infoBooksEl) infoBooksEl.textContent = tn('books_count', 0);
+    renderLibraryInfoCounts([], byId, currentCategories);
     await Promise.all([renderStorage(), renderWhatsNew(), renderTier2()]);
     window.__rp.libraryReady = true;
     requestAnimationFrame(updateLibScrollbar);
@@ -1060,6 +1216,7 @@ export async function renderLibrary() {
             content.scrollBy({ left: Math.max(260, Math.round(content.clientWidth * 0.7)), behavior: 'smooth' });
           });
           content.addEventListener('scroll', updateRowNav, { passive: true });
+          enableRowDragScroll(content);
           requestAnimationFrame(updateRowNav);
 
           rowNav = el('div', { class: 'row-scroll-nav', hidden: true }, btnPrev, btnNext);
@@ -1096,9 +1253,7 @@ export async function renderLibrary() {
   renderSections();
   syncBatchSelectionUI();
   for (const u of oldUrls) URL.revokeObjectURL(u);
-  renderStats(stats, positions);
-  const infoBooksEl = $('lib-info-books');
-  if (infoBooksEl) infoBooksEl.textContent = tn('books_count', books.length);
+  renderLibraryInfoCounts(books, byId, currentCategories);
   await Promise.all([renderStorage(), renderWhatsNew(), renderTier2()]);
   window.__rp.libraryReady = true;
   requestAnimationFrame(updateLibScrollbar);
@@ -1677,12 +1832,22 @@ export function initLibrary(c) {
   if (batchDelete) {
     batchDelete.addEventListener('click', openBatchConfirm);
   }
+  const closeBatchModal = () => {
+    closeBatchConfirm();
+    $('batch-delete')?.focus();
+  };
+  const batchConfirmClose = $('batch-confirm-close');
+  if (batchConfirmClose) {
+    batchConfirmClose.replaceChildren(icon('close', 16));
+    batchConfirmClose.addEventListener('click', closeBatchModal);
+  }
+  const batchConfirmBackdrop = $('batch-confirm-backdrop');
+  if (batchConfirmBackdrop) {
+    batchConfirmBackdrop.addEventListener('click', closeBatchModal);
+  }
   const batchConfirmKeep = $('batch-confirm-keep');
   if (batchConfirmKeep) {
-    batchConfirmKeep.addEventListener('click', () => {
-      closeBatchConfirm();
-      $('batch-delete')?.focus();
-    });
+    batchConfirmKeep.addEventListener('click', closeBatchModal);
   }
   const batchConfirmYes = $('batch-confirm-yes');
   if (batchConfirmYes) {
@@ -1706,19 +1871,17 @@ export function initLibrary(c) {
       $('lib-menu-btn')?.focus();
       return;
     }
+    if (e.key === 'Escape' && $('batch-confirm-modal') && !$('batch-confirm-modal').hidden) {
+      e.stopPropagation();
+      closeBatchModal();
+      return;
+    }
     if (e.key === 'Escape' && $('meta-modal') && !$('meta-modal').hidden) {
       e.stopPropagation();
       closeMetadataModal();
       return;
     }
     if (e.key === 'Escape' && selectionMode) {
-      const confirm = $('batch-confirm');
-      if (confirm && !confirm.hidden) {
-        e.stopPropagation();
-        closeBatchConfirm();
-        $('batch-delete')?.focus();
-        return;
-      }
       e.stopPropagation();
       exitSelectionMode();
     }
