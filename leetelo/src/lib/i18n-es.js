@@ -341,5 +341,10 @@ export default {
   "delete_selected_q_other": "¿Eliminar $1 libros?",
   "deleted_batch_one": "1 libro eliminado",
   "deleted_batch_other": "$1 libros eliminados",
-  "cancel": "Cancelar"
+  "cancel": "Cancelar",
+  "loading": "Cargando…",
+  "importing_books": "Importando libros…",
+  "importing_progress": "Importando $1 de $2…",
+  "deleting_books": "Eliminando libros…",
+  "deleting_progress": "Eliminando $1 de $2…"
 };

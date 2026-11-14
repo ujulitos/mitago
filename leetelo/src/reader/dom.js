@@ -65,3 +65,26 @@ export function radioGroup(container, options, onPick) {
     },
   };
 }
+
+let loadingOverlayDepth = 0;
+
+export function setLoadingOverlayText(text = '') {
+  const label = $('loading-text');
+  if (label) label.textContent = text;
+}
+
+export function showLoadingOverlay(text = '') {
+  loadingOverlayDepth++;
+  const overlay = $('loading-overlay');
+  if (text) setLoadingOverlayText(text);
+  if (overlay) overlay.hidden = false;
+  document.body?.setAttribute('aria-busy', 'true');
+}
+
+export function hideLoadingOverlay(force = false) {
+  loadingOverlayDepth = force ? 0 : Math.max(0, loadingOverlayDepth - 1);
+  if (loadingOverlayDepth > 0) return;
+  const overlay = $('loading-overlay');
+  if (overlay) overlay.hidden = true;
+  document.body?.removeAttribute('aria-busy');
+}

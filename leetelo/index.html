@@ -170,7 +170,7 @@
                             </div>
                             <div>
                                 <dt data-i18n="version_label">Versión</dt>
-                                <dd id="app-version">v 1.00</dd>
+                                <dd id="app-version">1.00</dd>
                             </div>
                         </dl>
                     </section>
@@ -401,6 +401,18 @@
 
     <div id="veil" class="veil" hidden>
         <div class="veil-box"><span id="veil-icon" aria-hidden="true"></span><span data-i18n="drop_to_open"></span></div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay" role="status" aria-live="polite" aria-modal="true" hidden>
+        <div class="loading-box">
+            <span class="loading-spinner" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="34" height="34" fill="none">
+                    <circle class="loading-track" cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="2.6" />
+                    <path class="loading-arc" d="M21.5 12a9.5 9.5 0 0 0-9.5-9.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
+                </svg>
+            </span>
+            <span id="loading-text" class="loading-text"></span>
+        </div>
     </div>
 
     <!-- WebApp Scripts: Service Worker & Sync -->

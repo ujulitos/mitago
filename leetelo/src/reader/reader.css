@@ -412,7 +412,7 @@ button.primary:hover {
 #app-version,
 .app-version {
     width: 100%;
-    text-align: center;
+    /* text-align: center; */
     padding: 4px 0 18px;
     font-size: 11.5px;
     font-weight: 600;
@@ -659,13 +659,21 @@ body.dragging .lib-drawer-action {
     top: calc(var(--lib-head-h, 96px) + 6px);
     bottom: calc(10px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)));
     right: max(0px, env(safe-area-inset-right, 0px));
-    width: 10px;
-    z-index: 45;
+    width: 20px;
+    z-index: 48;
     touch-action: none;
+    overscroll-behavior: contain;
     user-select: none;
     -webkit-user-select: none;
+    -webkit-touch-callout: none;
     cursor: grab;
     -webkit-tap-highlight-color: transparent;
+}
+
+@media (pointer: coarse) {
+    .lib-scrollbar {
+        width: 34px;
+    }
 }
 
 .lib-scrollbar[hidden] {
@@ -676,21 +684,29 @@ body.dragging .lib-drawer-action {
     cursor: grabbing;
 }
 
+body.lib-scroll-dragging,
+html:has(body.lib-scroll-dragging) {
+    scroll-behavior: auto !important;
+    overscroll-behavior-y: contain;
+}
+
 .lib-scrollbar-track {
     position: absolute;
     top: 0;
     bottom: 0;
     right: 5px;
-    width: 6px;
+    width: 5px;
     border-radius: 999px;
     background: color-mix(in srgb, var(--line) 60%, transparent);
     touch-action: none;
-    transition: width 140ms ease, background-color 140ms ease;
+    pointer-events: none;
+    transition: width 140ms ease, right 140ms ease, background-color 140ms ease;
 }
 
 .lib-scrollbar:hover .lib-scrollbar-track,
 .lib-scrollbar.dragging .lib-scrollbar-track {
-    width: 10px;
+    width: 9px;
+    right: 4px;
     background: color-mix(in srgb, var(--line) 85%, transparent);
 }
 
@@ -701,17 +717,18 @@ body.dragging .lib-drawer-action {
     top: 0;
     min-height: 48px;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--rp-progress, salmon) 78%, var(--muted));
-    opacity: 0.85;
+    background: var(--ink);
+    opacity: 0.45;
     touch-action: none;
+    pointer-events: none;
     will-change: transform;
-    transition: opacity 140ms ease, background-color 140ms ease;
+    transition: opacity 140ms ease;
 }
 
 .lib-scrollbar:hover .lib-scrollbar-thumb,
 .lib-scrollbar.dragging .lib-scrollbar-thumb {
-    background: var(--rp-progress, salmon);
-    opacity: 1;
+    background: var(--ink);
+    opacity: 0.88;
 }
 
 .quiet-link {
@@ -1099,10 +1116,10 @@ body.dragging .dropzone {
     align-items: center;
     justify-content: space-between;
     margin-top: auto;
-    padding-top: 2px;
-    gap: 1px;
+    padding-top: 4px;
+    gap: 2px;
     flex-shrink: 0;
-    height: 26px;
+    height: 34px;
 }
 
 .book-action-btn {
@@ -1111,7 +1128,7 @@ body.dragging .dropzone {
     justify-content: center;
     flex: 1 1 0;
     min-width: 0;
-    height: 24px;
+    height: 32px;
     padding: 0;
     border: 0;
     border-radius: 6px;
@@ -1585,6 +1602,69 @@ body.dragging .shelf-dropzone {
     border-radius: 22px;
     font-size: 22px;
     font-weight: 650;
+}
+
+/* Loading overlay for long operations (import / batch delete) */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: color-mix(in srgb, var(--paper) 74%, transparent);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.loading-overlay[hidden] {
+    display: none !important;
+}
+
+.loading-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-width: min(260px, calc(100vw - 48px));
+    max-width: calc(100vw - 48px);
+    padding: 24px 28px;
+    border-radius: 18px;
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow, 0 12px 32px rgba(20, 24, 36, 0.22));
+    text-align: center;
+}
+
+.loading-spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+}
+
+.loading-spinner svg {
+    display: block;
+    animation: rp-spin 0.85s linear infinite;
+}
+
+.loading-spinner .loading-track {
+    opacity: 0.2;
+}
+
+.loading-text {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.35;
+}
+
+@keyframes rp-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* =================================================================== reading */
@@ -3340,7 +3420,7 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 480px) {
     .library {
-        padding: calc(102px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(24px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: calc(102px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(30px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .lib-head {

@@ -344,5 +344,10 @@ export default {
 "delete_selected_q_other": "Delete $1 books?",
 "deleted_batch_one": "1 book deleted",
 "deleted_batch_other": "$1 books deleted",
-"cancel": "Cancel"
+"cancel": "Cancel",
+"loading": "Loading…",
+"importing_books": "Importing books…",
+"importing_progress": "Importing $1 of $2…",
+"deleting_books": "Deleting books…",
+"deleting_progress": "Deleting $1 of $2…"
 };

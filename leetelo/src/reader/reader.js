@@ -11,7 +11,7 @@ import { atProgress, START } from '../core/position.js';
 import { icon } from '../lib/icons.js';
 import { localizeDom, t } from '../lib/i18n.js';
 import { showToast } from '../lib/toast.js';
-import { $ } from './dom.js';
+import { $, hideLoadingOverlay, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
 import { addReadingTime, errorCode, fileProblem, hasRoom, localDay } from './logic.js';
 import { closeLibraryDrawer, hideNotice, importFile, initLibrary, problemText, renderLibrary, showNotice } from './library.js';
 import { addStatTime } from './stats.js';
@@ -375,25 +375,37 @@ async function openSrc(url) {
 }
 
 async function addFilesToLibrary(files) {
+  const list = [...(files || [])];
+  if (!list.length) return;
   let count = 0;
   let lastTitle = '';
-  for (const file of files) {
-    if (file.name?.toLowerCase().endsWith(`.${EXTENSION}`)) {
-      await openLibraryFile(file);
-      continue;
+  showLoadingOverlay(list.length > 1 ? t('importing_progress', 1, list.length) : t('importing_books'));
+  await new Promise((r) => requestAnimationFrame(() => r()));
+  try {
+    for (let i = 0; i < list.length; i++) {
+      const file = list[i];
+      if (list.length > 1) {
+        setLoadingOverlayText(t('importing_progress', i + 1, list.length));
+      }
+      if (file.name?.toLowerCase().endsWith(`.${EXTENSION}`)) {
+        await openLibraryFile(file);
+        continue;
+      }
+      await saveBookPhysically(file);
+      const ok = await importBookOnly(file);
+      if (ok) {
+        count++;
+        lastTitle = file.name.replace(/\.[^.]+$/, '');
+      }
     }
-    await saveBookPhysically(file);
-    const ok = await importBookOnly(file);
-    if (ok) {
-      count++;
-      lastTitle = file.name.replace(/\.[^.]+$/, '');
+    await renderLibrary();
+    if (count === 1) {
+      showToast({ text: `${t('book_added')}: ${lastTitle}` });
+    } else if (count > 1) {
+      showToast({ text: `${count} ${t('books_added')}` });
     }
-  }
-  await renderLibrary();
-  if (count === 1) {
-    showToast({ text: `${t('book_added')}: ${lastTitle}` });
-  } else if (count > 1) {
-    showToast({ text: `${count} ${t('books_added')}` });
+  } finally {
+    hideLoadingOverlay();
   }
 }
 
@@ -535,7 +547,12 @@ document.addEventListener('drop', async (e) => {
 /** A dropped library file is imported into the library, wherever it was dropped. */
 async function openLibraryFile(file) {
   if ($('library').hidden) await showLibrary();
-  await importFile(file);
+  showLoadingOverlay(t('importing_books'));
+  try {
+    await importFile(file);
+  } finally {
+    hideLoadingOverlay();
+  }
 }
 
 // Internal book links (rewritten by the loader to data-rp-href).
