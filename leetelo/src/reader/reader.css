@@ -474,6 +474,11 @@ button.primary:hover {
     transform: translateX(0);
 }
 
+.lib-drawer.dragging .lib-drawer-panel,
+.lib-drawer.dragging .lib-drawer-backdrop {
+    transition: none !important;
+}
+
 .lib-drawer-head {
     display: flex;
     align-items: center;

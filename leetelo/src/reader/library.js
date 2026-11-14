@@ -1111,6 +1111,9 @@ export function closeLibraryDrawer(immediate = false) {
   const menuBtn = $('lib-menu-btn');
   if (!drawer || drawer.hidden) return;
   clearTimeout(drawerCloseTimer);
+  drawer.classList.remove('dragging');
+  const panel = drawer.querySelector('.lib-drawer-panel');
+  const backdrop = drawer.querySelector('.lib-drawer-backdrop');
   const dd = $('lib-theme-dropdown');
   const toggle = $('lib-theme-toggle');
   if (dd) dd.classList.remove('open');
@@ -1119,10 +1122,19 @@ export function closeLibraryDrawer(immediate = false) {
   if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
   document.body.style.overflow = '';
   if (immediate) {
+    if (panel) panel.style.transform = '';
+    if (backdrop) backdrop.style.opacity = '';
     drawer.hidden = true;
     return;
   }
-  const panel = drawer.querySelector('.lib-drawer-panel');
+  if (panel && panel.style.transform) {
+    requestAnimationFrame(() => {
+      panel.style.transform = '';
+      if (backdrop) backdrop.style.opacity = '';
+    });
+  } else if (backdrop) {
+    backdrop.style.opacity = '';
+  }
   const finish = () => {
     clearTimeout(drawerCloseTimer);
     if (!drawer.classList.contains('open')) drawer.hidden = true;
@@ -1136,16 +1148,190 @@ function openLibraryDrawer() {
   const menuBtn = $('lib-menu-btn');
   if (!drawer) return;
   clearTimeout(drawerCloseTimer);
+  drawer.classList.remove('dragging');
+  const panel = drawer.querySelector('.lib-drawer-panel');
+  const backdrop = drawer.querySelector('.lib-drawer-backdrop');
   const dd = $('lib-theme-dropdown');
   const toggle = $('lib-theme-toggle');
   if (dd) dd.classList.remove('open');
   if (toggle) toggle.setAttribute('aria-expanded', 'false');
   renderStorage();
+  const fromDrag = Boolean(panel && panel.style.transform);
   drawer.hidden = false;
-  requestAnimationFrame(() => requestAnimationFrame(() => drawer.classList.add('open')));
+  if (fromDrag) {
+    drawer.classList.add('open');
+    if (panel) panel.style.transform = '';
+    if (backdrop) backdrop.style.opacity = '';
+  } else {
+    requestAnimationFrame(() => requestAnimationFrame(() => drawer.classList.add('open')));
+  }
   if (menuBtn) menuBtn.setAttribute('aria-expanded', 'true');
   document.body.style.overflow = 'hidden';
   $('lib-drawer-close')?.focus();
+}
+
+function initDrawerEdgeSwipe() {
+  const lib = $('library');
+  const drawer = $('lib-drawer');
+  if (!lib || !drawer) return;
+  const panel = drawer.querySelector('.lib-drawer-panel');
+  const backdrop = drawer.querySelector('.lib-drawer-backdrop');
+  if (!panel) return;
+
+  const EDGE_ZONE = 36;
+  let state = null; // { mode: 'open'|'close', active, pointerId, touchId, startX, startY, lastX, lastAt, prevX, prevAt, panelW, progress }
+
+  const resetInline = () => {
+    panel.style.transform = '';
+    if (backdrop) backdrop.style.opacity = '';
+  };
+
+  const canStartOpen = (x, target) => {
+    if (lib.hidden || !drawer.hidden) return false;
+    if ($('meta-modal') && !$('meta-modal').hidden) return false;
+    if ($('loading-overlay') && !$('loading-overlay').hidden) return false;
+    if (target?.closest?.('input, textarea, select, .lib-scrollbar')) return false;
+    const safeLeft = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-left')) || 0;
+    return x <= EDGE_ZONE + safeLeft;
+  };
+
+  const startTrack = (x, y, mode, ids, target) => {
+    if (mode === 'open' && !canStartOpen(x, target)) return false;
+    if (mode === 'close' && (drawer.hidden || !drawer.classList.contains('open'))) return false;
+    if (mode === 'close' && target?.closest?.('input, textarea, select')) return false;
+    const now = performance.now();
+    state = {
+      mode,
+      active: false,
+      pointerId: ids.pointerId ?? null,
+      touchId: ids.touchId ?? null,
+      startX: x,
+      startY: y,
+      lastX: x,
+      lastAt: now,
+      prevX: x,
+      prevAt: now,
+      panelW: panel.offsetWidth || 300,
+      progress: mode === 'open' ? 0 : 1,
+    };
+    return true;
+  };
+
+  const updateTrack = (x, y, prevent) => {
+    if (!state) return;
+    const dx = x - state.startX;
+    const dy = y - state.startY;
+    if (!state.active) {
+      if (Math.hypot(dx, dy) < 8) return;
+      const validDir = state.mode === 'open' ? dx > 0 : dx < 0;
+      if (!validDir || Math.abs(dy) >= Math.abs(dx) * 0.9) {
+        state = null;
+        return;
+      }
+      state.active = true;
+      activeLongPressCancel?.();
+      clearTimeout(drawerCloseTimer);
+      if (state.mode === 'open') {
+        renderStorage();
+        drawer.hidden = false;
+      }
+      state.panelW = panel.offsetWidth || 300;
+      drawer.classList.add('dragging');
+      document.body.style.overflow = 'hidden';
+    }
+    prevent?.();
+    const now = performance.now();
+    if (now - state.lastAt > 12) {
+      state.prevX = state.lastX;
+      state.prevAt = state.lastAt;
+      state.lastX = x;
+      state.lastAt = now;
+    }
+    const base = state.mode === 'open' ? 0 : 1;
+    const progress = Math.max(0, Math.min(1, base + dx / state.panelW));
+    state.progress = progress;
+    const tx = (progress - 1) * state.panelW;
+    panel.style.transform = `translate3d(${tx.toFixed(1)}px, 0, 0)`;
+    if (backdrop) backdrop.style.opacity = String(progress.toFixed(3));
+  };
+
+  const finishTrack = () => {
+    if (!state) return;
+    const cur = state;
+    state = null;
+    if (!cur.active) return;
+    const dt = Math.max(1, performance.now() - cur.prevAt);
+    const vx = (cur.lastX - cur.prevX) / dt; // px/ms
+    const shouldOpen = cur.mode === 'open'
+      ? (cur.progress >= 0.3 || (vx > 0.35 && cur.progress > 0.06))
+      : !(cur.progress <= 0.7 || (vx < -0.35 && cur.progress < 0.94));
+    drawer.classList.remove('dragging');
+    if (shouldOpen) {
+      openLibraryDrawer();
+    } else {
+      closeLibraryDrawer();
+    }
+  };
+
+  const findTouch = (list, tid) => {
+    for (let i = 0; list && i < list.length; i++) {
+      if (list[i].identifier === tid) return list[i];
+    }
+    return null;
+  };
+
+  window.addEventListener('touchstart', (e) => {
+    if (state || e.touches.length > 1) return;
+    const t0 = e.changedTouches?.[0] || e.touches?.[0];
+    if (!t0) return;
+    const mode = (!drawer.hidden && drawer.classList.contains('open')) ? 'close' : 'open';
+    startTrack(t0.clientX, t0.clientY, mode, { touchId: t0.identifier }, e.target);
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!state || state.touchId === null) return;
+    const t0 = findTouch(e.changedTouches, state.touchId) || findTouch(e.touches, state.touchId);
+    if (!t0) return;
+    updateTrack(t0.clientX, t0.clientY, () => {
+      if (e.cancelable) e.preventDefault();
+    });
+  }, { passive: false });
+
+  const onTouchDone = (e) => {
+    if (!state || state.touchId === null) return;
+    if (!findTouch(e.changedTouches, state.touchId)) return;
+    finishTrack();
+  };
+  window.addEventListener('touchend', onTouchDone, { passive: true });
+  window.addEventListener('touchcancel', onTouchDone, { passive: true });
+
+  // Mouse / stylus drag support from left edge
+  window.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch' || e.button !== 0 || state) return;
+    const mode = (!drawer.hidden && drawer.classList.contains('open')) ? 'close' : 'open';
+    startTrack(e.clientX, e.clientY, mode, { pointerId: e.pointerId }, e.target);
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (!state || state.pointerId !== e.pointerId) return;
+    updateTrack(e.clientX, e.clientY, () => e.preventDefault());
+  });
+
+  const onPointerDone = (e) => {
+    if (!state || state.pointerId !== e.pointerId) return;
+    finishTrack();
+  };
+  window.addEventListener('pointerup', onPointerDone);
+  window.addEventListener('pointercancel', onPointerDone);
+
+  window.addEventListener('blur', () => {
+    if (state?.active) {
+      drawer.classList.remove('dragging');
+      resetInline();
+      closeLibraryDrawer(true);
+    }
+    state = null;
+  });
 }
 
 function updateLibScrollbar() {
@@ -1465,6 +1651,7 @@ export function initLibrary(c) {
     });
   }
   initLibScrollbar();
+  initDrawerEdgeSwipe();
 
   // Batch selection bar listeners
   const batchCancel = $('batch-cancel');
