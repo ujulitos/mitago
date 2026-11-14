@@ -325,5 +325,12 @@ export default {
   "wn_keys": "Pulsa ? para ver todos los atajos de teclado.",
   "wn_ok": "Entendido",
   "kofi_short": "Apoyar",
-  "wn_spread": "Dos páginas una junto a otra en pantallas anchas, como en un libro de verdad."
+  "wn_spread": "Dos páginas una junto a otra en pantallas anchas, como en un libro de verdad.",
+  "menu": "Menú",
+  "add_books": "Agregar libro(s)",
+  "add_books_sub": "Arrastra aquí o toca · EPUB, FB2 o CBZ",
+  "library_info": "Información de la biblioteca",
+  "total_books_label": "Libros en la biblioteca",
+  "storage_label": "Espacio ocupado",
+  "version_label": "Versión"
 };

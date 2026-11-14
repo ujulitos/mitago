@@ -44,7 +44,7 @@
     --rp-hit-bg: #7a6210;
     --rp-hit-ink: #ffffff;
     --mark: #b8c4ec;
-    --panel-bg: #3d3d3d;
+    --panel-bg: #2c2f36;
     --panel-hover: #494949;
     --panel-line: #525252;
     --rp-hl-yellow: rgb(230 190 30 / 0.34);
@@ -92,7 +92,7 @@
     --rp-hit-bg: #7a6210;
     --rp-hit-ink: #ffffff;
     --mark: #b8c4ec;
-    --panel-bg: #2c2f36;
+    --panel-bg: #3d3d3d;
     --panel-hover: #373b44;
     --panel-line: #444954;
     --rp-hl-yellow: rgb(230 190 30 / 0.34);
@@ -153,21 +153,36 @@
 
 html {
     background: var(--paper);
+    overflow-y: auto;
+    overflow-x: clip;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     scroll-padding-top: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px));
     scroll-padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
     scroll-padding-left: max(env(safe-area-inset-left, 0px), var(--safe-left, 0px));
     scroll-padding-right: max(env(safe-area-inset-right, 0px), var(--safe-right, 0px));
 }
 
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
 html,
 body {
-    height: 100%;
+    height: auto;
     min-height: 100dvh;
 }
 
 body {
     background: var(--paper);
     font-size: 14px;
+    overflow-x: clip;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 ::selection {
@@ -234,6 +249,53 @@ button.primary:hover {
     align-items: flex-start;
     justify-content: center;
     gap: 6px;
+}
+
+.lib-brand-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lib-menu-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    color: var(--ink);
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lib-menu-btn:hover {
+    background: var(--hover);
+    color: var(--rp-progress, var(--ink));
+}
+
+.burger-icon {
+    position: relative;
+    width: 18px;
+    height: 14px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+    pointer-events: none;
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.burger-icon span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transform-origin: center;
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease;
+}
+
+.lib-menu-btn[aria-expanded="true"] .burger-icon {
+    transform: rotate(90deg);
 }
 
 .lib-tools {
@@ -341,14 +403,13 @@ button.primary:hover {
 .lib-foot {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px 16px;
-    padding: 18px 0 12px;
+    justify-content: center;
+    padding: 16px 0 10px;
     border-top: 1px solid var(--line);
     font-size: 12.5px;
 }
 
+#app-version,
 .app-version {
     width: 100%;
     text-align: center;
@@ -359,6 +420,294 @@ button.primary:hover {
     color: var(--muted);
     opacity: 0.75;
     user-select: none;
+}
+
+/* Hamburger menu slide-over drawer */
+.lib-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.lib-drawer[hidden] {
+    display: none !important;
+}
+
+.lib-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 12, 18, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    opacity: 0;
+    transition: opacity 180ms ease;
+}
+
+.lib-drawer.open .lib-drawer-backdrop {
+    opacity: 1;
+}
+
+.lib-drawer-panel {
+    position: relative;
+    z-index: 1;
+    width: min(340px, 86vw);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--panel-bg, var(--card));
+    color: var(--ink);
+    border-right: 1px solid var(--panel-line, var(--line));
+    box-shadow: 12px 0 36px rgba(0, 0, 0, 0.28);
+    transform: translateX(-100%);
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-top: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px));
+    padding-left: max(env(safe-area-inset-left, 0px), var(--safe-left, 0px));
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
+}
+
+.lib-drawer.open .lib-drawer-panel {
+    transform: translateX(0);
+}
+
+.lib-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--panel-line, var(--line));
+}
+
+.lib-drawer-head h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.lib-drawer-close {
+    color: var(--ink);
+}
+
+.lib-drawer:not(.open) .lib-drawer-close .burger-icon {
+    transform: rotate(-90deg) scale(0.88);
+    opacity: 0.6;
+}
+
+.lib-drawer.open .lib-drawer-close .burger-icon {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+}
+
+.lib-drawer-close:hover {
+    color: var(--rp-progress, var(--ink));
+    background: var(--panel-hover, var(--hover));
+}
+
+.lib-drawer-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 18px;
+}
+
+.lib-drawer-body .lib-theme-dropdown {
+    width: 100%;
+    display: block;
+}
+
+.lib-drawer-body .lib-theme-toggle {
+    width: 100%;
+}
+
+.lib-drawer-body #lib-theme.swatches {
+    width: 100%;
+    left: 0;
+    right: 0;
+}
+
+.lib-drawer-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px dashed color-mix(in srgb, var(--rp-progress, salmon) 48%, var(--panel-line, var(--line)));
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--rp-progress, salmon) 10%, var(--card));
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 140ms ease, border-color 140ms ease, transform 120ms ease;
+}
+
+.lib-drawer-action:hover,
+.lib-drawer-action.drag-over,
+body.dragging .lib-drawer-action {
+    background: color-mix(in srgb, var(--rp-progress, salmon) 20%, var(--card));
+    border-color: var(--rp-progress, salmon);
+}
+
+.lib-drawer-action.drag-over {
+    transform: scale(1.015);
+}
+
+.lib-drawer-action:active {
+    transform: scale(0.985);
+}
+
+.lib-drawer-action-icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--rp-progress, salmon);
+    color: #fff;
+    flex: none;
+}
+
+.lib-drawer-action-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lib-drawer-action-text strong {
+    font-size: 14.5px;
+    font-weight: 680;
+    line-height: 1.25;
+}
+
+.lib-drawer-action-text small {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.lib-drawer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px 0;
+    border: 0;
+    border-top: 1px solid var(--panel-line, var(--line));
+    border-radius: 0;
+    background: transparent;
+}
+
+.lib-drawer-section-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+}
+
+.lib-drawer-section .stats-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+    margin: 0;
+}
+
+.lib-drawer-section .stats-list dt {
+    font-size: 11.5px;
+}
+
+.lib-drawer-section .stats-list dd {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.lib-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+}
+
+.lib-info-list div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.lib-info-list dt {
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.lib-info-list dd {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+/* Interactive right-side vertical scroll rail for Home (replaces native white scrollbar) */
+.lib-scrollbar {
+    display: block;
+    position: fixed;
+    top: calc(var(--lib-head-h, 96px) + 6px);
+    bottom: calc(10px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)));
+    right: max(0px, env(safe-area-inset-right, 0px));
+    width: 26px;
+    z-index: 45;
+    touch-action: none;
+    user-select: none;
+    cursor: grab;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.lib-scrollbar[hidden] {
+    display: none !important;
+}
+
+.lib-scrollbar.dragging {
+    cursor: grabbing;
+}
+
+.lib-scrollbar-track {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 4px;
+    width: 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--line) 60%, transparent);
+    transition: width 140ms ease, background-color 140ms ease;
+}
+
+.lib-scrollbar:hover .lib-scrollbar-track,
+.lib-scrollbar.dragging .lib-scrollbar-track {
+    width: 9px;
+    background: color-mix(in srgb, var(--line) 85%, transparent);
+}
+
+.lib-scrollbar-thumb {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    min-height: 44px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--rp-progress, salmon) 78%, var(--muted));
+    opacity: 0.85;
+    transition: opacity 140ms ease, background-color 140ms ease;
+}
+
+.lib-scrollbar:hover .lib-scrollbar-thumb,
+.lib-scrollbar.dragging .lib-scrollbar-thumb {
+    background: var(--rp-progress, salmon);
+    opacity: 1;
 }
 
 .quiet-link {
@@ -555,6 +904,7 @@ body.dragging .dropzone {
     padding: 4px 2px 10px;
     scroll-behavior: smooth;
     scroll-snap-type: x proximity;
+    touch-action: pan-x pan-y;
     scrollbar-width: thin;
     scrollbar-color: var(--line) transparent;
 }
@@ -2749,7 +3099,7 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 640px) {
     .library {
-        padding: calc(104px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: calc(104px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(24px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .lib-head {
@@ -2986,7 +3336,7 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 480px) {
     .library {
-        padding: calc(102px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: calc(102px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(24px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .lib-head {

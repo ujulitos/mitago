@@ -328,5 +328,12 @@ export default {
 "wn_keys": "Press ? to see every keyboard shortcut.",
 "wn_ok": "Got it",
 "kofi_short": "Support",
-"wn_spread": "Two pages side by side on wide screens, like a real book."
+"wn_spread": "Two pages side by side on wide screens, like a real book.",
+"menu": "Menu",
+"add_books": "Add book(s)",
+"add_books_sub": "Drop here or tap · EPUB, FB2 or CBZ",
+"library_info": "Library info",
+"total_books_label": "Books in library",
+"storage_label": "Storage used",
+"version_label": "Version"
 };

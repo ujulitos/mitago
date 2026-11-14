@@ -31,21 +31,18 @@
 
 <body>
     <input id="file" type="file" accept=".epub,application/epub+zip,.fb2,.fbz,.fb2.zip,.zip,.cbz" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
-    <input id="lib-file" type="file" accept=".readpane" class="visually-hidden" tabindex="-1" aria-hidden="true">
 
     <!-- ============================================================ library -->
     <div id="library" class="library" hidden>
         <header class="lib-head">
             <div class="lib-head-inner">
-                <h1 class="brand" id="brand"><span>Léetelo</span></h1>
+                <div class="lib-brand-row">
+                    <button id="lib-menu-btn" class="icon-btn lib-menu-btn" type="button" aria-controls="lib-drawer" aria-expanded="false" data-i18n-aria="menu" data-i18n-title="menu">
+                        <span class="burger-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+                    </button>
+                    <h1 class="brand" id="brand"><span>Léetelo</span></h1>
+                </div>
                 <div class="lib-tools">
-                    <div class="lib-theme-dropdown" id="lib-theme-dropdown">
-                        <button id="lib-theme-toggle" class="lib-theme-toggle" type="button" aria-haspopup="true" aria-expanded="false">
-                            <span id="lib-theme-label" class="lib-theme-label" data-i18n="theme">Tema</span>
-                            <span id="lib-theme-chevron" class="lib-theme-chevron" aria-hidden="true"></span>
-                        </button>
-                        <div class="swatches" role="radiogroup" aria-labelledby="lbl-theme" id="lib-theme"></div>
-                    </div>
                     <div id="shelf-search-wrap" class="shelf-search-bar" role="search">
                         <span id="shelf-search-icon" class="shelf-search-icon" aria-hidden="true"></span>
                         <input id="shelf-search" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="shelf_search_placeholder" data-i18n-aria="shelf_search_placeholder">
@@ -98,20 +95,6 @@
                 <div id="shelf-sections" class="shelf-sections">
                     <ul id="books" class="books"></ul>
                 </div>
-                <div id="shelf-dropzone" class="shelf-dropzone" role="button" tabindex="0" aria-label="Añadir libro a la biblioteca">
-                    <div class="shelf-dropzone-inner">
-                        <span class="shelf-drop-icon" id="shelf-drop-icon" aria-hidden="true"></span>
-                        <div class="shelf-drop-text">
-                            <p class="shelf-drop-title" data-i18n="drop_add_title"></p>
-                            <p class="shelf-drop-sub" data-i18n="drop_add_sub"></p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="stats" class="stats" aria-labelledby="stats-title" hidden>
-                <h2 id="stats-title" data-i18n="stats_title"></h2>
-                <dl id="stats-list" class="stats-list"></dl>
             </section>
 
             <div id="cards" class="cards">
@@ -142,15 +125,65 @@
             </div>
         </main>
 
-        <footer class="lib-foot">
-            <span id="storage" class="muted"></span>
-            <span class="lib-io">
-                <button id="lib-export" class="link-btn quiet-link" type="button" data-i18n="export_library"></button>
-                <button id="lib-import" class="link-btn quiet-link" type="button" data-i18n="import_library"></button>
-            </span>
-            <div id="app-version">v 1.00</div>
+        <!-- Hamburger Menu Drawer -->
+        <div id="lib-drawer" class="lib-drawer" role="dialog" aria-modal="true" aria-labelledby="lib-drawer-title" hidden>
+            <div class="lib-drawer-backdrop" id="lib-drawer-backdrop"></div>
+            <aside class="lib-drawer-panel">
+                <header class="lib-drawer-head">
+                    <button id="lib-drawer-close" class="icon-btn lib-menu-btn lib-drawer-close" type="button" data-i18n-aria="dismiss" data-i18n-title="dismiss">
+                        <span class="burger-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+                    </button>
+                    <h2 id="lib-drawer-title" data-i18n="menu">Menú</h2>
+                </header>
+                <div class="lib-drawer-body">
+                    <div class="lib-theme-dropdown" id="lib-theme-dropdown">
+                        <button id="lib-theme-toggle" class="lib-theme-toggle" type="button" aria-haspopup="true" aria-expanded="false">
+                            <span id="lib-theme-label" class="lib-theme-label" data-i18n="theme">Tema</span>
+                            <span id="lib-theme-chevron" class="lib-theme-chevron" aria-hidden="true"></span>
+                        </button>
+                        <div class="swatches" role="radiogroup" aria-labelledby="lbl-theme" id="lib-theme"></div>
+                    </div>
 
-        </footer>
+                    <button id="lib-drawer-add" class="lib-drawer-action" type="button">
+                        <span class="lib-drawer-action-icon" id="lib-drawer-add-icon" aria-hidden="true"></span>
+                        <span class="lib-drawer-action-text">
+                            <strong data-i18n="add_books">Agregar libro(s)</strong>
+                            <small data-i18n="add_books_sub">Arrastra aquí o toca · EPUB, FB2 o CBZ</small>
+                        </span>
+                    </button>
+
+                    <section id="stats" class="stats lib-drawer-section" aria-labelledby="stats-title">
+                        <h3 id="stats-title" class="lib-drawer-section-title" data-i18n="stats_title"></h3>
+                        <dl id="stats-list" class="stats-list"></dl>
+                    </section>
+
+                    <section id="lib-info" class="lib-drawer-section" aria-labelledby="lib-info-title">
+                        <h3 id="lib-info-title" class="lib-drawer-section-title" data-i18n="library_info">Información de la biblioteca</h3>
+                        <dl class="lib-info-list">
+                            <div>
+                                <dt data-i18n="total_books_label">Libros en la biblioteca</dt>
+                                <dd id="lib-info-books">0</dd>
+                            </div>
+                            <div>
+                                <dt data-i18n="storage_label">Espacio ocupado</dt>
+                                <dd id="storage">—</dd>
+                            </div>
+                            <div>
+                                <dt data-i18n="version_label">Versión</dt>
+                                <dd id="app-version">v 1.00</dd>
+                            </div>
+                        </dl>
+                    </section>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Touch/pointer interactive right-side scroll rail for mobile Home -->
+        <div id="lib-scrollbar" class="lib-scrollbar" aria-hidden="true" hidden>
+            <div id="lib-scrollbar-track" class="lib-scrollbar-track">
+                <div id="lib-scrollbar-thumb" class="lib-scrollbar-thumb"></div>
+            </div>
+        </div>
     </div>
 
     <!-- ============================================================ reading -->

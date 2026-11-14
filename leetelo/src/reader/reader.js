@@ -13,7 +13,7 @@ import { localizeDom, t } from '../lib/i18n.js';
 import { showToast } from '../lib/toast.js';
 import { $ } from './dom.js';
 import { addReadingTime, errorCode, fileProblem, hasRoom, localDay } from './logic.js';
-import { hideNotice, importFile, initLibrary, problemText, renderLibrary, showNotice } from './library.js';
+import { closeLibraryDrawer, hideNotice, importFile, initLibrary, problemText, renderLibrary, showNotice } from './library.js';
 import { addStatTime } from './stats.js';
 import { EXTENSION } from './libfile.js';
 import { openRemote } from './remote.js';
@@ -156,6 +156,7 @@ async function show(book, id, { push = false } = {}) {
   Object.assign(rp, { book, bookId: id, index: null, ready: false });
   rp.loader = createLoader(book);
   hideNotice();
+  closeLibraryDrawer(true);
   $('library').hidden = true;
   $('reading').hidden = false;
   wake();
@@ -518,6 +519,7 @@ document.addEventListener('drop', async (e) => {
   e.preventDefault();
   dragDepth = 0;
   dragState(false);
+  if (e.target?.closest?.('#lib-drawer-add')) return;
   const files = e.dataTransfer?.files;
   if (!files || !files.length) { fail('no-file'); return; }
   if (!$('library').hidden) {

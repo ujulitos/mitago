@@ -77,6 +77,7 @@ const PATHS = {
   checkDouble: 'M3 11l3.5 3.5L14 7M8 11l3.5 3.5L19 7',
   books: 'M3.5 4.5h2.5v11h-2.5zM3.5 8h2.5M7.5 4.5h2.5v11h-2.5zM7.5 8h2.5M12 5.6l2.4-.7 3 10.3-2.4.7z',
   dots: 'M10 4.5h.01M10 10h.01M10 15.5h.01',
+  menu: 'M3 5.5h14M3 10h14M3 14.5h14',
 };
 
 function svg(width, height, viewBox) {

@@ -10,7 +10,7 @@ import { $, el, formatSize, labelled } from './dom.js';
 import { ERROR_FALLBACK, errorCode, localDay, percent } from './logic.js';
 import { hoursMinutes, libraryStats } from './stats.js';
 import { EXTENSION } from './libfile.js';
-import { exportLibrary, importLibrary } from './libio.js';
+import { importLibrary } from './libio.js';
 import { openAny } from '../core/formats.js';
 
 const local = {
@@ -438,46 +438,37 @@ function confirmDelete(li, book, del, categories) {
     await renderLibrary();
     const target = next && document.querySelector(`[data-id="${CSS.escape(next.dataset.id)}"] .cover-btn`);
     if (target) target.focus();
-    else $('shelf-dropzone')?.focus();
+    else $('lib-menu-btn')?.focus();
   });
   li.append(box);
   keep.focus();
 }
 
 async function renderStorage() {
+  const storageEl = $('storage');
+  if (!storageEl) return;
   try {
     const { usage } = await navigator.storage.estimate();
-    $('storage').textContent = t('storage_used', formatSize(usage ?? 0, uiLanguage()));
-  } catch { $('storage').textContent = ''; }
+    storageEl.textContent = formatSize(usage ?? 0, uiLanguage());
+  } catch { storageEl.textContent = '—'; }
 }
 
-// ---- reading stats (local only; shown once there is a minute to show) ----------------------
+// ---- reading stats (inside hamburger menu drawer) ----------------------
 function renderStats(stats, positions) {
   const s = libraryStats(stats, positions, localDay(Date.now()));
-  $('stats').hidden = s.total < 60000;
-  if ($('stats').hidden) return;
+  const statsEl = $('stats');
+  if (statsEl) statsEl.hidden = false;
   const item = (label, value) => el('div', {}, el('dt', { textContent: label }), el('dd', { textContent: value }));
-  $('stats-list').replaceChildren(
+  $('stats-list')?.replaceChildren(
     item(t('stats_total'), duration(s.total, true)),
     item(t('stats_week'), duration(s.week, true)),
     item(t('stats_streak'), tn('days_count', s.streak)),
     item(t('stats_finished'), String(s.finished)));
 }
 
-// ---- export / import: one .readpane file ---------------------------------------------
+// ---- export / import helper ---------------------------------------------
 async function busy(fn) {
-  for (const id of ['lib-export', 'lib-import']) $(id).disabled = true;
-  try { return await fn(); } finally { for (const id of ['lib-export', 'lib-import']) $(id).disabled = false; }
-}
-
-async function exportFile() {
-  await busy(async () => {
-    const blob = await exportLibrary(ctx.store);
-    const url = URL.createObjectURL(blob);
-    const day = new Date().toLocaleDateString('sv'); // YYYY-MM-DD
-    el('a', { href: url, download: `readpane-library-${day}.${EXTENSION}` }).click();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  });
+  return fn();
 }
 
 /** Merge a .readpane file into the library; says what came in, or why nothing did. */
@@ -666,6 +657,12 @@ export async function renderLibrary() {
   if (!has) {
     if (shelfSections) shelfSections.replaceChildren();
     for (const u of oldUrls) URL.revokeObjectURL(u);
+    renderStats(stats, positions);
+    const infoBooksEl = $('lib-info-books');
+    if (infoBooksEl) infoBooksEl.textContent = tn('books_count', 0);
+    await Promise.all([renderStorage(), renderWhatsNew(), renderTier2()]);
+    window.__rp.libraryReady = true;
+    requestAnimationFrame(updateLibScrollbar);
     return;
   }
 
@@ -832,9 +829,139 @@ export async function renderLibrary() {
   renderSections();
   for (const u of oldUrls) URL.revokeObjectURL(u);
   renderStats(stats, positions);
-  $('lib-export').hidden = !has;
+  const infoBooksEl = $('lib-info-books');
+  if (infoBooksEl) infoBooksEl.textContent = tn('books_count', books.length);
   await Promise.all([renderStorage(), renderWhatsNew(), renderTier2()]);
   window.__rp.libraryReady = true;
+  requestAnimationFrame(updateLibScrollbar);
+}
+
+let drawerCloseTimer = 0;
+
+export function closeLibraryDrawer(immediate = false) {
+  const drawer = $('lib-drawer');
+  const menuBtn = $('lib-menu-btn');
+  if (!drawer || drawer.hidden) return;
+  clearTimeout(drawerCloseTimer);
+  const dd = $('lib-theme-dropdown');
+  const toggle = $('lib-theme-toggle');
+  if (dd) dd.classList.remove('open');
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  drawer.classList.remove('open');
+  if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+  if (immediate) {
+    drawer.hidden = true;
+    return;
+  }
+  const panel = drawer.querySelector('.lib-drawer-panel');
+  const finish = () => {
+    clearTimeout(drawerCloseTimer);
+    if (!drawer.classList.contains('open')) drawer.hidden = true;
+  };
+  panel?.addEventListener('transitionend', finish, { once: true });
+  drawerCloseTimer = setTimeout(finish, 260);
+}
+
+function openLibraryDrawer() {
+  const drawer = $('lib-drawer');
+  const menuBtn = $('lib-menu-btn');
+  if (!drawer) return;
+  clearTimeout(drawerCloseTimer);
+  const dd = $('lib-theme-dropdown');
+  const toggle = $('lib-theme-toggle');
+  if (dd) dd.classList.remove('open');
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  renderStorage();
+  drawer.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => drawer.classList.add('open')));
+  if (menuBtn) menuBtn.setAttribute('aria-expanded', 'true');
+  document.body.style.overflow = 'hidden';
+  $('lib-drawer-close')?.focus();
+}
+
+function updateLibScrollbar() {
+  const sb = $('lib-scrollbar');
+  const track = $('lib-scrollbar-track');
+  const thumb = $('lib-scrollbar-thumb');
+  const libEl = $('library');
+  if (!sb || !track || !thumb || !libEl || libEl.hidden) {
+    if (sb) sb.hidden = true;
+    return;
+  }
+  const head = libEl.querySelector('.lib-head');
+  if (head) sb.style.setProperty('--lib-head-h', `${Math.round(head.getBoundingClientRect().height)}px`);
+  const doc = document.scrollingElement || document.documentElement;
+  const maxScroll = doc.scrollHeight - window.innerHeight;
+  if (maxScroll <= 16) {
+    sb.hidden = true;
+    return;
+  }
+  sb.hidden = false;
+  const trackH = track.clientHeight;
+  if (trackH <= 0) return;
+  const ratio = window.innerHeight / doc.scrollHeight;
+  const thumbH = Math.max(44, Math.min(Math.round(trackH * 0.65), Math.round(trackH * ratio)));
+  const maxThumbTop = Math.max(1, trackH - thumbH);
+  const progress = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+  const thumbTop = Math.round(progress * maxThumbTop);
+  thumb.style.height = `${thumbH}px`;
+  thumb.style.transform = `translateY(${thumbTop}px)`;
+}
+
+function initLibScrollbar() {
+  const sb = $('lib-scrollbar');
+  const track = $('lib-scrollbar-track');
+  const thumb = $('lib-scrollbar-thumb');
+  if (!sb || !track || !thumb) return;
+
+  let dragging = false;
+  let grabOffset = 0;
+
+  const scrollToClientY = (clientY) => {
+    const doc = document.scrollingElement || document.documentElement;
+    const maxScroll = Math.max(0, doc.scrollHeight - window.innerHeight);
+    if (maxScroll <= 0) return;
+    const rect = track.getBoundingClientRect();
+    const thumbH = thumb.offsetHeight || 44;
+    const travel = Math.max(1, rect.height - thumbH);
+    const frac = Math.max(0, Math.min(1, (clientY - rect.top - grabOffset) / travel));
+    window.scrollTo({ top: Math.round(frac * maxScroll), behavior: 'auto' });
+  };
+
+  sb.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    dragging = true;
+    sb.classList.add('dragging');
+    sb.setPointerCapture?.(e.pointerId);
+    const thumbRect = thumb.getBoundingClientRect();
+    if (e.clientY >= thumbRect.top && e.clientY <= thumbRect.bottom) {
+      grabOffset = e.clientY - thumbRect.top;
+    } else {
+      grabOffset = thumbRect.height / 2;
+      scrollToClientY(e.clientY);
+    }
+  });
+
+  sb.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    scrollToClientY(e.clientY);
+  });
+
+  const endDrag = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    sb.classList.remove('dragging');
+    if (e.pointerId !== undefined) {
+      try { sb.releasePointerCapture?.(e.pointerId); } catch {}
+    }
+  };
+  sb.addEventListener('pointerup', endDrag);
+  sb.addEventListener('pointercancel', endDrag);
+
+  window.addEventListener('scroll', () => requestAnimationFrame(updateLibScrollbar), { passive: true });
+  window.addEventListener('resize', () => requestAnimationFrame(updateLibScrollbar), { passive: true });
 }
 
 export function initLibrary(c) {
@@ -870,42 +997,6 @@ export function initLibrary(c) {
       }
     });
   }
-  const shelfDrop = $('shelf-dropzone');
-  if (shelfDrop) {
-    const dropIcon = $('shelf-drop-icon');
-    if (dropIcon) {
-      const iconImg = document.createElement('img');
-      iconImg.src = 'icons/libro.jpg';
-      iconImg.alt = '';
-      iconImg.style.width = '32px';
-      iconImg.style.height = '32px';
-      iconImg.style.borderRadius = '8px';
-      iconImg.style.objectFit = 'cover';
-      dropIcon.replaceChildren(iconImg);
-    }
-    shelfDrop.addEventListener('click', () => ctx.pickFile());
-    shelfDrop.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        ctx.pickFile();
-      }
-    });
-    shelfDrop.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      shelfDrop.classList.add('drag-over');
-    });
-    shelfDrop.addEventListener('dragleave', () => {
-      shelfDrop.classList.remove('drag-over');
-    });
-    shelfDrop.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      shelfDrop.classList.remove('drag-over');
-      const files = e.dataTransfer?.files;
-      if (files && files.length && ctx.addFiles) {
-        await ctx.addFiles(files);
-      }
-    });
-  }
   const firstRun = $('first-run');
   if (firstRun) {
     firstRun.tabIndex = 0;
@@ -933,9 +1024,50 @@ export function initLibrary(c) {
       showToast({ level: 'warn', text: t('copy_failed') });
     }
   }); }
-  const libExport = $('lib-export'); if (libExport) libExport.addEventListener('click', exportFile);
-  const libImport = $('lib-import'); if (libImport) libImport.addEventListener('click', () => $('lib-file')?.click());
-  const libFile = $('lib-file'); if (libFile) libFile.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) importFile(f); e.target.value = ''; });
+  const menuBtn = $('lib-menu-btn');
+  if (menuBtn) {
+    menuBtn.addEventListener('click', () => openLibraryDrawer());
+  }
+  const drawerClose = $('lib-drawer-close');
+  if (drawerClose) {
+    drawerClose.addEventListener('click', () => closeLibraryDrawer());
+  }
+  const drawerBackdrop = $('lib-drawer-backdrop');
+  if (drawerBackdrop) {
+    drawerBackdrop.addEventListener('click', () => closeLibraryDrawer());
+  }
+  const drawerAddIcon = $('lib-drawer-add-icon');
+  if (drawerAddIcon) drawerAddIcon.replaceChildren(icon('plus', 18));
+  const drawerAdd = $('lib-drawer-add');
+  if (drawerAdd) {
+    drawerAdd.addEventListener('click', () => {
+      closeLibraryDrawer(true);
+      ctx.pickFile();
+    });
+    drawerAdd.addEventListener('dragenter', (e) => {
+      if (![...(e.dataTransfer?.types ?? [])].includes('Files')) return;
+      e.preventDefault();
+      drawerAdd.classList.add('drag-over');
+    });
+    drawerAdd.addEventListener('dragover', (e) => {
+      if (![...(e.dataTransfer?.types ?? [])].includes('Files')) return;
+      e.preventDefault();
+      drawerAdd.classList.add('drag-over');
+    });
+    drawerAdd.addEventListener('dragleave', (e) => {
+      if (!drawerAdd.contains(e.relatedTarget)) drawerAdd.classList.remove('drag-over');
+    });
+    drawerAdd.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      drawerAdd.classList.remove('drag-over');
+      const files = e.dataTransfer?.files;
+      if (files && files.length && ctx.addFiles) {
+        closeLibraryDrawer();
+        await ctx.addFiles(files);
+      }
+    });
+  }
+  initLibScrollbar();
 
   // Metadata modal dismiss listeners
   const metaModalClose = $('meta-modal-close');
@@ -948,6 +1080,12 @@ export function initLibrary(c) {
     metaModalBackdrop.addEventListener('click', closeMetadataModal);
   }
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('lib-drawer') && !$('lib-drawer').hidden) {
+      e.stopPropagation();
+      closeLibraryDrawer();
+      $('lib-menu-btn')?.focus();
+      return;
+    }
     if (e.key === 'Escape' && $('meta-modal') && !$('meta-modal').hidden) {
       e.stopPropagation();
       closeMetadataModal();
