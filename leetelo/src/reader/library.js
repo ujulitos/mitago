@@ -211,7 +211,7 @@ async function healBookCover(book) {
     bmp.close();
     const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
     if (!dataUrl) return;
-    await ctx.store.putBook(rec.blob, { ...rec.meta, cover: dataUrl });
+    await ctx.store.putBook(rec.blob, { ...rec.meta, cover: dataUrl, preserveOpenedAt: true });
     for (const img of document.querySelectorAll(`[data-id="${CSS.escape(book.id)}"] .cover-btn img`)) {
       img.src = dataUrl;
     }
@@ -536,6 +536,18 @@ function closeWhatsNew() {
 let syncDone = false;
 async function syncFromLibros(store) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
+  try {
+    const current = await store.listBooks();
+    const alreadySynced = await store.getSetting('libros_synced', false);
+    if (current.length > 0 || alreadySynced) {
+      if (!alreadySynced && current.length > 0) {
+        await store.setSetting('libros_synced', true);
+      }
+      return false;
+    }
+  } catch {
+    return false;
+  }
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), 2500);
   try {
@@ -546,6 +558,10 @@ async function syncFromLibros(store) {
     if (!Array.isArray(list) || list.length === 0) return false;
 
     const current = await store.listBooks();
+    if (current.length > 0) {
+      await store.setSetting('libros_synced', true);
+      return false;
+    }
     const currentFiles = new Set(current.map((b) => (b.fileName || '').toLowerCase()));
     let anyAdded = false;
 
@@ -564,6 +580,7 @@ async function syncFromLibros(store) {
         console.warn('Error syncing book from /libros:', item.name, e);
       }
     }
+    await store.setSetting('libros_synced', true);
     return anyAdded;
   } catch {
     return false;

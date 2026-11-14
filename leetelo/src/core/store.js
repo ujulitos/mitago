@@ -61,13 +61,24 @@ export async function openStore(name = DB_NAME) {
     db,
     /** Add or refresh a book. Returns its id. */
     async putBook(blob, meta) {
-      const id = meta.id ?? await bookKey(blob);
+      const id = meta.id ?? (blob ? await bookKey(blob) : undefined);
       const now = Date.now();
       const old = await get('books', id);
-      const cover = meta?.cover ?? old?.cover ?? null;
+      const { preserveOpenedAt, ...cleanMeta } = meta || {};
+      const hasValidNewCover = typeof cleanMeta.cover === 'string' && cleanMeta.cover.startsWith('data:');
+      const hasValidOldCover = typeof old?.cover === 'string' && old.cover.startsWith('data:');
+      const cover = hasValidNewCover ? cleanMeta.cover : (hasValidOldCover ? old.cover : (cleanMeta.cover ?? old?.cover ?? null));
       const tx = db.transaction(['books', 'files'], 'readwrite');
-      tx.objectStore('books').put({ ...old, ...meta, ...(cover ? { cover } : {}), id, size: blob.size, addedAt: old?.addedAt ?? now, openedAt: now });
-      if (!old) tx.objectStore('files').put({ id, blob });
+      tx.objectStore('books').put({
+        ...old,
+        ...cleanMeta,
+        ...(cover ? { cover } : {}),
+        id,
+        size: old?.size ?? blob?.size ?? cleanMeta.size ?? 0,
+        addedAt: old?.addedAt ?? now,
+        openedAt: (preserveOpenedAt && old?.openedAt) ? old.openedAt : now,
+      });
+      if (!old && blob) tx.objectStore('files').put({ id, blob });
       await done(tx);
       return id;
     },
