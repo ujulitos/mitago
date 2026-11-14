@@ -178,6 +178,27 @@
             </aside>
         </div>
 
+        <!-- Batch selection bar for Todos -->
+        <div id="batch-bar" class="batch-bar" role="region" aria-live="polite" hidden>
+            <div class="batch-bar-inner">
+                <div class="batch-bar-main" id="batch-bar-main">
+                    <button id="batch-cancel" class="icon-btn batch-close" type="button" data-i18n-aria="cancel" data-i18n-title="cancel"></button>
+                    <span id="batch-count" class="batch-count"></span>
+                    <div class="batch-bar-actions">
+                        <button id="batch-select-all" class="batch-btn" type="button" data-i18n="select_all">Seleccionar todos</button>
+                        <button id="batch-delete" class="batch-btn batch-delete" type="button"></button>
+                    </div>
+                </div>
+                <div class="batch-confirm" id="batch-confirm" hidden>
+                    <span id="batch-confirm-text" class="batch-confirm-text"></span>
+                    <div class="batch-bar-actions">
+                        <button id="batch-confirm-keep" class="batch-btn" type="button" data-i18n="keep">Conservar</button>
+                        <button id="batch-confirm-yes" class="batch-btn batch-delete" type="button" data-i18n="delete">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Touch/pointer interactive right-side scroll rail for mobile Home -->
         <div id="lib-scrollbar" class="lib-scrollbar" aria-hidden="true" hidden>
             <div id="lib-scrollbar-track" class="lib-scrollbar-track">

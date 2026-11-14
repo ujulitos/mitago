@@ -332,5 +332,14 @@ export default {
   "library_info": "Información de la biblioteca",
   "total_books_label": "Libros en la biblioteca",
   "storage_label": "Espacio ocupado",
-  "version_label": "Versión"
+  "version_label": "Versión",
+  "selected_one": "$1 seleccionado",
+  "selected_other": "$1 seleccionados",
+  "select_all": "Seleccionar todos",
+  "deselect_all": "Deseleccionar",
+  "delete_selected_q_one": "¿Eliminar 1 libro?",
+  "delete_selected_q_other": "¿Eliminar $1 libros?",
+  "deleted_batch_one": "1 libro eliminado",
+  "deleted_batch_other": "$1 libros eliminados",
+  "cancel": "Cancelar"
 };

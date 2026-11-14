@@ -335,5 +335,14 @@ export default {
 "library_info": "Library info",
 "total_books_label": "Books in library",
 "storage_label": "Storage used",
-"version_label": "Version"
+"version_label": "Version",
+"selected_one": "$1 selected",
+"selected_other": "$1 selected",
+"select_all": "Select all",
+"deselect_all": "Deselect all",
+"delete_selected_q_one": "Delete 1 book?",
+"delete_selected_q_other": "Delete $1 books?",
+"deleted_batch_one": "1 book deleted",
+"deleted_batch_other": "$1 books deleted",
+"cancel": "Cancel"
 };

@@ -659,7 +659,7 @@ body.dragging .lib-drawer-action {
     top: calc(var(--lib-head-h, 96px) + 6px);
     bottom: calc(10px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)));
     right: max(0px, env(safe-area-inset-right, 0px));
-    width: 36px;
+    width: 10px;
     z-index: 45;
     touch-action: none;
     user-select: none;
@@ -3872,4 +3872,193 @@ body.dragging .shelf-dropzone {
 .modal-synopsis-text::-webkit-scrollbar-thumb {
     background: var(--line);
     border-radius: 4px;
+}
+
+/* ---------- Batch selection in #todos (Google Photos style) ---------- */
+
+#todos .book,
+#todos .cover-btn,
+#todos .cover-btn img {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.select-check {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    background: rgba(20, 24, 36, 0.38);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.85);
+    pointer-events: none;
+    transition: opacity 140ms ease, transform 140ms ease, background 140ms ease, border-color 140ms ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+    z-index: 2;
+}
+
+.select-check svg {
+    opacity: 0;
+    transform: scale(0.7);
+    transition: opacity 120ms ease, transform 120ms ease;
+}
+
+#todos.is-selecting .select-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#todos.is-selecting .book {
+    cursor: pointer;
+}
+
+#todos.is-selecting .book-actions {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+#todos .book.selected .cover-btn {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 3px var(--rp-progress), 0 6px 18px rgba(0, 0, 0, 0.16);
+}
+
+#todos .book.selected .cover-btn:hover {
+    transform: scale(0.92);
+}
+
+#todos .book.selected .select-check {
+    background: var(--rp-progress);
+    border-color: var(--rp-progress);
+}
+
+#todos .book.selected .select-check svg {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#library.is-selecting .lib-main {
+    padding-bottom: 92px;
+}
+
+.batch-bar {
+    position: fixed;
+    left: 50%;
+    bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    width: min(560px, calc(100vw - 36px));
+    z-index: 45;
+}
+
+.batch-bar-inner {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 10px 12px;
+    box-shadow: 0 12px 32px rgba(20, 24, 36, 0.22);
+    backdrop-filter: blur(10px);
+}
+
+.batch-bar-main,
+.batch-confirm {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.batch-bar-main[hidden],
+.batch-confirm[hidden] {
+    display: none;
+}
+
+.batch-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.batch-count,
+.batch-confirm-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-right: auto;
+    min-width: 0;
+}
+
+.batch-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.batch-btn {
+    border: 1px solid var(--line);
+    background: var(--hover);
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 140ms ease, opacity 140ms ease, transform 100ms ease;
+    white-space: nowrap;
+}
+
+.batch-btn:hover:not(:disabled) {
+    background: var(--line);
+}
+
+.batch-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.batch-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.batch-btn.batch-delete {
+    background: var(--error, #b3261e);
+    border-color: var(--error, #b3261e);
+    color: #fff;
+}
+
+.batch-btn.batch-delete:hover:not(:disabled) {
+    opacity: 0.92;
+    background: var(--error, #b3261e);
+}
+
+@media (max-width: 520px) {
+    .batch-bar {
+        width: calc(100vw - 28px);
+        left: calc(50% - 6px);
+    }
+
+    .batch-bar-inner {
+        padding: 9px 10px;
+        border-radius: 14px;
+    }
+
+    .batch-count,
+    .batch-confirm-text {
+        font-size: 13px;
+    }
+
+    .batch-btn {
+        padding: 7px 10px;
+        font-size: 12.5px;
+    }
 }

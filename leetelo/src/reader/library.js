@@ -23,6 +23,154 @@ let urls = [];
 let currentMetaBookId = null;
 let currentMetaTrigger = null;
 
+const selectedBookIds = new Set();
+let selectionMode = false;
+let allTodosBooks = [];
+let currentCategories = {};
+let activeLongPressCancel = null;
+
+async function deleteBookRecord(book, categories, persistCategories = true) {
+  await ctx.store.deleteBook(book.id);
+  if (book.fileName && navigator.onLine !== false) {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 2000);
+    try {
+      await fetch(`/api/libros?name=${encodeURIComponent(book.fileName)}`, { method: 'DELETE', signal: ac.signal });
+    } catch {} finally {
+      clearTimeout(timer);
+    }
+  }
+  if (categories && categories[book.id]) {
+    delete categories[book.id];
+    if (persistCategories) await ctx.store.setSetting('book_categories', categories);
+  }
+}
+
+function closeBatchConfirm() {
+  const main = $('batch-bar-main');
+  const confirm = $('batch-confirm');
+  if (confirm) confirm.hidden = true;
+  if (main) main.hidden = false;
+}
+
+function syncBatchSelectionUI() {
+  const libraryEl = $('library');
+  const todosEl = $('todos');
+  const bar = $('batch-bar');
+  if (libraryEl) libraryEl.classList.toggle('is-selecting', selectionMode);
+  if (todosEl) todosEl.classList.toggle('is-selecting', selectionMode);
+
+  if (todosEl) {
+    const items = todosEl.querySelectorAll('.books-all > .book');
+    for (const li of items) {
+      const id = li.dataset.id;
+      const isSelected = selectionMode && selectedBookIds.has(id);
+      li.classList.toggle('selected', isSelected);
+      li.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+    }
+  }
+
+  if (!bar) return;
+  bar.hidden = !selectionMode;
+  if (!selectionMode) {
+    closeBatchConfirm();
+    return;
+  }
+
+  closeBatchConfirm();
+  const count = selectedBookIds.size;
+  const countEl = $('batch-count');
+  if (countEl) countEl.textContent = tn('selected', count);
+
+  const selectAllBtn = $('batch-select-all');
+  if (selectAllBtn) {
+    const allSelected = allTodosBooks.length > 0 && allTodosBooks.every((b) => selectedBookIds.has(b.id));
+    selectAllBtn.textContent = allSelected ? t('deselect_all') : t('select_all');
+    selectAllBtn.disabled = allTodosBooks.length === 0;
+  }
+
+  const delBtn = $('batch-delete');
+  if (delBtn) {
+    delBtn.disabled = count === 0;
+    delBtn.textContent = count > 0 ? `${t('delete')} (${count})` : t('delete');
+  }
+}
+
+function enterSelectionMode(bookId) {
+  const todosEl = $('todos');
+  if (todosEl) {
+    for (const box of todosEl.querySelectorAll('.confirm')) box.remove();
+  }
+  selectionMode = true;
+  if (bookId) selectedBookIds.add(bookId);
+  try { navigator.vibrate?.(15); } catch {}
+  syncBatchSelectionUI();
+}
+
+export function exitSelectionMode() {
+  if (!selectionMode && !selectedBookIds.size) return;
+  selectionMode = false;
+  selectedBookIds.clear();
+  syncBatchSelectionUI();
+}
+
+function toggleBookSelection(bookId) {
+  if (!selectionMode) return;
+  if (selectedBookIds.has(bookId)) selectedBookIds.delete(bookId);
+  else selectedBookIds.add(bookId);
+  if (selectedBookIds.size === 0) {
+    exitSelectionMode();
+    return;
+  }
+  syncBatchSelectionUI();
+}
+
+function openBatchConfirm() {
+  const count = selectedBookIds.size;
+  if (!count) return;
+  const selected = allTodosBooks.filter((b) => selectedBookIds.has(b.id));
+  const totalBytes = selected.reduce((sum, b) => sum + (b.size ?? 0), 0);
+  const confirm = $('batch-confirm');
+  const main = $('batch-bar-main');
+  const text = $('batch-confirm-text');
+  if (!confirm || !main || !text) return;
+  text.textContent = `${tn('delete_selected_q', count)} · ${t('frees', formatSize(totalBytes, uiLanguage()))}`;
+  main.hidden = true;
+  confirm.hidden = false;
+  $('batch-confirm-keep')?.focus();
+}
+
+async function executeBatchDelete() {
+  const ids = [...selectedBookIds];
+  if (!ids.length) return;
+  const yesBtn = $('batch-confirm-yes');
+  if (yesBtn) yesBtn.disabled = true;
+  try {
+    const byId = new Map(allTodosBooks.map((b) => [b.id, b]));
+    let deletedCount = 0;
+    let categoriesChanged = false;
+    for (const id of ids) {
+      const book = byId.get(id);
+      if (!book) continue;
+      if (currentCategories && currentCategories[id]) categoriesChanged = true;
+      await deleteBookRecord(book, currentCategories, false);
+      if (currentMetaBookId === id) closeMetadataModal();
+      deletedCount++;
+    }
+    if (categoriesChanged) {
+      await ctx.store.setSetting('book_categories', currentCategories);
+    }
+    exitSelectionMode();
+    await renderLibrary();
+    if (deletedCount > 0) {
+      showToast({ text: tn('deleted_batch', deletedCount) });
+    }
+    $('lib-menu-btn')?.focus();
+  } finally {
+    if (yesBtn) yesBtn.disabled = false;
+  }
+}
+
 export function closeMetadataModal() {
   const modal = $('meta-modal');
   if (modal) modal.hidden = true;
@@ -272,12 +420,32 @@ export function resolveCategory(bookId, pos, categories) {
 function bookItem(book, pos, stat, category, categories) {
   const title = book.title || t('untitled');
   const label = readLabel(pos);
+  const isAllBooks = category === 'all_books';
+  const selectBadge = isAllBooks
+    ? el('span', { class: 'select-check', 'aria-hidden': 'true' }, icon('check', 14))
+    : null;
+  const coverChildren = selectBadge ? [coverOf(book), selectBadge] : [coverOf(book)];
   const cover = el('button', {
     type: 'button',
     class: 'cover-btn',
     'aria-label': pos ? t('continue_book', title, label) : t('open_named', title)
-  }, coverOf(book));
-  cover.addEventListener('click', () => ctx.openBook(book.id));
+  }, ...coverChildren);
+
+  let suppressClickUntil = 0;
+  cover.addEventListener('click', (e) => {
+    if (Date.now() < suppressClickUntil) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (isAllBooks && selectionMode) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleBookSelection(book.id);
+      return;
+    }
+    ctx.openBook(book.id);
+  });
 
   const pct = pos ? percent(pos.progress ?? 0) : 0;
   const hasProg = pct > 0;
@@ -404,6 +572,68 @@ function bookItem(book, pos, stat, category, categories) {
     });
   }
 
+  if (isAllBooks) {
+    let lpTimer = 0;
+    let startX = 0;
+    let startY = 0;
+    let lastPointerType = '';
+    const cancelLongPress = () => {
+      if (lpTimer) {
+        clearTimeout(lpTimer);
+        lpTimer = 0;
+      }
+      if (activeLongPressCancel === cancelLongPress) activeLongPressCancel = null;
+    };
+
+    li.addEventListener('pointerdown', (e) => {
+      lastPointerType = e.pointerType || '';
+      suppressClickUntil = 0;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('.confirm')) return;
+      if (!selectionMode && e.target.closest('.book-actions')) return;
+      if (selectionMode) return;
+      cancelLongPress();
+      startX = e.clientX;
+      startY = e.clientY;
+      activeLongPressCancel = cancelLongPress;
+      lpTimer = setTimeout(() => {
+        lpTimer = 0;
+        if (activeLongPressCancel === cancelLongPress) activeLongPressCancel = null;
+        suppressClickUntil = Date.now() + 800;
+        enterSelectionMode(book.id);
+      }, 450);
+    });
+
+    li.addEventListener('pointermove', (e) => {
+      if (!lpTimer) return;
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 10) {
+        cancelLongPress();
+      }
+    });
+
+    li.addEventListener('pointerup', cancelLongPress);
+    li.addEventListener('pointercancel', cancelLongPress);
+
+    li.addEventListener('contextmenu', (e) => {
+      if (lastPointerType !== 'mouse' || selectionMode || Date.now() < suppressClickUntil) {
+        e.preventDefault();
+      }
+    });
+
+    li.addEventListener('click', (e) => {
+      if (!selectionMode) return;
+      if (e.target.closest('.cover-btn') || e.target.closest('.confirm')) return;
+      if (Date.now() < suppressClickUntil) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      toggleBookSelection(book.id);
+    });
+  }
+
   return li;
 }
 
@@ -420,20 +650,8 @@ function confirmDelete(li, book, del, categories) {
   keep.addEventListener('click', close);
   box.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
   yes.addEventListener('click', async () => {
-    await ctx.store.deleteBook(book.id);
-    if (book.fileName && navigator.onLine !== false) {
-      const ac = new AbortController();
-      const timer = setTimeout(() => ac.abort(), 2000);
-      try {
-        await fetch(`/api/libros?name=${encodeURIComponent(book.fileName)}`, { method: 'DELETE', signal: ac.signal });
-      } catch {} finally {
-        clearTimeout(timer);
-      }
-    }
-    if (categories && categories[book.id]) {
-      delete categories[book.id];
-      await ctx.store.setSetting('book_categories', categories);
-    }
+    await deleteBookRecord(book, categories, true);
+    selectedBookIds.delete(book.id);
     const next = li.nextElementSibling ?? li.previousElementSibling;
     await renderLibrary();
     const target = next && document.querySelector(`[data-id="${CSS.escape(next.dataset.id)}"] .cover-btn`);
@@ -655,6 +873,9 @@ export async function renderLibrary() {
   const shelfSections = $('shelf-sections');
 
   if (!has) {
+    allTodosBooks = [];
+    currentCategories = {};
+    exitSelectionMode();
     if (shelfSections) shelfSections.replaceChildren();
     for (const u of oldUrls) URL.revokeObjectURL(u);
     renderStats(stats, positions);
@@ -686,6 +907,13 @@ export async function renderLibrary() {
     read: [],
     all_books: sortAllBooks(filteredBooks, currentSortBy, currentSortDir)
   };
+  allTodosBooks = groups.all_books;
+  currentCategories = categories || {};
+  const visibleIds = new Set(allTodosBooks.map((b) => b.id));
+  for (const id of [...selectedBookIds]) {
+    if (!visibleIds.has(id)) selectedBookIds.delete(id);
+  }
+  if (selectionMode && !selectedBookIds.size) selectionMode = false;
 
   for (const b of filteredBooks) {
     const cat = resolveCategory(b.id, byId.get(b.id), categories);
@@ -827,6 +1055,7 @@ export async function renderLibrary() {
   }
 
   renderSections();
+  syncBatchSelectionUI();
   for (const u of oldUrls) URL.revokeObjectURL(u);
   renderStats(stats, positions);
   const infoBooksEl = $('lib-info-books');
@@ -1015,6 +1244,7 @@ function initLibScrollbar() {
   });
 
   window.addEventListener('scroll', () => {
+    if (activeLongPressCancel) activeLongPressCancel();
     if (!dragging) requestAnimationFrame(updateLibScrollbar);
   }, { passive: true });
   window.addEventListener('resize', () => requestAnimationFrame(updateLibScrollbar), { passive: true });
@@ -1130,6 +1360,42 @@ export function initLibrary(c) {
   }
   initLibScrollbar();
 
+  // Batch selection bar listeners
+  const batchCancel = $('batch-cancel');
+  if (batchCancel) {
+    batchCancel.replaceChildren(icon('close', 16));
+    batchCancel.addEventListener('click', () => exitSelectionMode());
+  }
+  const batchSelectAll = $('batch-select-all');
+  if (batchSelectAll) {
+    batchSelectAll.addEventListener('click', () => {
+      if (!allTodosBooks.length) return;
+      const allSelected = allTodosBooks.every((b) => selectedBookIds.has(b.id));
+      if (allSelected) {
+        selectedBookIds.clear();
+        syncBatchSelectionUI();
+      } else {
+        for (const b of allTodosBooks) selectedBookIds.add(b.id);
+        syncBatchSelectionUI();
+      }
+    });
+  }
+  const batchDelete = $('batch-delete');
+  if (batchDelete) {
+    batchDelete.addEventListener('click', openBatchConfirm);
+  }
+  const batchConfirmKeep = $('batch-confirm-keep');
+  if (batchConfirmKeep) {
+    batchConfirmKeep.addEventListener('click', () => {
+      closeBatchConfirm();
+      $('batch-delete')?.focus();
+    });
+  }
+  const batchConfirmYes = $('batch-confirm-yes');
+  if (batchConfirmYes) {
+    batchConfirmYes.addEventListener('click', executeBatchDelete);
+  }
+
   // Metadata modal dismiss listeners
   const metaModalClose = $('meta-modal-close');
   if (metaModalClose) {
@@ -1150,6 +1416,18 @@ export function initLibrary(c) {
     if (e.key === 'Escape' && $('meta-modal') && !$('meta-modal').hidden) {
       e.stopPropagation();
       closeMetadataModal();
+      return;
+    }
+    if (e.key === 'Escape' && selectionMode) {
+      const confirm = $('batch-confirm');
+      if (confirm && !confirm.hidden) {
+        e.stopPropagation();
+        closeBatchConfirm();
+        $('batch-delete')?.focus();
+        return;
+      }
+      e.stopPropagation();
+      exitSelectionMode();
     }
   });
 }
