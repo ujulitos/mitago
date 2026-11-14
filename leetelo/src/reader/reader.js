@@ -564,6 +564,7 @@ document.addEventListener('click', (e) => {
   rp.view.goToHref(a.dataset.rpHref);
 });
 for (const type of ['pointerdown', 'scroll', 'wheel']) addEventListener(type, () => { rp.lastActive = Date.now(); }, { passive: true, capture: true });
+for (const type of ['gesturestart', 'gesturechange']) document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
 
 // ---- active reading: stats per book (IndexedDB) and support milestones (5+ minutes a day) ----
 // Counts only while a book is open, the tab visible and the reader active in the last 2 minutes.
