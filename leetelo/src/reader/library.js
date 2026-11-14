@@ -1142,7 +1142,7 @@ function updateLibScrollbar() {
   const trackH = track.clientHeight;
   if (trackH <= 0) return;
   const ratio = viewH / scrollH;
-  const thumbH = Math.max(48, Math.min(Math.round(trackH * 0.65), Math.round(trackH * ratio)));
+  const thumbH = Math.max(30, Math.min(Math.round(trackH * 0.65), Math.round(trackH * ratio)));
   const maxThumbTop = Math.max(1, trackH - thumbH);
   const currentScroll = window.scrollY || doc.scrollTop || 0;
   const progress = Math.max(0, Math.min(1, currentScroll / maxScroll));
@@ -1178,7 +1178,7 @@ function initLibScrollbar() {
     const doc = document.scrollingElement || document.documentElement;
     const m = dragMetrics;
     const trackTop = m ? m.trackTop : track.getBoundingClientRect().top;
-    const travel = m ? m.travel : Math.max(1, track.clientHeight - (thumb.offsetHeight || 48));
+    const travel = m ? m.travel : Math.max(1, track.clientHeight - (thumb.offsetHeight || 30));
     const maxScroll = m ? m.maxScroll : Math.max(0, doc.scrollHeight - (window.innerHeight || doc.clientHeight));
     if (maxScroll <= 0) return;
     const thumbTop = Math.max(0, Math.min(travel, clientY - trackTop - grabOffset));
@@ -1212,7 +1212,7 @@ function initLibScrollbar() {
     const doc = document.scrollingElement || document.documentElement;
     const trackRect = track.getBoundingClientRect();
     const thumbRect = thumb.getBoundingClientRect();
-    const thumbH = thumbRect.height || thumb.offsetHeight || 48;
+    const thumbH = thumbRect.height || thumb.offsetHeight || 30;
     const viewH = window.innerHeight || doc.clientHeight;
     const maxScroll = Math.max(0, doc.scrollHeight - viewH);
     if (maxScroll <= 0 || trackRect.height <= 0) return;
