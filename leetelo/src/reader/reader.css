@@ -1666,6 +1666,83 @@ body.dragging .shelf-dropzone {
     }
 }
 
+/* App startup splash screen */
+.splash-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+    padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
+    background: var(--paper, var(--rp-paper));
+    color: var(--ink, var(--rp-ink));
+    opacity: 1;
+    transition: opacity 280ms ease, transform 280ms ease;
+}
+
+.splash-screen.is-hidden {
+    opacity: 0;
+    transform: scale(1.02);
+    pointer-events: none;
+}
+
+.splash-screen[hidden] {
+    display: none !important;
+}
+
+.splash-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    animation: rp-splash-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.splash-logo {
+    display: block;
+    width: 84px;
+    height: 84px;
+    border-radius: 22px;
+    object-fit: cover;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.splash-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.splash-spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+    color: var(--muted, var(--ink));
+}
+
+.splash-spinner svg {
+    display: block;
+    animation: rp-spin 0.85s linear infinite;
+}
+
+.splash-spinner .loading-track {
+    opacity: 0.2;
+}
+
+@keyframes rp-splash-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /* =================================================================== reading */
 .reading {
     --rail-h: 42px;

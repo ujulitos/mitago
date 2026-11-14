@@ -614,5 +614,22 @@ if (veilIcon) {
   img.style.objectFit = 'cover';
   veilIcon.append(img);
 }
+function dismissSplash() {
+  const splash = $('splash-screen');
+  if (!splash || splash.dataset.dismissed) return;
+  splash.dataset.dismissed = '1';
+  splash.classList.add('is-hidden');
+  setTimeout(() => {
+    splash.hidden = true;
+    splash.remove();
+  }, 300);
+}
+
 applyReadingTheme(await (await storeReady).getSetting('theme', null));
-route();
+const splashFallbackTimer = setTimeout(dismissSplash, 8000);
+try {
+  await route();
+} finally {
+  clearTimeout(splashFallbackTimer);
+  dismissSplash();
+}
