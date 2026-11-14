@@ -409,15 +409,15 @@ function duration(ms, zero = false) {
 }
 
 export function resolveCategory(bookId, pos, categories) {
-  if (pos && percent(pos.progress ?? 0) >= 100) {
-    return 'read';
-  }
   const manual = categories?.[bookId];
   if (manual === 'none') return 'all_books';
   if (manual === 'reading') return 'reading';
   if (manual === 'to_read') return 'to_read';
   if (manual === 'read') return 'read';
 
+  if (pos && percent(pos.progress ?? 0) >= 100) {
+    return 'read';
+  }
   if (pos && (pos.progress ?? 0) > 0) {
     return 'reading';
   }
@@ -491,6 +491,7 @@ function bookItem(book, pos, stat, category, categories) {
 
   btnReading.addEventListener('click', async (e) => {
     e.stopPropagation();
+    btnReading.blur();
     closeMetadataModal();
     if (effectiveCat === 'reading') {
       categories[book.id] = 'none';
@@ -509,6 +510,7 @@ function bookItem(book, pos, stat, category, categories) {
 
   btnToRead.addEventListener('click', async (e) => {
     e.stopPropagation();
+    btnToRead.blur();
     closeMetadataModal();
     if (effectiveCat === 'to_read') {
       categories[book.id] = 'none';
@@ -527,6 +529,7 @@ function bookItem(book, pos, stat, category, categories) {
 
   btnRead.addEventListener('click', async (e) => {
     e.stopPropagation();
+    btnRead.blur();
     closeMetadataModal();
     if (effectiveCat === 'read') {
       categories[book.id] = 'none';

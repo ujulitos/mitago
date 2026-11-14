@@ -1142,18 +1142,23 @@ body.dragging .dropzone {
     transform: none !important;
 }
 
-.book-action-btn:hover {
-    color: var(--rp-progress, salmon) !important;
-    background: transparent !important;
-    transform: none !important;
-}
+@media (hover: hover) and (pointer: fine) {
+    .book-action-btn:hover,
+    .book-action-btn.btn-delete:hover {
+        color: var(--rp-progress, salmon) !important;
+        background: transparent !important;
+        transform: none !important;
+    }
 
-.book-action-btn:hover svg {
-    color: var(--rp-progress, salmon) !important;
-}
+    .book-action-btn:hover svg,
+    .book-action-btn.btn-delete:hover svg {
+        color: var(--rp-progress, salmon) !important;
+    }
 
-.book-action-btn:hover svg path {
-    stroke: var(--rp-progress, salmon) !important;
+    .book-action-btn:hover svg path,
+    .book-action-btn.btn-delete:hover svg path {
+        stroke: var(--rp-progress, salmon) !important;
+    }
 }
 
 .book-action-btn svg {
@@ -1176,15 +1181,6 @@ body.dragging .dropzone {
 }
 
 .book-action-btn.active svg path {
-    stroke: var(--rp-progress, salmon) !important;
-}
-
-.book-action-btn.btn-delete:hover {
-    color: var(--rp-progress, salmon) !important;
-    background: transparent !important;
-}
-
-.book-action-btn.btn-delete:hover svg path {
     stroke: var(--rp-progress, salmon) !important;
 }
 
