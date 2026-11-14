@@ -890,9 +890,14 @@ function updateLibScrollbar() {
     return;
   }
   const head = libEl.querySelector('.lib-head');
-  if (head) sb.style.setProperty('--lib-head-h', `${Math.round(head.getBoundingClientRect().height)}px`);
+  if (head) {
+    const h = Math.round(head.getBoundingClientRect().height);
+    if (h > 0) sb.style.setProperty('--lib-head-h', `${h}px`);
+  }
   const doc = document.scrollingElement || document.documentElement;
-  const maxScroll = doc.scrollHeight - window.innerHeight;
+  const viewH = doc.clientHeight || window.innerHeight;
+  const scrollH = doc.scrollHeight;
+  const maxScroll = Math.max(0, scrollH - viewH);
   if (maxScroll <= 16) {
     sb.hidden = true;
     return;
@@ -900,13 +905,14 @@ function updateLibScrollbar() {
   sb.hidden = false;
   const trackH = track.clientHeight;
   if (trackH <= 0) return;
-  const ratio = window.innerHeight / doc.scrollHeight;
-  const thumbH = Math.max(44, Math.min(Math.round(trackH * 0.65), Math.round(trackH * ratio)));
+  const ratio = viewH / scrollH;
+  const thumbH = Math.max(48, Math.min(Math.round(trackH * 0.65), Math.round(trackH * ratio)));
   const maxThumbTop = Math.max(1, trackH - thumbH);
-  const progress = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+  const currentScroll = doc.scrollTop || window.scrollY || 0;
+  const progress = Math.max(0, Math.min(1, currentScroll / maxScroll));
   const thumbTop = Math.round(progress * maxThumbTop);
   thumb.style.height = `${thumbH}px`;
-  thumb.style.transform = `translateY(${thumbTop}px)`;
+  thumb.style.transform = `translate3d(0, ${thumbTop}px, 0)`;
 }
 
 function initLibScrollbar() {
@@ -916,52 +922,107 @@ function initLibScrollbar() {
   if (!sb || !track || !thumb) return;
 
   let dragging = false;
+  let dragMode = null; // 'touch' | 'pointer'
+  let activePointerId = null;
   let grabOffset = 0;
 
   const scrollToClientY = (clientY) => {
     const doc = document.scrollingElement || document.documentElement;
-    const maxScroll = Math.max(0, doc.scrollHeight - window.innerHeight);
+    const viewH = doc.clientHeight || window.innerHeight;
+    const maxScroll = Math.max(0, doc.scrollHeight - viewH);
     if (maxScroll <= 0) return;
     const rect = track.getBoundingClientRect();
-    const thumbH = thumb.offsetHeight || 44;
+    const thumbH = thumb.offsetHeight || 48;
     const travel = Math.max(1, rect.height - thumbH);
-    const frac = Math.max(0, Math.min(1, (clientY - rect.top - grabOffset) / travel));
-    window.scrollTo({ top: Math.round(frac * maxScroll), behavior: 'auto' });
+    const thumbTop = Math.max(0, Math.min(travel, clientY - rect.top - grabOffset));
+    const frac = thumbTop / travel;
+    const targetTop = Math.round(frac * maxScroll);
+    thumb.style.transform = `translate3d(0, ${Math.round(thumbTop)}px, 0)`;
+    doc.scrollTop = targetTop;
+    if (Math.abs((window.scrollY || 0) - targetTop) > 1) {
+      window.scrollTo(0, targetTop);
+    }
   };
 
-  sb.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
+  const beginDrag = (clientY, mode, pointerId = null) => {
     dragging = true;
+    dragMode = mode;
+    activePointerId = pointerId;
     sb.classList.add('dragging');
-    sb.setPointerCapture?.(e.pointerId);
     const thumbRect = thumb.getBoundingClientRect();
-    if (e.clientY >= thumbRect.top && e.clientY <= thumbRect.bottom) {
-      grabOffset = e.clientY - thumbRect.top;
+    if (clientY >= thumbRect.top - 12 && clientY <= thumbRect.bottom + 12) {
+      grabOffset = Math.max(0, Math.min(thumbRect.height, clientY - thumbRect.top));
     } else {
-      grabOffset = thumbRect.height / 2;
-      scrollToClientY(e.clientY);
+      grabOffset = (thumbRect.height || 48) / 2;
+      scrollToClientY(clientY);
     }
+  };
+
+  const finishDrag = () => {
+    if (!dragging) return;
+    dragging = false;
+    dragMode = null;
+    if (activePointerId !== null) {
+      try { sb.releasePointerCapture?.(activePointerId); } catch {}
+      activePointerId = null;
+    }
+    sb.classList.remove('dragging');
+    requestAnimationFrame(updateLibScrollbar);
+  };
+
+  // Native touch listeners with passive:false prevent iOS Safari / Android from stealing the vertical drag
+  sb.addEventListener('touchstart', (e) => {
+    if (!e.touches.length) return;
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
+    beginDrag(e.touches[0].clientY, 'touch');
+  }, { passive: false });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!dragging || dragMode !== 'touch' || !e.touches.length) return;
+    if (e.cancelable) e.preventDefault();
+    scrollToClientY(e.touches[0].clientY);
+  }, { passive: false });
+
+  window.addEventListener('touchend', () => {
+    if (dragMode === 'touch') finishDrag();
+  }, { passive: true });
+
+  window.addEventListener('touchcancel', () => {
+    if (dragMode === 'touch') finishDrag();
+  }, { passive: true });
+
+  // Pointer events for mouse / stylus / hybrid browsers
+  sb.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') return;
+    e.preventDefault();
+    sb.setPointerCapture?.(e.pointerId);
+    beginDrag(e.clientY, 'pointer', e.pointerId);
   });
 
-  sb.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
+  window.addEventListener('pointermove', (e) => {
+    if (!dragging || dragMode !== 'pointer') return;
     e.preventDefault();
     scrollToClientY(e.clientY);
   });
 
-  const endDrag = (e) => {
-    if (!dragging) return;
-    dragging = false;
-    sb.classList.remove('dragging');
-    if (e.pointerId !== undefined) {
-      try { sb.releasePointerCapture?.(e.pointerId); } catch {}
-    }
-  };
-  sb.addEventListener('pointerup', endDrag);
-  sb.addEventListener('pointercancel', endDrag);
+  window.addEventListener('pointerup', () => {
+    if (dragMode === 'pointer') finishDrag();
+  });
 
-  window.addEventListener('scroll', () => requestAnimationFrame(updateLibScrollbar), { passive: true });
+  window.addEventListener('pointercancel', () => {
+    if (dragMode === 'pointer') finishDrag();
+  });
+
+  window.addEventListener('scroll', () => {
+    if (!dragging) requestAnimationFrame(updateLibScrollbar);
+  }, { passive: true });
   window.addEventListener('resize', () => requestAnimationFrame(updateLibScrollbar), { passive: true });
+  if (typeof ResizeObserver === 'function') {
+    const ro = new ResizeObserver(() => requestAnimationFrame(updateLibScrollbar));
+    const libMain = document.querySelector('#library .lib-main');
+    if (libMain) ro.observe(libMain);
+  }
 }
 
 export function initLibrary(c) {

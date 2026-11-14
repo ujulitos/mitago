@@ -659,10 +659,11 @@ body.dragging .lib-drawer-action {
     top: calc(var(--lib-head-h, 96px) + 6px);
     bottom: calc(10px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)));
     right: max(0px, env(safe-area-inset-right, 0px));
-    width: 26px;
+    width: 36px;
     z-index: 45;
     touch-action: none;
     user-select: none;
+    -webkit-user-select: none;
     cursor: grab;
     -webkit-tap-highlight-color: transparent;
 }
@@ -679,16 +680,17 @@ body.dragging .lib-drawer-action {
     position: absolute;
     top: 0;
     bottom: 0;
-    right: 4px;
+    right: 5px;
     width: 6px;
     border-radius: 999px;
     background: color-mix(in srgb, var(--line) 60%, transparent);
+    touch-action: none;
     transition: width 140ms ease, background-color 140ms ease;
 }
 
 .lib-scrollbar:hover .lib-scrollbar-track,
 .lib-scrollbar.dragging .lib-scrollbar-track {
-    width: 9px;
+    width: 10px;
     background: color-mix(in srgb, var(--line) 85%, transparent);
 }
 
@@ -697,10 +699,12 @@ body.dragging .lib-drawer-action {
     left: 0;
     right: 0;
     top: 0;
-    min-height: 44px;
+    min-height: 48px;
     border-radius: 999px;
     background: color-mix(in srgb, var(--rp-progress, salmon) 78%, var(--muted));
     opacity: 0.85;
+    touch-action: none;
+    will-change: transform;
     transition: opacity 140ms ease, background-color 140ms ease;
 }
 
