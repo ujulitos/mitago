@@ -659,7 +659,7 @@ body.dragging .lib-drawer-action {
     top: calc(var(--lib-head-h, 96px) + 6px);
     bottom: calc(10px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)));
     right: max(0px, env(safe-area-inset-right, 0px));
-    width: 14px;
+    width: 20px;
     z-index: 48;
     touch-action: none;
     overscroll-behavior: contain;
