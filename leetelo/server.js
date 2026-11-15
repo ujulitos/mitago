@@ -1,4 +1,5 @@
 import http from 'node:http';
+import https from 'node:https';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -10,9 +11,16 @@ const __dirname = path.dirname(__filename);
 
 const root = __dirname;
 const librosDir = path.join(root, 'libros');
+const certsDir = path.join(root, 'certs');
 const host = '0.0.0.0';
 const port = Number(process.env.PORT || 3000);
 const shouldOpenBrowser = process.argv.includes('--open') || process.env.OPEN === '1';
+
+const certPath = process.env.SSL_CERT || path.join(certsDir, 'cert.pem');
+const keyPath = process.env.SSL_KEY || path.join(certsDir, 'key.pem');
+const rootCaPath = path.join(certsDir, 'rootCA.crt');
+const useHttps = process.env.HTTP_ONLY !== '1' && fs.existsSync(certPath) && fs.existsSync(keyPath);
+const proto = useHttps ? 'https' : 'http';
 
 // Ensure physical /libros directory exists
 if (!fs.existsSync(librosDir)) {
@@ -61,7 +69,7 @@ const send = (res, status, body, headers = {}) => {
   res.end(body);
 };
 
-// Discover local IPv4 LAN addresses
+// Discover local IPv4 LAN addresses (Wi-Fi / Ethernet / 192.168.* prioritized over virtual adapters)
 function getLanIps() {
   const nets = os.networkInterfaces();
   const ips = [];
@@ -72,7 +80,13 @@ function getLanIps() {
       }
     }
   }
-  return ips;
+  const rank = ({ interface: iface, address }) => {
+    if (/wi-?fi|wlan/i.test(iface)) return 0;
+    if (/ethernet/i.test(iface) && address.startsWith('192.168.')) return 1;
+    if (address.startsWith('192.168.')) return 2;
+    return 3;
+  };
+  return ips.sort((a, b) => rank(a) - rank(b));
 }
 
 // Safe path resolver with fallback aliases
@@ -128,12 +142,12 @@ function generateQrSvg(text) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`;
 }
 
-const server = http.createServer((req, res) => {
+const requestHandler = (req, res) => {
   // CORS Preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, HEAD, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, DELETE, HEAD, OPTIONS',
       'Access-Control-Allow-Headers': '*',
       'Access-Control-Allow-Private-Network': 'true'
     });
@@ -141,7 +155,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const reqUrlObj = new URL(req.url, 'http://localhost');
+  const reqUrlObj = new URL(req.url, `${proto}://localhost`);
   const pathname = reqUrlObj.pathname || '/';
 
   // API 1: /api/info
@@ -150,12 +164,32 @@ const server = http.createServer((req, res) => {
     const primaryIp = lanIps[0]?.address || 'localhost';
     const info = {
       status: 'ok',
+      protocol: proto,
+      https: useHttps,
       port,
-      localUrl: `http://localhost:${port}`,
-      lanUrl: `http://${primaryIp}:${port}`,
+      localUrl: `${proto}://localhost:${port}`,
+      lanUrl: `${proto}://${primaryIp}:${port}`,
       ips: lanIps
     };
     send(res, 200, JSON.stringify(info, null, 2), { 'Content-Type': 'application/json; charset=utf-8' });
+    return;
+  }
+
+  // Descarga directa del certificado CA raíz para confiar desde teléfonos
+  if (pathname === '/rootCA.crt' || pathname === '/api/ca') {
+    if (!fs.existsSync(rootCaPath)) {
+      send(res, 404, 'No hay certificado rootCA.crt generado todavía. Ejecuta: npm run setup-https');
+      return;
+    }
+    const caData = fs.readFileSync(rootCaPath);
+    res.writeHead(200, {
+      'Content-Type': 'application/x-x509-ca-cert',
+      'Content-Disposition': 'attachment; filename="leetelo-rootCA.crt"',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'no-store',
+      'Content-Length': caData.length
+    });
+    res.end(caData);
     return;
   }
 
@@ -320,19 +354,54 @@ const server = http.createServer((req, res) => {
       fs.createReadStream(filePath).pipe(res);
     }
   });
-});
+};
+
+const server = useHttps
+  ? https.createServer({ cert: fs.readFileSync(certPath), key: fs.readFileSync(keyPath) }, requestHandler)
+  : http.createServer(requestHandler);
+
+// Mini servidor HTTP auxiliar para descargar e instalar rootCA.crt en teléfonos la primera vez
+const caPort = Number(process.env.CA_PORT || (port + 1));
+let caHelperServer = null;
+if (useHttps && fs.existsSync(rootCaPath)) {
+  caHelperServer = http.createServer((req, res) => {
+    const reqPath = new URL(req.url, 'http://localhost').pathname;
+    if (reqPath === '/rootCA.crt') {
+      const caData = fs.readFileSync(rootCaPath);
+      res.writeHead(200, {
+        'Content-Type': 'application/x-x509-ca-cert',
+        'Content-Disposition': 'attachment; filename="leetelo-rootCA.crt"',
+        'Cache-Control': 'no-store',
+        'Content-Length': caData.length
+      });
+      res.end(caData);
+      return;
+    }
+    const lanIps = getLanIps();
+    const primaryIp = lanIps[0]?.address || 'localhost';
+    const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Certificado Wi-Fi — Léetelo</title><style>body{font-family:system-ui,sans-serif;max-width:520px;margin:28px auto;padding:0 18px;line-height:1.5;color:#1b1b1b}a.btn{display:inline-block;padding:12px 18px;background:#e06a5a;color:#fff;text-decoration:none;border-radius:10px;font-weight:700;margin:10px 0}code{background:#f1f1f1;padding:2px 6px;border-radius:6px}</style></head><body><h2>Certificado Wi-Fi local (HTTPS)</h2><p>Instala este certificado <strong>una sola vez</strong> en tu teléfono para sincronizar con tu PC usando HTTPS:</p><p><a class="btn" href="/rootCA.crt">Descargar leetelo-rootCA.crt</a></p><ul><li><strong>Android:</strong> Ajustes → Seguridad / Cifrado y credenciales → Instalar certificado → <em>Certificado de CA</em>.</li><li><strong>iPhone / iPad:</strong> Abre con Safari, instala el perfil en Ajustes y luego actívalo en <em>General → Información → Confianza en certificados</em>.</li></ul><p>Después usa en la webapp: <code>https://${primaryIp}:${port}</code></p></body></html>`;
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(html);
+  });
+  caHelperServer.on('error', () => {});
+  caHelperServer.listen(caPort, host);
+}
 
 server.listen(port, host, () => {
   const lanIps = getLanIps();
   console.log('\n' + '='.repeat(60));
   console.log('  📖 LÉETELO WEBAPP — LECTOR DE LIBROS EPUB / FB2 / CBZ');
   console.log('='.repeat(60));
-  console.log('  Servidor activo y listo:');
-  console.log(`\n  👉 En esta computadora (Localhost): http://localhost:${port}`);
+  console.log(`  Servidor activo y listo (${useHttps ? 'HTTPS local activado' : 'HTTP'}):`);
+  console.log(`\n  👉 En esta computadora (Localhost): ${proto}://localhost:${port}`);
   if (lanIps.length > 0) {
     console.log('  📱 En tu red local (móvil/tablet):');
     for (const item of lanIps) {
-      console.log(`     http://${item.address}:${port}  (${item.interface})`);
+      console.log(`     ${proto}://${item.address}:${port}  (${item.interface})`);
+    }
+    if (caHelperServer) {
+      console.log(`\n  🔐 Instalar certificado en teléfono (una sola vez):`);
+      console.log(`     http://${lanIps[0].address}:${caPort}`);
     }
   } else {
     console.log('  📱 En red local: Conecta tu PC a Wi-Fi para ver la IP de tu red.');
@@ -342,7 +411,7 @@ server.listen(port, host, () => {
   console.log('='.repeat(60) + '\n');
 
   if (shouldOpenBrowser) {
-    const localUrl = `http://localhost:${port}`;
+    const localUrl = `${proto}://localhost:${port}`;
     const startCmd = process.platform === 'win32' ? `start "" "${localUrl}"` :
                      process.platform === 'darwin' ? `open "${localUrl}"` :
                      `xdg-open "${localUrl}"`;
