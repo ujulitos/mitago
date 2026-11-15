@@ -474,12 +474,12 @@ async function healBookCover(book) {
 
 function coverOf(book) {
   if (typeof book.cover === 'string' && book.cover.startsWith('data:')) {
-    return el('img', { src: book.cover, alt: '', decoding: 'async' });
+    return el('img', { src: book.cover, alt: '', decoding: 'async', loading: 'lazy' });
   }
   if (book.cover instanceof Blob && book.cover.size > 0) {
     const url = URL.createObjectURL(book.cover);
     urls.push(url);
-    const img = el('img', { src: url, alt: '', decoding: 'async' });
+    const img = el('img', { src: url, alt: '', decoding: 'async', loading: 'lazy' });
     img.addEventListener('error', () => {
       img.src = 'icons/libro.jpg';
       healBookCover(book);
@@ -487,7 +487,7 @@ function coverOf(book) {
     healBookCover(book);
     return img;
   }
-  const img = el('img', { src: 'icons/libro.jpg', alt: book.title || '', decoding: 'async' });
+  const img = el('img', { src: 'icons/libro.jpg', alt: book.title || '', decoding: 'async', loading: 'lazy' });
   healBookCover(book);
   return img;
 }
@@ -1062,10 +1062,14 @@ function sortAllBooks(list, sortBy, sortDir) {
 }
 
 let renderSeq = 0;
+let hasRenderedShelf = false;
+const renderedEffectiveCats = new Map();
 
 /** Tear down Home library DOM and image blob URLs when entering reading view. */
 export function teardownLibraryView() {
   renderSeq++;
+  hasRenderedShelf = false;
+  renderedEffectiveCats.clear();
   closeLibraryDrawer(true);
   closeMetadataModal();
   closeAllDeleteConfirms();
@@ -1122,6 +1126,8 @@ export async function renderLibrary() {
   const shelfSections = $('shelf-sections');
 
   if (!has) {
+    hasRenderedShelf = false;
+    renderedEffectiveCats.clear();
     allTodosBooks = [];
     currentCategories = {};
     exitSelectionMode();
@@ -1307,8 +1313,54 @@ export async function renderLibrary() {
   renderSections();
   syncBatchSelectionUI();
   for (const u of oldUrls) URL.revokeObjectURL(u);
+  renderedEffectiveCats.clear();
+  for (const b of filteredBooks) {
+    renderedEffectiveCats.set(b.id, resolveCategory(b.id, byId.get(b.id), categories));
+  }
+  hasRenderedShelf = true;
   renderLibraryInfoCounts(books, byId, currentCategories);
   await Promise.all([renderStorage(), renderWhatsNew(), renderTier2()]);
+  window.__rp.libraryReady = true;
+  requestAnimationFrame(updateLibScrollbar);
+}
+
+/** Update only the closed book card's progress in Home when its shelf category didn't change, saving battery & image decodes. */
+export async function refreshBookInLibrary(bookId) {
+  const { store } = ctx;
+  if (!store || !bookId || !hasRenderedShelf || !$('shelf-sections')?.childElementCount) {
+    return renderLibrary();
+  }
+  const [pos, categories] = await Promise.all([
+    store.getPosition(bookId),
+    store.getSetting('book_categories', {})
+  ]);
+  const nextCat = resolveCategory(bookId, pos, categories);
+  if (renderedEffectiveCats.get(bookId) !== nextCat) {
+    return renderLibrary();
+  }
+  const pct = pos ? percent(pos.progress ?? 0) : 0;
+  const pctText = `${pct}%`;
+  const hasProg = pct > 0;
+  const isDone = pct >= 100;
+  const label = readLabel(pos);
+  const cards = document.querySelectorAll(`#shelf-sections [data-id="${CSS.escape(bookId)}"]`);
+  if (!cards.length) return renderLibrary();
+  for (const card of cards) {
+    const pctEl = card.querySelector('.meta-pct');
+    if (pctEl && pctEl.textContent !== pctText) pctEl.textContent = pctText;
+    const readLine = card.querySelector('.read-line');
+    if (readLine) {
+      readLine.classList.toggle('has-progress', hasProg);
+      readLine.classList.toggle('is-complete', isDone);
+      const fill = readLine.firstElementChild;
+      if (fill) fill.style.width = `${pct}%`;
+    }
+    const coverBtn = card.querySelector('.cover-btn');
+    if (coverBtn) {
+      const title = card.querySelector('.title')?.textContent || t('untitled');
+      coverBtn.setAttribute('aria-label', pos ? t('continue_book', title, label) : t('open_named', title));
+    }
+  }
   window.__rp.libraryReady = true;
   requestAnimationFrame(updateLibScrollbar);
 }

@@ -723,10 +723,18 @@ function renderTicks() {
   $('ticks').replaceChildren(...ticks.map((k) => el('i', { style: `left:${(k.at * 100).toFixed(3)}%` })));
 }
 
+function setTextIfChanged(node, text) {
+  if (node && node.textContent !== text) node.textContent = text;
+}
+
+let lastPaintPct = '';
 function paintRail(p) {
-  $('rail-thumb').style.left = `${p * 100}%`;
+  const pctStr = `${(p * 100).toFixed(3)}%`;
+  if (pctStr === lastPaintPct) return;
+  lastPaintPct = pctStr;
+  $('rail-thumb').style.left = pctStr;
   $('rail-thumb').style.top = '';
-  $('rail-fill').style.width = `${p * 100}%`;
+  $('rail-fill').style.width = pctStr;
   $('rail-fill').style.height = '';
 }
 
@@ -793,16 +801,18 @@ export function paintChapterTime() {
     mins = Math.ceil((bytesLeft / 6) / 220);
   }
 
+  let nextText;
   if (mins <= 0) {
-    el.textContent = t('time_left_chapter_less_minute');
+    nextText = t('time_left_chapter_less_minute');
   } else if (mins < 60) {
-    el.textContent = t('time_left_chapter', mins);
+    nextText = t('time_left_chapter', mins);
   } else {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    el.textContent = t('time_left_chapter_hours', h, m);
+    nextText = t('time_left_chapter_hours', h, m);
   }
-  el.hidden = false;
+  setTextIfChanged(el, nextText);
+  if (el.hidden) el.hidden = false;
 }
 
 let clockVisible = true;
@@ -900,6 +910,9 @@ function initAnalogClock() {
 }
 
 /** Called on every position change (debounced saves happen in reader.js). */
+let lastBookFillW = '';
+let lastRailVal = '';
+let lastRailText = '';
 export function onPosition(pos, progress) {
   if (rp.view?.impl?.atEnd) {
     progress = 1;
@@ -907,32 +920,44 @@ export function onPosition(pos, progress) {
   }
   if (!$('rail').classList.contains('dragging')) paintRail(progress);
   const pct = percent(progress);
-  $('pct').textContent = t('percent', pct);
+  const pctText = t('percent', pct);
+  setTextIfChanged($('pct'), pctText);
   markToc(pos);
   paintFolio();
-  paintChapterTime();
   const rail = $('rail');
-  rail.setAttribute('aria-valuenow', String(pct));
-  rail.setAttribute('aria-valuetext', `${t('percent', pct)}, ${$('chapter').textContent}`);
+  const valStr = String(pct);
+  if (valStr !== lastRailVal) {
+    lastRailVal = valStr;
+    rail.setAttribute('aria-valuenow', valStr);
+  }
+  const valText = `${pctText}, ${$('chapter').textContent}`;
+  if (valText !== lastRailText) {
+    lastRailText = valText;
+    rail.setAttribute('aria-valuetext', valText);
+  }
   if (marks.length || $('quick-bookmark')?.getAttribute('aria-pressed') === 'true') markBookmarkState();
-  $('book-fill').style.width = `${progress * 100}%`;
+  const fillW = `${(progress * 100).toFixed(3)}%`;
+  if (fillW !== lastBookFillW) {
+    lastBookFillW = fillW;
+    $('book-fill').style.width = fillW;
+  }
 }
 
 function paintChapterPages() {
   const el = $('chapter-pages');
   if (!el) return;
-  if (!rp?.view || !rp?.book || rp.book.tocPages) { el.textContent = ''; return; }
+  if (!rp?.view || !rp?.book || rp.book.tocPages) { setTextIfChanged(el, ''); return; }
   const impl = rp.view.impl;
   const chapterFol = impl?.chapterFolio ?? impl?.folio;
   if (rp.view.mode === 'paged' && chapterFol) {
     const [a, b, n] = chapterFol;
-    el.textContent = a === b ? t('page_of', a, n) : t('folio_spread', a, b, n);
+    setTextIfChanged(el, a === b ? t('page_of', a, n) : t('folio_spread', a, b, n));
     return;
   }
   const spine = rp.view.position?.spine ?? 0;
   const host = impl?.hosts?.[spine];
   const viewEl = impl?.el;
-  if (!host || !viewEl) { el.textContent = ''; return; }
+  if (!host || !viewEl) { setTextIfChanged(el, ''); return; }
   const pageH = Math.max(100, viewEl.clientHeight - (impl.ctx?.inset || 0));
   const rect = host.getBoundingClientRect();
   const secH = Math.max(pageH, rect.height || host.offsetHeight || pageH);
@@ -940,7 +965,7 @@ function paintChapterPages() {
   const passed = Math.max(0, (impl.top ?? viewEl.getBoundingClientRect().top) - rect.top);
   let cur = total <= 1 ? 1 : Math.min(total, Math.floor(passed / pageH) + 1);
   if (impl.atEnd || rp.view.position?.frac >= 0.9995) cur = total;
-  el.textContent = t('page_of', cur, total);
+  setTextIfChanged(el, t('page_of', cur, total));
 }
 
 /** Page arrows and page numbers: after a move, or a re-pagination in place. */
@@ -953,16 +978,26 @@ export function paintFolio() {
   }
   if (impl?.folio) {
     const [a, b, n, book] = impl.folio;
-    $('folio').textContent = a === b ? t('page_of', a, n) : t('folio_spread', a, b, n);
-    $('folio').title = book ? $('folio').textContent : a === b ? t('page_of_chapter', a, n) : t('folio_spread_chapter', a, b, n);
+    const folioText = a === b ? t('page_of', a, n) : t('folio_spread', a, b, n);
+    const folioTitle = book ? folioText : a === b ? t('page_of_chapter', a, n) : t('folio_spread_chapter', a, b, n);
+    setTextIfChanged($('folio'), folioText);
+    if ($('folio').title !== folioTitle) $('folio').title = folioTitle;
   }
   const p = rp.view.progress;
   const pct = percent(p);
-  $('pct').textContent = t('percent', pct);
-  $('book-fill').style.width = `${p * 100}%`;
+  setTextIfChanged($('pct'), t('percent', pct));
+  const fillW = `${(p * 100).toFixed(3)}%`;
+  if (fillW !== lastBookFillW) {
+    lastBookFillW = fillW;
+    $('book-fill').style.width = fillW;
+  }
   const rail = $('rail');
   if (rail && !rail.classList.contains('dragging')) paintRail(p);
-  rail?.setAttribute('aria-valuenow', String(pct));
+  const valStr = String(pct);
+  if (valStr !== lastRailVal) {
+    lastRailVal = valStr;
+    rail?.setAttribute('aria-valuenow', valStr);
+  }
   paintChapterPages();
   pageLine(rp.view.position);
   paintChapterTime();
@@ -977,6 +1012,10 @@ export function teardownReadingView() {
   $('reading')?.classList.remove('mobile-ui-visible');
   tocCurrent = -1;
   lastTicksKey = '';
+  lastPaintPct = '';
+  lastBookFillW = '';
+  lastRailVal = '';
+  lastRailText = '';
   marks = [];
   sectionWordsCache.clear();
   highlightHit(null);

@@ -13,7 +13,7 @@ import { localizeDom, t } from '../lib/i18n.js';
 import { showToast } from '../lib/toast.js';
 import { $, hideLoadingOverlay, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
 import { addReadingTime, errorCode, fileProblem, hasRoom, localDay } from './logic.js';
-import { closeLibraryDrawer, hideNotice, importFile, initLibrary, problemText, renderLibrary, showNotice, teardownLibraryView } from './library.js';
+import { closeLibraryDrawer, hideNotice, importFile, initLibrary, problemText, refreshBookInLibrary, renderLibrary, showNotice } from './library.js';
 import { addStatTime } from './stats.js';
 import { EXTENSION } from './libfile.js';
 import { openRemote } from './remote.js';
@@ -70,6 +70,8 @@ let saveTimer = 0;
 let pending = null;
 let flushingPromise = null;
 let section = null;
+let lastReportedCatBook = null;
+let lastReportedCat = null;
 function onPosition(pos, progress) {
   if (rp.view?.impl?.atEnd) {
     progress = 1;
@@ -79,20 +81,23 @@ function onPosition(pos, progress) {
   if (section?.bookId !== rp.bookId || section.spine !== pos.spine) section = { bookId: rp.bookId, spine: pos.spine, since: now };
   rp.position = pos;
   rp.progress = progress;
-  rp.lastActive = Date.now();
+  rp.lastActive = now;
   paintPosition(pos, progress);
   onTextMoved();
   pending = { pos, progress };
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(flush, 300);
+  saveTimer = setTimeout(flush, 1800);
   if (rp.bookId) {
     const nextCat = progress >= 0.9995 ? 'read' : (progress > 0 ? 'reading' : null);
-    if (nextCat) {
+    if (nextCat && (lastReportedCatBook !== rp.bookId || lastReportedCat !== nextCat)) {
+      const targetBookId = rp.bookId;
+      lastReportedCatBook = targetBookId;
+      lastReportedCat = nextCat;
       storeReady.then(async (store) => {
         try {
           const categories = await store.getSetting('book_categories', {});
-          if (categories[rp.bookId] !== nextCat) {
-            categories[rp.bookId] = nextCat;
+          if (categories[targetBookId] !== nextCat) {
+            categories[targetBookId] = nextCat;
             await store.setSetting('book_categories', categories);
           }
         } catch {}
@@ -130,9 +135,9 @@ async function flush() {
   }
 }
 rp.flush = flush;
-document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
-addEventListener('pagehide', flush);
-addEventListener('beforeunload', flush);
+document.addEventListener('visibilitychange', () => { if (document.hidden) { flush(); flushReadingStats(); } });
+addEventListener('pagehide', () => { flush(); flushReadingStats(); });
+addEventListener('beforeunload', () => { flush(); flushReadingStats(); });
 
 // Scroll mode reads at this line, with top breathing space below the bar.
 const READING_EDGE = 24;
@@ -153,6 +158,7 @@ function closeReading() {
   if (!rp.view) return;
   syncPendingFromView();
   flush();
+  flushReadingStats();
   closePanel(false);
   closeSettings(false);
   globalThis.CSS?.highlights?.delete('rp-hit');
@@ -161,20 +167,23 @@ function closeReading() {
   rp.loader?.revoke();
   teardownReadingView();
   section = null;
+  lastReportedCatBook = null;
+  lastReportedCat = null;
   Object.assign(rp, { view: null, loader: null, book: null, bookId: null, index: null, ready: false, kept: undefined, ownStyle: false, position: null, progress: 0 });
   syncReadingTickTimer();
 }
 
 async function showLibrary() {
+  const closedBookId = rp.bookId;
   syncPendingFromView();
-  await flush();
+  await Promise.all([flush(), flushReadingStats()]);
   closeReading();
   if (location.search) history.replaceState(null, '', location.pathname);
   $('reading').hidden = true;
   $('library').hidden = false;
   stopAnalogClock();
   document.title = 'Léetelo';
-  await renderLibrary();
+  await (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary());
 }
 
 /** Lay a book out at its saved place. Returns true when it had one. */
@@ -182,12 +191,13 @@ async function show(book, id, { push = false } = {}) {
   const store = await storeReady;
   await ensureSpineMetrics(book);
   closeReading();
+  lastReportedCatBook = null;
+  lastReportedCat = null;
   Object.assign(rp, { book, bookId: id, index: null, ready: false });
   rp.loader = createLoader(book);
   hideNotice();
   closeLibraryDrawer(true);
   $('library').hidden = true;
-  teardownLibraryView();
   $('reading').hidden = false;
   wake();
   const saved = await store.getPosition(id);
@@ -602,7 +612,10 @@ for (const type of ['gesturestart', 'gesturechange']) document.addEventListener(
 // ---- active reading: stats per book (IndexedDB) and support milestones (5+ minutes a day) ----
 // Counts only while a book is open, the tab visible and the reader active in the last 2 minutes.
 const TICK = 60000;
+const STATS_FLUSH_MS = TICK * 3;
 let readingTickTimer = 0;
+let pendingStatBookId = null;
+let pendingStatMs = 0;
 function syncReadingTickTimer() {
   const active = Boolean(rp.view && !document.hidden && !$('reading')?.hidden);
   if (active && !readingTickTimer) {
@@ -613,20 +626,30 @@ function syncReadingTickTimer() {
   }
 }
 document.addEventListener('visibilitychange', syncReadingTickTimer);
+async function flushReadingStats() {
+  if (!pendingStatBookId || pendingStatMs <= 0) return;
+  const bookId = pendingStatBookId;
+  const ms = pendingStatMs;
+  pendingStatBookId = null;
+  pendingStatMs = 0;
+  try {
+    const store = await storeReady;
+    await store.putStats(addStatTime(await store.getStats(bookId), bookId, Date.now(), ms));
+  } catch { /* no stats this tick; reading goes on */ }
+  try {
+    const { rpReadDay } = await chrome.storage.local.get('rpReadDay');
+    const { state } = addReadingTime(rpReadDay, bookId, localDay(Date.now()), ms);
+    await chrome.storage.local.set({ rpReadDay: state });
+  } catch { /* storage unavailable: no milestone, nothing breaks */ }
+}
 async function readingTick() {
   if (!rp.view || document.hidden || Date.now() - (rp.lastActive ?? 0) > 2 * 60 * 1000) return;
   const { bookId } = rp;
-  if (rp.kept !== false) { // a book not kept in the library (no room) gets no stats either
-    try {
-      const store = await storeReady;
-      await store.putStats(addStatTime(await store.getStats(bookId), bookId, Date.now(), TICK));
-    } catch { /* no stats this tick; reading goes on */ }
-  }
-  try {
-    const { rpReadDay } = await chrome.storage.local.get('rpReadDay');
-    const { state } = addReadingTime(rpReadDay, bookId, localDay(Date.now()), TICK);
-    await chrome.storage.local.set({ rpReadDay: state });
-  } catch { /* storage unavailable: no milestone, nothing breaks */ }
+  if (rp.kept === false) return;
+  if (pendingStatBookId && pendingStatBookId !== bookId) await flushReadingStats();
+  pendingStatBookId = bookId;
+  pendingStatMs += TICK;
+  if (pendingStatMs >= STATS_FLUSH_MS) await flushReadingStats();
 }
 rp.readingTick = readingTick;
 syncReadingTickTimer();
@@ -638,11 +661,21 @@ async function route() {
   if (src) return openSrc(src);
   const remote = new URLSearchParams(location.search);
   if (remote.has('url')) { await showLibrary(); return openRemote(remote.get('url'), { openFile, denied: remote.has('denied') }); }
-  if (id && id === rp.bookId && rp.view) { $('library').hidden = true; teardownLibraryView(); $('reading').hidden = false; return; }
+  if (id && id === rp.bookId && rp.view) { $('library').hidden = true; $('reading').hidden = false; return; }
   if (id) return openStored(id);
   return showLibrary();
 }
 addEventListener('popstate', route);
+const isAppleTouch = /iP(hone|ad|od)/.test(navigator.platform) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent));
+if (isAppleTouch) {
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const x = e.touches[0].clientX;
+    if (x > 20 && x < window.innerWidth - 20) return;
+    if (e.target?.closest?.('button, a, input, select, textarea, label, [role="button"], .books.books-row, #rail, #lib-scrollbar')) return;
+    e.preventDefault();
+  }, { passive: false });
+}
 
 localizeDom();
 initLibrary({ store: await storeReady, openBook: (id) => openStored(id), pickFile, addFiles: addFilesToLibrary });
