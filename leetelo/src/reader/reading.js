@@ -970,6 +970,34 @@ export function paintFolio() {
   if (!$('panel').hidden && $('panel').dataset.pane === 'toc') refreshTocPages();
 }
 
+/** Tear down Reading DOM, cached section metrics, and timers when returning Home. */
+export function teardownReadingView() {
+  stopAnalogClock();
+  closePanel(false);
+  $('reading')?.classList.remove('mobile-ui-visible');
+  tocCurrent = -1;
+  lastTicksKey = '';
+  marks = [];
+  sectionWordsCache.clear();
+  highlightHit(null);
+  $('toc')?.replaceChildren();
+  $('bookmarks')?.replaceChildren();
+  $('hl-list')?.replaceChildren();
+  $('results')?.replaceChildren();
+  $('ticks')?.replaceChildren();
+  for (const id of ['book-title', 'chapter', 'chapter-pages', 'folio', 'chapter-time', 'pct', 'search-status']) {
+    if ($(id)) $(id).textContent = '';
+  }
+  if ($('q')) $('q').value = '';
+  if ($('search-back')) $('search-back').hidden = true;
+  if ($('search-progress')) $('search-progress').hidden = true;
+  if ($('search-fill')) $('search-fill').style.width = '';
+  if ($('rail-fill')) $('rail-fill').style.width = '';
+  if ($('rail-thumb')) $('rail-thumb').style.left = '';
+  if ($('rail')) $('rail').removeAttribute('aria-valuenow');
+  lastFocus = null;
+}
+
 /** A book was just laid out: fill everything that depends on it. */
 export async function setupBook() {
   tocCurrent = -1;

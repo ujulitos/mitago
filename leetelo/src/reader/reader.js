@@ -13,14 +13,14 @@ import { localizeDom, t } from '../lib/i18n.js';
 import { showToast } from '../lib/toast.js';
 import { $, hideLoadingOverlay, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
 import { addReadingTime, errorCode, fileProblem, hasRoom, localDay } from './logic.js';
-import { closeLibraryDrawer, hideNotice, importFile, initLibrary, problemText, renderLibrary, showNotice } from './library.js';
+import { closeLibraryDrawer, hideNotice, importFile, initLibrary, problemText, renderLibrary, showNotice, teardownLibraryView } from './library.js';
 import { addStatTime } from './stats.js';
 import { EXTENSION } from './libfile.js';
 import { openRemote } from './remote.js';
 import { clearHighlights, closeHighlightBar, exportHighlights, highlightSelection, highlights, initHighlights, onTextMoved, paint as paintHighlights, setupHighlights } from './highlights.js';
 import {
   MEASURES, READER_DEFAULTS, addBookmark, applyReadingTheme, bumpSize, closeKeys, closePanel, closeSettings,
-  hideChrome, initReading, openKeys, onPosition as paintPosition, openPanel, paintFolio, runSearch, setStyle, settle, setupBook, stopAnalogClock, syncMode, toggleBookmark, wake,
+  hideChrome, initReading, openKeys, onPosition as paintPosition, openPanel, paintFolio, runSearch, setStyle, settle, setupBook, stopAnalogClock, syncMode, teardownReadingView, toggleBookmark, wake,
 } from './reading.js';
 
 // Exposed for the e2e suite and debugging; nothing reads it in production paths.
@@ -159,7 +159,9 @@ function closeReading() {
   clearHighlights();
   rp.view.destroy();
   rp.loader?.revoke();
-  Object.assign(rp, { view: null, loader: null, book: null, bookId: null, index: null, ready: false, kept: undefined, ownStyle: false });
+  teardownReadingView();
+  section = null;
+  Object.assign(rp, { view: null, loader: null, book: null, bookId: null, index: null, ready: false, kept: undefined, ownStyle: false, position: null, progress: 0 });
   syncReadingTickTimer();
 }
 
@@ -185,6 +187,7 @@ async function show(book, id, { push = false } = {}) {
   hideNotice();
   closeLibraryDrawer(true);
   $('library').hidden = true;
+  teardownLibraryView();
   $('reading').hidden = false;
   wake();
   const saved = await store.getPosition(id);
@@ -223,8 +226,7 @@ async function show(book, id, { push = false } = {}) {
   rp.inset = READING_EDGE;
   await rp.view.goTo(saved?.pos ?? START);
   const url = `?book=${id}`;
-  if (push) history.pushState({ lib: true }, '', url);
-  else if (location.search !== url) history.replaceState({ lib: !!history.state?.lib }, '', url);
+  if (location.search !== url) history.replaceState(null, '', url);
   await setupBook();
   await setupHighlights();
   document.title = `${book.title || t('untitled')} — Léetelo`;
@@ -455,8 +457,7 @@ $('file').addEventListener('change', async (e) => {
 });
 
 function backToLibrary() {
-  if (history.state?.lib) history.back();
-  else showLibrary();
+  showLibrary();
 }
 
 // ---- moving through the book -----------------------------------------------------------
@@ -637,14 +638,14 @@ async function route() {
   if (src) return openSrc(src);
   const remote = new URLSearchParams(location.search);
   if (remote.has('url')) { await showLibrary(); return openRemote(remote.get('url'), { openFile, denied: remote.has('denied') }); }
-  if (id && id === rp.bookId && rp.view) { $('library').hidden = true; $('reading').hidden = false; return; }
+  if (id && id === rp.bookId && rp.view) { $('library').hidden = true; teardownLibraryView(); $('reading').hidden = false; return; }
   if (id) return openStored(id);
   return showLibrary();
 }
 addEventListener('popstate', route);
 
 localizeDom();
-initLibrary({ store: await storeReady, openBook: (id) => openStored(id, { push: true }), pickFile, addFiles: addFilesToLibrary });
+initLibrary({ store: await storeReady, openBook: (id) => openStored(id), pickFile, addFiles: addFilesToLibrary });
 initReading(rp, { store: await storeReady, onBack: backToLibrary });
 initHighlights(rp, { store: await storeReady });
 const veilIcon = $('veil-icon');

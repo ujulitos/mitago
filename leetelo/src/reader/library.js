@@ -1063,6 +1063,25 @@ function sortAllBooks(list, sortBy, sortDir) {
 
 let renderSeq = 0;
 
+/** Tear down Home library DOM and image blob URLs when entering reading view. */
+export function teardownLibraryView() {
+  renderSeq++;
+  closeLibraryDrawer(true);
+  closeMetadataModal();
+  closeAllDeleteConfirms();
+  exitSelectionMode();
+  hideNotice();
+  $('shelf-sections')?.replaceChildren();
+  for (const u of urls) URL.revokeObjectURL(u);
+  urls = [];
+  allTodosBooks = [];
+  currentCategories = {};
+  if ($('lib-scrollbar')) $('lib-scrollbar').hidden = true;
+  if ($('shelf')) $('shelf').hidden = true;
+  if ($('first-run')) $('first-run').hidden = true;
+  syncHomeScrollLock();
+}
+
 export async function renderLibrary() {
   const { store } = ctx;
   const seq = ++renderSeq;

@@ -174,7 +174,8 @@ html,
 body {
     height: auto;
     min-height: 100dvh;
-    touch-action: pan-x pan-y;
+    touch-action: pan-y;
+    overscroll-behavior-x: none;
 }
 
 body {
@@ -234,6 +235,7 @@ button.primary:hover {
     min-height: 100%;
     max-width: 1120px;
     margin: 0 auto;
+    overscroll-behavior-x: none;
     padding: calc(108px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(32px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(32px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
 }
 
@@ -1914,6 +1916,8 @@ body.dragging .shelf-dropzone {
     inset: 0;
     background: var(--rp-paper);
     color: var(--rp-ink);
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
 }
 
 .panel,
@@ -1934,6 +1938,8 @@ body.dragging .shelf-dropzone {
     background: var(--rp-paper);
     color: var(--rp-ink);
     scrollbar-width: none;
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
 }
 
 #view::-webkit-scrollbar {
