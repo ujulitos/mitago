@@ -559,7 +559,7 @@ function bookItem(book, pos, stat, category, categories) {
 
   const formatSizeEl = el('span', { class: 'format-size' },
     format ? el('span', { class: 'fmt-txt', textContent: format }) : null,
-    pct > 0 ? el('span', { class: 'meta-pct', textContent: `${pct}%` }) : null
+    el('span', { class: 'meta-pct', textContent: `${pct}%` })
   );
 
   const meta = el('div', { class: 'meta' },

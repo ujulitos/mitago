@@ -68,6 +68,7 @@ addEventListener('resize', () => syncSafeAreaFallback(false));
 // ---- position saving ----------------------------------------------------------------
 let saveTimer = 0;
 let pending = null;
+let flushingPromise = null;
 let section = null;
 function onPosition(pos, progress) {
   if (rp.view?.impl?.atEnd) {
@@ -101,22 +102,32 @@ function onPosition(pos, progress) {
 }
 async function flush() {
   clearTimeout(saveTimer);
+  while (flushingPromise) {
+    try { await flushingPromise; } catch {}
+  }
   if (!pending || !rp.bookId || !rp.view) return;
   const { pos, progress } = pending;
   const { bookId, view: { mode } } = rp; // read now: closing the book clears them during the await
   pending = null;
-  const store = await storeReady;
-  await store.savePosition(bookId, pos, { progress, mode });
-  if (progress >= 0.9995) {
-    try {
-      const categories = await store.getSetting('book_categories', {});
-      if (categories[bookId] !== 'read') {
-        categories[bookId] = 'read';
-        await store.setSetting('book_categories', categories);
-      }
-    } catch {}
+  flushingPromise = (async () => {
+    const store = await storeReady;
+    await store.savePosition(bookId, pos, { progress, mode });
+    if (progress >= 0.9995) {
+      try {
+        const categories = await store.getSetting('book_categories', {});
+        if (categories[bookId] !== 'read') {
+          categories[bookId] = 'read';
+          await store.setSetting('book_categories', categories);
+        }
+      } catch {}
+    }
+    rp.saves = (rp.saves ?? 0) + 1;
+  })();
+  try {
+    await flushingPromise;
+  } finally {
+    flushingPromise = null;
   }
-  rp.saves = (rp.saves ?? 0) + 1;
 }
 rp.flush = flush;
 document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
@@ -127,8 +138,20 @@ addEventListener('beforeunload', flush);
 const READING_EDGE = 24;
 
 // ---- views --------------------------------------------------------------------------
+function syncPendingFromView() {
+  if (!rp.view || !rp.bookId || !rp.ready) return;
+  const liveProgress = rp.view.impl?.atEnd ? 1 : rp.view.progress;
+  const livePos = rp.view.impl?.atEnd
+    ? { ...(rp.view.position || {}), spine: (rp.book?.spine?.length ? rp.book.spine.length - 1 : rp.view.position?.spine), frac: 1 }
+    : rp.view.position;
+  if (livePos && Number.isFinite(liveProgress)) {
+    pending = { pos: livePos, progress: liveProgress };
+  }
+}
+
 function closeReading() {
   if (!rp.view) return;
+  syncPendingFromView();
   flush();
   closePanel(false);
   closeSettings(false);
@@ -141,6 +164,7 @@ function closeReading() {
 }
 
 async function showLibrary() {
+  syncPendingFromView();
   await flush();
   closeReading();
   if (location.search) history.replaceState(null, '', location.pathname);
