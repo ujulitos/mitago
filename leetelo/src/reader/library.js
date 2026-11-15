@@ -1360,6 +1360,14 @@ export async function refreshBookInLibrary(bookId) {
       const title = card.querySelector('.title')?.textContent || t('untitled');
       coverBtn.setAttribute('aria-label', pos ? t('continue_book', title, label) : t('open_named', title));
     }
+    const row = card.closest('.books.books-row');
+    if (row) {
+      if (row.firstElementChild !== card) row.prepend(card);
+      if (row.scrollLeft !== 0) {
+        row.scrollLeft = 0;
+        row.dispatchEvent(new Event('scroll'));
+      }
+    }
   }
   window.__rp.libraryReady = true;
   requestAnimationFrame(updateLibScrollbar);
