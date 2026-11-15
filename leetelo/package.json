@@ -7,7 +7,6 @@
   "scripts": {
     "start": "node server.js --open",
     "dev": "node server.js",
-    "serve": "node server.js",
-    "setup-https": "node setup-https.mjs"
+    "serve": "node server.js"
   }
 }

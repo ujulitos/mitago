@@ -9,10 +9,10 @@ import { createView, spineWeightsOf } from '../core/render.js';
 import { openStore, bookKey } from '../core/store.js';
 import { atProgress, START } from '../core/position.js';
 import { icon } from '../lib/icons.js';
-import { localizeDom, t } from '../lib/i18n.js';
+import { localizeDom, t, tn } from '../lib/i18n.js';
 import { showToast } from '../lib/toast.js';
 import { $, hideLoadingOverlay, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
-import { addReadingTime, errorCode, fileProblem, hasRoom, localDay } from './logic.js';
+import { addReadingTime, errorCode, fileProblem, findDuplicateBook, hasRoom, localDay } from './logic.js';
 import { closeLibraryDrawer, hideNotice, importFile, initLibrary, problemText, refreshBookInLibrary, renderLibrary, showNotice } from './library.js';
 import { addStatTime } from './stats.js';
 import { EXTENSION } from './libfile.js';
@@ -323,34 +323,50 @@ async function openFile(file) {
   const problem = fileProblem(file);
   if (problem) return fail(problem, file?.name);
   const push = !rp.view && !location.search;
-  // Guardar copia física en la carpeta /libros del proyecto
-  await saveBookPhysically(file);
   try {
     const book = await openAny(file, file.name, { pageLabel });
     rp.timings.parse = performance.now() - t0;
     const store = await storeReady;
     const id = await bookKey(file);
-    const known = (await store.listBooks()).some((b) => b.id === id);
+    const resolvedTitle = book.title || file.name?.replace(/\.[^.]+$/, '') || '';
+    const existing = await store.listBooks();
+    const dup = findDuplicateBook(existing, {
+      id,
+      title: resolvedTitle,
+      creator: book.creator || '',
+      spineLength: book.spine.length,
+    });
+    const known = Boolean(dup);
+    const targetId = dup ? dup.id : id;
+
     // Space: a new book that will not fit is still opened, just not kept (said once it's open).
     let kept = known || hasRoom(await estimate(), file.size);
     if (kept) {
       try {
-        const stats = await extractBookStats(book);
-        await store.putBook(file, {
-          id, title: book.title, creator: book.creator, language: book.language,
-          description: book.description || '',
-          fileName: file.name ?? '', spineLength: book.spine.length, ...stats,
-          ...(known ? {} : { cover: await coverThumb(book) }),
-        });
-        if (!known) askPersist();
+        if (dup) {
+          const rec = await store.getBook(dup.id);
+          if (rec) await store.putBook(rec.blob, rec.meta);
+        } else {
+          const stats = await extractBookStats(book);
+          await store.putBook(file, {
+            id, title: resolvedTitle, creator: book.creator, language: book.language,
+            description: book.description || '',
+            fileName: file.name ?? '', spineLength: book.spine.length, ...stats,
+            cover: await coverThumb(book),
+          });
+          askPersist();
+          await saveBookPhysically(file);
+        }
       } catch (e) {
         if (errorCode(e) !== 'quota') throw e;
         kept = false;
       }
     }
-    const reopened = await show(book, id, { push });
+    const reopened = await show(book, targetId, { push });
     rp.kept = kept;
-    if (!kept) {
+    if (dup && !reopened) {
+      showToast({ text: t('duplicate_skipped_one') });
+    } else if (!kept) {
       const [text, next] = problemText('quota', file.name);
       showToast({ level: 'error', text, details: [next] });
     }
@@ -358,33 +374,51 @@ async function openFile(file) {
   } catch (e) { fail(errorCode(e), file.name); }
 }
 
-async function importBookOnly(file) {
+async function importBookStatus(file) {
+  const titleFallback = file?.name?.replace(/\.[^.]+$/, '') || '';
+  if (fileProblem(file)) {
+    return { status: 'error', title: titleFallback, existingId: null };
+  }
   try {
     const book = await openAny(file, file.name, { pageLabel });
     const store = await storeReady;
     const id = await bookKey(file);
-    const known = (await store.listBooks()).some((b) => b.id === id);
-    if (!known) {
-      const stats = await extractBookStats(book);
-      await store.putBook(file, {
-        id,
-        title: book.title || file.name.replace(/\.[^.]+$/, ''),
-        creator: book.creator || '',
-        language: book.language || '',
-        description: book.description || '',
-        fileName: file.name ?? '',
-        spineLength: book.spine.length,
-        ...stats,
-        cover: await coverThumb(book),
-      });
-      askPersist();
-      return true;
+    const resolvedTitle = book.title || titleFallback;
+    const existing = await store.listBooks();
+    const dup = findDuplicateBook(existing, {
+      id,
+      title: resolvedTitle,
+      creator: book.creator || '',
+      spineLength: book.spine.length,
+    });
+    if (dup) {
+      return { status: 'duplicate', title: resolvedTitle, existingId: dup.id };
     }
+
+    const stats = await extractBookStats(book);
+    await store.putBook(file, {
+      id,
+      title: resolvedTitle,
+      creator: book.creator || '',
+      language: book.language || '',
+      description: book.description || '',
+      fileName: file.name ?? '',
+      spineLength: book.spine.length,
+      ...stats,
+      cover: await coverThumb(book),
+    });
+    askPersist();
+    return { status: 'added', title: resolvedTitle, existingId: id };
   } catch (err) {
-    console.warn('importBookOnly error:', file?.name, err);
+    console.warn('importBookStatus error:', file?.name, err);
+    return { status: 'error', title: titleFallback, existingId: null };
   }
-  return false;
 }
+
+async function importBookOnly(file) {
+  return (await importBookStatus(file)).status === 'added';
+}
+rp.importBookStatus = importBookStatus;
 rp.importBookOnly = importBookOnly;
 
 async function openStored(id, { push = false } = {}) {
@@ -422,6 +456,7 @@ async function addFilesToLibrary(files) {
   const list = [...(files || [])];
   if (!list.length) return;
   let count = 0;
+  let duplicates = 0;
   let lastTitle = '';
   showLoadingOverlay(list.length > 1 ? t('importing_progress', 1, list.length) : t('importing_books'));
   await new Promise((r) => requestAnimationFrame(() => r()));
@@ -435,18 +470,27 @@ async function addFilesToLibrary(files) {
         await openLibraryFile(file);
         continue;
       }
-      await saveBookPhysically(file);
-      const ok = await importBookOnly(file);
-      if (ok) {
+      const res = await importBookStatus(file);
+      if (res.status === 'added') {
+        await saveBookPhysically(file);
         count++;
-        lastTitle = file.name.replace(/\.[^.]+$/, '');
+        lastTitle = res.title || file.name.replace(/\.[^.]+$/, '');
+      } else if (res.status === 'duplicate') {
+        duplicates++;
       }
     }
-    await renderLibrary();
+    if (count > 0) await renderLibrary();
+    let base = '';
     if (count === 1) {
-      showToast({ text: `${t('book_added')}: ${lastTitle}` });
+      base = `${t('book_added')}: ${lastTitle}`;
     } else if (count > 1) {
-      showToast({ text: `${count} ${t('books_added')}` });
+      base = `${count} ${t('books_added')}`;
+    }
+    if (duplicates > 0) {
+      const dupText = tn('duplicate_skipped', duplicates);
+      showToast({ text: base ? `${base} · ${dupText}` : dupText });
+    } else if (base) {
+      showToast({ text: base });
     }
   } finally {
     hideLoadingOverlay();

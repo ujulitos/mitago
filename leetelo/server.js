@@ -1,5 +1,5 @@
 import http from 'node:http';
-import https from 'node:https';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -11,16 +11,41 @@ const __dirname = path.dirname(__filename);
 
 const root = __dirname;
 const librosDir = path.join(root, 'libros');
-const certsDir = path.join(root, 'certs');
 const host = '0.0.0.0';
 const port = Number(process.env.PORT || 3000);
 const shouldOpenBrowser = process.argv.includes('--open') || process.env.OPEN === '1';
+const BOOK_EXTS = new Set(['.epub', '.fb2', '.cbz', '.fbz', '.zip']);
+const KEY_CHUNK = 256 * 1024;
 
-const certPath = process.env.SSL_CERT || path.join(certsDir, 'cert.pem');
-const keyPath = process.env.SSL_KEY || path.join(certsDir, 'key.pem');
-const rootCaPath = path.join(certsDir, 'rootCA.crt');
-const useHttps = process.env.HTTP_ONLY !== '1' && fs.existsSync(certPath) && fs.existsSync(keyPath);
-const proto = useHttps ? 'https' : 'http';
+// Match src/core/store.js bookKey(blob): size + first/last 256 KiB -> SHA-256 hex (32 chars)
+export function computeFileBookKey(filePath, size) {
+  const header = Buffer.alloc(16);
+  header.writeDoubleBE(size, 0);
+  const hash = crypto.createHash('sha256');
+  hash.update(header);
+
+  if (size > 0) {
+    const fd = fs.openSync(filePath, 'r');
+    try {
+      const headLen = Math.min(KEY_CHUNK, size);
+      const headBuf = Buffer.allocUnsafe(headLen);
+      fs.readSync(fd, headBuf, 0, headLen, 0);
+      hash.update(headBuf);
+
+      if (size > KEY_CHUNK) {
+        const tailStart = Math.max(KEY_CHUNK, size - KEY_CHUNK);
+        const tailLen = size - tailStart;
+        const tailBuf = Buffer.allocUnsafe(tailLen);
+        fs.readSync(fd, tailBuf, 0, tailLen, tailStart);
+        hash.update(tailBuf);
+      }
+    } finally {
+      fs.closeSync(fd);
+    }
+  }
+
+  return hash.digest().subarray(0, 16).toString('hex');
+}
 
 // Ensure physical /libros directory exists
 if (!fs.existsSync(librosDir)) {
@@ -62,14 +87,13 @@ const mime = {
 const send = (res, status, body, headers = {}) => {
   res.writeHead(status, {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Private-Network': 'true',
     'Cache-Control': 'no-cache',
     ...headers
   });
   res.end(body);
 };
 
-// Discover local IPv4 LAN addresses (Wi-Fi / Ethernet / 192.168.* prioritized over virtual adapters)
+// Discover local IPv4 LAN addresses
 function getLanIps() {
   const nets = os.networkInterfaces();
   const ips = [];
@@ -80,13 +104,7 @@ function getLanIps() {
       }
     }
   }
-  const rank = ({ interface: iface, address }) => {
-    if (/wi-?fi|wlan/i.test(iface)) return 0;
-    if (/ethernet/i.test(iface) && address.startsWith('192.168.')) return 1;
-    if (address.startsWith('192.168.')) return 2;
-    return 3;
-  };
-  return ips.sort((a, b) => rank(a) - rank(b));
+  return ips;
 }
 
 // Safe path resolver with fallback aliases
@@ -142,20 +160,19 @@ function generateQrSvg(text) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`;
 }
 
-const requestHandler = (req, res) => {
+const server = http.createServer((req, res) => {
   // CORS Preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, DELETE, HEAD, OPTIONS',
-      'Access-Control-Allow-Headers': '*',
-      'Access-Control-Allow-Private-Network': 'true'
+      'Access-Control-Allow-Methods': 'GET, POST, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': '*'
     });
     res.end();
     return;
   }
 
-  const reqUrlObj = new URL(req.url, `${proto}://localhost`);
+  const reqUrlObj = new URL(req.url, 'http://localhost');
   const pathname = reqUrlObj.pathname || '/';
 
   // API 1: /api/info
@@ -164,36 +181,16 @@ const requestHandler = (req, res) => {
     const primaryIp = lanIps[0]?.address || 'localhost';
     const info = {
       status: 'ok',
-      protocol: proto,
-      https: useHttps,
       port,
-      localUrl: `${proto}://localhost:${port}`,
-      lanUrl: `${proto}://${primaryIp}:${port}`,
+      localUrl: `http://localhost:${port}`,
+      lanUrl: `http://${primaryIp}:${port}`,
       ips: lanIps
     };
     send(res, 200, JSON.stringify(info, null, 2), { 'Content-Type': 'application/json; charset=utf-8' });
     return;
   }
 
-  // Descarga directa del certificado CA raíz para confiar desde teléfonos
-  if (pathname === '/rootCA.crt' || pathname === '/api/ca') {
-    if (!fs.existsSync(rootCaPath)) {
-      send(res, 404, 'No hay certificado rootCA.crt generado todavía. Ejecuta: npm run setup-https');
-      return;
-    }
-    const caData = fs.readFileSync(rootCaPath);
-    res.writeHead(200, {
-      'Content-Type': 'application/x-x509-ca-cert',
-      'Content-Disposition': 'attachment; filename="leetelo-rootCA.crt"',
-      'Access-Control-Allow-Origin': '*',
-      'Cache-Control': 'no-store',
-      'Content-Length': caData.length
-    });
-    res.end(caData);
-    return;
-  }
-
-  // API 2: POST /api/upload o POST /api/libros (Guarda físicamente el libro en la subcarpeta /libros)
+  // API 2: POST /api/upload o POST /api/libros (Guarda físicamente en /libros sin duplicar por huella de contenido)
   if (req.method === 'POST' && (pathname === '/api/upload' || pathname === '/api/libros')) {
     try {
       const rawName = reqUrlObj.searchParams.get('name') || req.headers['x-filename'] || 'libro.epub';
@@ -204,8 +201,8 @@ const requestHandler = (req, res) => {
         fs.mkdirSync(librosDir, { recursive: true });
       }
 
-      const targetPath = path.join(librosDir, safeName);
-      const writeStream = fs.createWriteStream(targetPath);
+      const tmpPath = path.join(librosDir, `.upload-${Date.now()}-${Math.random().toString(16).slice(2)}.tmp`);
+      const writeStream = fs.createWriteStream(tmpPath);
       let bytesWritten = 0;
 
       req.on('data', (chunk) => {
@@ -215,17 +212,59 @@ const requestHandler = (req, res) => {
       req.pipe(writeStream);
 
       writeStream.on('finish', () => {
-        console.log(`[Upload] Libro guardado físicamente: /libros/${safeName} (${bytesWritten} bytes)`);
-        send(res, 200, JSON.stringify({
-          ok: true,
-          message: 'Libro guardado físicamente en /libros',
-          name: safeName,
-          size: bytesWritten,
-          url: `/libros/${encodeURIComponent(safeName)}`
-        }), { 'Content-Type': 'application/json; charset=utf-8' });
+        try {
+          const uploadedKey = computeFileBookKey(tmpPath, bytesWritten);
+          const existingFiles = fs.readdirSync(librosDir);
+          for (const existing of existingFiles) {
+            if (existing.startsWith('.') || !BOOK_EXTS.has(path.extname(existing).toLowerCase())) continue;
+            const existingPath = path.join(librosDir, existing);
+            const stat = fs.statSync(existingPath);
+            if (!stat.isFile() || stat.size !== bytesWritten) continue;
+            if (computeFileBookKey(existingPath, stat.size) === uploadedKey) {
+              fs.unlinkSync(tmpPath);
+              console.log(`[Upload] Duplicado omitido (${safeName} == /libros/${existing})`);
+              send(res, 200, JSON.stringify({
+                ok: true,
+                duplicate: true,
+                id: uploadedKey,
+                message: 'El libro ya existía en /libros',
+                name: existing,
+                size: bytesWritten,
+                url: `/libros/${encodeURIComponent(existing)}`
+              }), { 'Content-Type': 'application/json; charset=utf-8' });
+              return;
+            }
+          }
+
+          let finalName = safeName;
+          let targetPath = path.join(librosDir, finalName);
+          if (fs.existsSync(targetPath)) {
+            const ext = path.extname(safeName);
+            const stem = safeName.slice(0, safeName.length - ext.length) || 'libro';
+            finalName = `${stem}_${uploadedKey.slice(0, 6)}${ext}`;
+            targetPath = path.join(librosDir, finalName);
+          }
+          fs.renameSync(tmpPath, targetPath);
+
+          console.log(`[Upload] Libro guardado físicamente: /libros/${finalName} (${bytesWritten} bytes)`);
+          send(res, 200, JSON.stringify({
+            ok: true,
+            duplicate: false,
+            id: uploadedKey,
+            message: 'Libro guardado físicamente en /libros',
+            name: finalName,
+            size: bytesWritten,
+            url: `/libros/${encodeURIComponent(finalName)}`
+          }), { 'Content-Type': 'application/json; charset=utf-8' });
+        } catch (err) {
+          try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch {}
+          console.error('[Upload Dedup Error]', err);
+          send(res, 500, JSON.stringify({ error: err.message }), { 'Content-Type': 'application/json; charset=utf-8' });
+        }
       });
 
       writeStream.on('error', (err) => {
+        try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch {}
         console.error('[Upload Error]', err);
         send(res, 500, JSON.stringify({ error: err.message }), { 'Content-Type': 'application/json; charset=utf-8' });
       });
@@ -265,13 +304,13 @@ const requestHandler = (req, res) => {
         return;
       }
       const files = fs.readdirSync(librosDir);
-      const supportedExts = ['.epub', '.fb2', '.cbz', '.fbz', '.zip'];
       const books = files
-        .filter((file) => supportedExts.includes(path.extname(file).toLowerCase()))
+        .filter((file) => !file.startsWith('.') && BOOK_EXTS.has(path.extname(file).toLowerCase()))
         .map((file) => {
           const filePath = path.join(librosDir, file);
           const stat = fs.statSync(filePath);
           return {
+            id: computeFileBookKey(filePath, stat.size),
             name: file,
             size: stat.size,
             mtime: stat.mtimeMs,
@@ -315,7 +354,6 @@ const requestHandler = (req, res) => {
     const extraHeaders = {
       'Content-Type': contentType,
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Private-Network': 'true',
       'Accept-Ranges': 'bytes'
     };
     if (path.basename(filePath) === 'sw.js') {
@@ -354,54 +392,19 @@ const requestHandler = (req, res) => {
       fs.createReadStream(filePath).pipe(res);
     }
   });
-};
-
-const server = useHttps
-  ? https.createServer({ cert: fs.readFileSync(certPath), key: fs.readFileSync(keyPath) }, requestHandler)
-  : http.createServer(requestHandler);
-
-// Mini servidor HTTP auxiliar para descargar e instalar rootCA.crt en teléfonos la primera vez
-const caPort = Number(process.env.CA_PORT || (port + 1));
-let caHelperServer = null;
-if (useHttps && fs.existsSync(rootCaPath)) {
-  caHelperServer = http.createServer((req, res) => {
-    const reqPath = new URL(req.url, 'http://localhost').pathname;
-    if (reqPath === '/rootCA.crt') {
-      const caData = fs.readFileSync(rootCaPath);
-      res.writeHead(200, {
-        'Content-Type': 'application/x-x509-ca-cert',
-        'Content-Disposition': 'attachment; filename="leetelo-rootCA.crt"',
-        'Cache-Control': 'no-store',
-        'Content-Length': caData.length
-      });
-      res.end(caData);
-      return;
-    }
-    const lanIps = getLanIps();
-    const primaryIp = lanIps[0]?.address || 'localhost';
-    const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Certificado Wi-Fi — Léetelo</title><style>body{font-family:system-ui,sans-serif;max-width:520px;margin:28px auto;padding:0 18px;line-height:1.5;color:#1b1b1b}a.btn{display:inline-block;padding:12px 18px;background:#e06a5a;color:#fff;text-decoration:none;border-radius:10px;font-weight:700;margin:10px 0}code{background:#f1f1f1;padding:2px 6px;border-radius:6px}</style></head><body><h2>Certificado Wi-Fi local (HTTPS)</h2><p>Instala este certificado <strong>una sola vez</strong> en tu teléfono para sincronizar con tu PC usando HTTPS:</p><p><a class="btn" href="/rootCA.crt">Descargar leetelo-rootCA.crt</a></p><ul><li><strong>Android:</strong> Ajustes → Seguridad / Cifrado y credenciales → Instalar certificado → <em>Certificado de CA</em>.</li><li><strong>iPhone / iPad:</strong> Abre con Safari, instala el perfil en Ajustes y luego actívalo en <em>General → Información → Confianza en certificados</em>.</li></ul><p>Después usa en la webapp: <code>https://${primaryIp}:${port}</code></p></body></html>`;
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    res.end(html);
-  });
-  caHelperServer.on('error', () => {});
-  caHelperServer.listen(caPort, host);
-}
+});
 
 server.listen(port, host, () => {
   const lanIps = getLanIps();
   console.log('\n' + '='.repeat(60));
   console.log('  📖 LÉETELO WEBAPP — LECTOR DE LIBROS EPUB / FB2 / CBZ');
   console.log('='.repeat(60));
-  console.log(`  Servidor activo y listo (${useHttps ? 'HTTPS local activado' : 'HTTP'}):`);
-  console.log(`\n  👉 En esta computadora (Localhost): ${proto}://localhost:${port}`);
+  console.log('  Servidor activo y listo:');
+  console.log(`\n  👉 En esta computadora (Localhost): http://localhost:${port}`);
   if (lanIps.length > 0) {
     console.log('  📱 En tu red local (móvil/tablet):');
     for (const item of lanIps) {
-      console.log(`     ${proto}://${item.address}:${port}  (${item.interface})`);
-    }
-    if (caHelperServer) {
-      console.log(`\n  🔐 Instalar certificado en teléfono (una sola vez):`);
-      console.log(`     http://${lanIps[0].address}:${caPort}`);
+      console.log(`     http://${item.address}:${port}  (${item.interface})`);
     }
   } else {
     console.log('  📱 En red local: Conecta tu PC a Wi-Fi para ver la IP de tu red.');
@@ -411,7 +414,7 @@ server.listen(port, host, () => {
   console.log('='.repeat(60) + '\n');
 
   if (shouldOpenBrowser) {
-    const localUrl = `${proto}://localhost:${port}`;
+    const localUrl = `http://localhost:${port}`;
     const startCmd = process.platform === 'win32' ? `start "" "${localUrl}"` :
                      process.platform === 'darwin' ? `open "${localUrl}"` :
                      `xdg-open "${localUrl}"`;

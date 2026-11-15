@@ -103,3 +103,52 @@ export function addReadingTime(state, bookId, day, ms) {
 
 /** Local calendar day number (sessions roll over at the reader's midnight). */
 export const localDay = (now, offsetMin = new Date(now).getTimezoneOffset()) => Math.floor((now - offsetMin * 60000) / 86400000);
+
+/** Normalize title or author text for filename-independent duplicate matching. */
+export function normalizeBookText(s) {
+  return String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function creatorTokenKey(s) {
+  const norm = normalizeBookText(s);
+  if (!norm) return '';
+  return [...new Set(norm.split(' '))].sort().join(' ');
+}
+
+/**
+ * Find an existing library book matching a candidate even when filenames differ
+ * or the file was repackaged/converted. Matches exact content id first, then
+ * normalized (title + order-insensitive creator tokens), or (title + spineLength)
+ * when neither entry has creator metadata.
+ */
+export function findDuplicateBook(existingBooks, candidate) {
+  if (!Array.isArray(existingBooks) || !existingBooks.length || !candidate) return null;
+  if (candidate.id) {
+    const byId = existingBooks.find((b) => b?.id === candidate.id);
+    if (byId) return byId;
+  }
+
+  const candTitle = normalizeBookText(candidate.title);
+  if (!candTitle) return null;
+  const candAuthor = creatorTokenKey(candidate.creator);
+  const candSpine = Number(candidate.spineLength) || 0;
+
+  for (const b of existingBooks) {
+    if (!b || normalizeBookText(b.title) !== candTitle) continue;
+    const bAuthor = creatorTokenKey(b.creator);
+    if (candAuthor && bAuthor) {
+      if (candAuthor === bAuthor) return b;
+      continue;
+    }
+    if (!candAuthor && !bAuthor && candSpine > 0 && Number(b.spineLength) === candSpine) {
+      return b;
+    }
+  }
+  return null;
+}

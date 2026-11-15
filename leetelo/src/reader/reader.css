@@ -584,18 +584,12 @@ button.primary:hover {
     right: 0;
 }
 
-.lib-drawer-import {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
 .lib-drawer-action {
     display: flex;
     align-items: center;
     gap: 12px;
     width: 100%;
-    padding: 13px 15px;
+    padding: 14px 16px;
     border: 2px dashed color-mix(in srgb, var(--rp-progress, salmon) 48%, var(--panel-line, var(--line)));
     border-radius: 14px;
     background: color-mix(in srgb, var(--rp-progress, salmon) 10%, var(--card));
@@ -605,25 +599,9 @@ button.primary:hover {
     transition: background-color 140ms ease, border-color 140ms ease, transform 120ms ease;
 }
 
-.lib-drawer-action-sync {
-    border-style: solid;
-    border-width: 1.5px;
-    border-color: color-mix(in srgb, var(--ink) 18%, var(--panel-line, var(--line)));
-    background: color-mix(in srgb, var(--hover) 72%, var(--card));
-}
-
-.lib-drawer-action-sync:hover {
-    border-color: var(--rp-progress, salmon);
-}
-
-.lib-drawer-action-icon-sync {
-    background: color-mix(in srgb, var(--ink) 84%, transparent);
-    color: var(--paper);
-}
-
 .lib-drawer-action:hover,
 .lib-drawer-action.drag-over,
-body.dragging #lib-drawer-add {
+body.dragging .lib-drawer-action {
     background: color-mix(in srgb, var(--rp-progress, salmon) 20%, var(--card));
     border-color: var(--rp-progress, salmon);
 }
@@ -4426,149 +4404,6 @@ body.dragging .shelf-dropzone {
     padding-left: 12px;
     border-left: 3px solid var(--line);
     color: var(--muted);
-}
-
-/* Wi-Fi PC Sync Modal */
-.pc-sync-card {
-    width: min(470px, 94vw);
-}
-
-.pc-sync-body {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    touch-action: pan-y;
-    -webkit-overflow-scrolling: touch;
-    padding: 16px 18px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.pc-sync-hint {
-    margin: 0;
-    font-size: 13.5px;
-    line-height: 1.45;
-    color: var(--muted);
-}
-
-.pc-sync-url-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.pc-sync-input {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 38px;
-    padding: 0 12px;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    background: var(--paper);
-    color: var(--ink);
-    font: inherit;
-    font-size: 14px;
-}
-
-.pc-sync-btn {
-    height: 38px;
-    padding: 0 14px;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    background: var(--hover);
-    color: var(--ink);
-    font: inherit;
-    font-size: 13.5px;
-    font-weight: 650;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.pc-sync-btn-primary {
-    background: var(--rp-progress, salmon);
-    border-color: transparent;
-    color: #fff;
-}
-
-.pc-sync-btn:disabled {
-    opacity: 0.55;
-    cursor: default;
-}
-
-.pc-sync-status {
-    margin: 0;
-    padding: 9px 12px;
-    border-radius: 10px;
-    background: var(--hover);
-    color: var(--ink);
-    font-size: 13.5px;
-    line-height: 1.4;
-}
-
-.pc-sync-status.is-error {
-    background: color-mix(in srgb, #e11d48 12%, var(--card));
-    color: color-mix(in srgb, #e11d48 80%, var(--ink));
-}
-
-.pc-sync-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 44dvh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-}
-
-.pc-sync-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 9px 12px;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    background: var(--paper);
-}
-
-.pc-sync-item-meta {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.pc-sync-item-name {
-    font-size: 14px;
-    font-weight: 620;
-    color: var(--ink);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pc-sync-item-size {
-    font-size: 12px;
-    color: var(--muted);
-}
-
-.pc-sync-badge {
-    font-size: 12px;
-    font-weight: 620;
-    color: var(--muted);
-    white-space: nowrap;
-}
-
-.pc-sync-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex-wrap: wrap;
 }
 
 .modal-synopsis-text::-webkit-scrollbar {

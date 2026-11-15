@@ -36,8 +36,7 @@ function syncHomeScrollLock() {
   const libraryVisible = !($('library')?.hidden);
   const metaOpen = Boolean($('meta-modal') && !$('meta-modal').hidden);
   const batchOpen = Boolean($('batch-confirm-modal') && !$('batch-confirm-modal').hidden);
-  const pcSyncOpen = Boolean($('pc-sync-modal') && !$('pc-sync-modal').hidden);
-  const shouldLock = libraryVisible && (drawerOpenState || metaOpen || batchOpen || pcSyncOpen);
+  const shouldLock = libraryVisible && (drawerOpenState || metaOpen || batchOpen);
   if (shouldLock && !scrollLocked) {
     scrollLocked = true;
     lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
@@ -229,207 +228,6 @@ export function closeMetadataModal() {
   }
   currentMetaBookId = null;
   currentMetaTrigger = null;
-}
-
-const PC_SERVER_STORAGE_KEY = 'rp_pc_server_url';
-let pcSyncItems = [];
-let pcSyncBaseUrl = '';
-let pcSyncBusy = false;
-
-function normalizePcServerUrl(raw) {
-  let s = String(raw || '').trim();
-  if (!s) return '';
-  if (!/^https?:\/\//i.test(s)) s = `http://${s}`;
-  try {
-    const u = new URL(s);
-    return u.origin;
-  } catch {
-    return '';
-  }
-}
-
-function defaultPcServerUrl() {
-  try {
-    const saved = localStorage.getItem(PC_SERVER_STORAGE_KEY);
-    if (saved) return normalizePcServerUrl(saved);
-  } catch {}
-  if (typeof location !== 'undefined' && /^https?:$/.test(location.protocol)) {
-    return location.origin;
-  }
-  return 'http://192.168.1.1:3000';
-}
-
-function setPcSyncStatus(text, isError = false) {
-  const elStatus = $('pc-sync-status');
-  if (!elStatus) return;
-  elStatus.textContent = text || '';
-  elStatus.classList.toggle('is-error', Boolean(isError));
-  elStatus.hidden = !text;
-}
-
-function renderPcSyncList() {
-  const listEl = $('pc-sync-list');
-  const importAllBtn = $('pc-sync-import-all');
-  if (!listEl || !importAllBtn) return;
-  if (!pcSyncItems.length) {
-    listEl.replaceChildren();
-    listEl.hidden = true;
-    importAllBtn.hidden = true;
-    return;
-  }
-  const newItems = pcSyncItems.filter((item) => !item.already);
-  listEl.replaceChildren(...pcSyncItems.map((item) => {
-    const meta = el('div', { class: 'pc-sync-item-meta' },
-      el('span', { class: 'pc-sync-item-name', textContent: item.name }),
-      el('span', { class: 'pc-sync-item-size', textContent: formatSize(item.size ?? 0, uiLanguage()) })
-    );
-    const right = item.already
-      ? el('span', { class: 'pc-sync-badge', textContent: t('pc_sync_already') })
-      : (() => {
-        const btn = el('button', { type: 'button', class: 'pc-sync-btn', textContent: t('pc_sync_import_one') });
-        btn.disabled = pcSyncBusy;
-        btn.addEventListener('click', () => importPcBookItems([item]));
-        return btn;
-      })();
-    return el('li', { class: 'pc-sync-item' }, meta, right);
-  }));
-  listEl.hidden = false;
-  if (newItems.length > 0) {
-    importAllBtn.textContent = t('pc_sync_import_all', newItems.length);
-    importAllBtn.hidden = false;
-    importAllBtn.disabled = pcSyncBusy;
-  } else {
-    importAllBtn.hidden = true;
-  }
-}
-
-async function fetchJsonTimed(url, ms = 3500) {
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), ms);
-  try {
-    const res = await fetch(url, { signal: ac.signal, cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function loadPcSyncList(rawUrl) {
-  if (pcSyncBusy) return;
-  const baseUrl = normalizePcServerUrl(rawUrl || defaultPcServerUrl());
-  const urlInput = $('pc-sync-url');
-  if (urlInput && baseUrl) urlInput.value = baseUrl;
-  if (!baseUrl) {
-    pcSyncItems = [];
-    renderPcSyncList();
-    setPcSyncStatus(t('pc_sync_err_connect', rawUrl || ''), true);
-    return;
-  }
-  if (location.protocol === 'https:' && baseUrl.startsWith('http://') && !/^http:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(baseUrl)) {
-    pcSyncItems = [];
-    renderPcSyncList();
-    setPcSyncStatus(t('pc_sync_err_mixed'), true);
-    return;
-  }
-  pcSyncBusy = true;
-  pcSyncBaseUrl = baseUrl;
-  try { localStorage.setItem(PC_SERVER_STORAGE_KEY, baseUrl); } catch {}
-  setPcSyncStatus(t('pc_sync_connecting'), false);
-  $('pc-sync-list').hidden = true;
-  $('pc-sync-import-all').hidden = true;
-  try {
-    let rawList;
-    try {
-      rawList = await fetchJsonTimed(`${baseUrl}/api/libros`);
-    } catch {
-      rawList = await fetchJsonTimed(`${baseUrl}/api/books`);
-    }
-    const items = Array.isArray(rawList) ? rawList : [];
-    const existingBooks = await ctx.store.listBooks();
-    const existingNames = new Set(existingBooks.map((b) => (b.fileName || '').toLowerCase()));
-    pcSyncItems = items.map((item) => ({
-      ...item,
-      already: existingNames.has((item.name || '').toLowerCase()),
-    }));
-    const newCount = pcSyncItems.filter((i) => !i.already).length;
-    setPcSyncStatus(pcSyncItems.length ? t('pc_sync_found', pcSyncItems.length, newCount) : t('pc_sync_empty'), false);
-    renderPcSyncList();
-  } catch {
-    pcSyncItems = [];
-    renderPcSyncList();
-    setPcSyncStatus(t('pc_sync_err_connect', baseUrl), true);
-  } finally {
-    pcSyncBusy = false;
-    renderPcSyncList();
-  }
-}
-
-async function importPcBookItems(items) {
-  if (pcSyncBusy || !items.length || !pcSyncBaseUrl) return;
-  const targets = items.filter((i) => !i.already);
-  if (!targets.length) {
-    showToast({ text: t('pc_sync_up_to_date') });
-    return;
-  }
-  pcSyncBusy = true;
-  renderPcSyncList();
-  let imported = 0;
-  try {
-    for (let i = 0; i < targets.length; i++) {
-      const item = targets[i];
-      setPcSyncStatus(t('pc_sync_importing', i + 1, targets.length), false);
-      try {
-        const fileUrl = new URL(item.url || `/libros/${encodeURIComponent(item.name)}`, pcSyncBaseUrl).href;
-        const res = await fetch(fileUrl, { cache: 'no-store' });
-        if (!res.ok) continue;
-        const blob = await res.blob();
-        const file = new File([blob], item.name, { type: blob.type });
-        if (window.__rp?.importBookOnly && await window.__rp.importBookOnly(file)) {
-          imported++;
-        }
-        item.already = true;
-      } catch (err) {
-        console.warn('Error importing from PC:', item.name, err);
-      }
-    }
-    if (imported > 0) {
-      await ctx.store.setSetting('libros_synced', true);
-      await renderLibrary();
-      showToast({ text: tn('pc_sync_done', imported) });
-    } else {
-      showToast({ text: t('pc_sync_up_to_date') });
-    }
-    const newCount = pcSyncItems.filter((i) => !i.already).length;
-    setPcSyncStatus(t('pc_sync_found', pcSyncItems.length, newCount), false);
-  } finally {
-    pcSyncBusy = false;
-    renderPcSyncList();
-  }
-}
-
-function importPendingPcBooks() {
-  return importPcBookItems(pcSyncItems.filter((i) => !i.already));
-}
-
-export function closePcSyncModal() {
-  const modal = $('pc-sync-modal');
-  if (!modal || modal.hidden) return;
-  modal.hidden = true;
-  syncHomeScrollLock();
-}
-
-export function openPcSyncModal() {
-  const modal = $('pc-sync-modal');
-  if (!modal) return;
-  closeLibraryDrawer(true);
-  closeMetadataModal();
-  const initialUrl = defaultPcServerUrl();
-  const urlInput = $('pc-sync-url');
-  if (urlInput) urlInput.value = initialUrl;
-  modal.hidden = false;
-  syncHomeScrollLock();
-  loadPcSyncList(initialUrl);
 }
 
 function renderHtmlSynopsis(container, html) {
@@ -1203,11 +1001,12 @@ async function syncFromLibros(store) {
       await store.setSetting('libros_synced', true);
       return false;
     }
+    const currentIds = new Set(current.map((b) => b.id).filter(Boolean));
     const currentFiles = new Set(current.map((b) => (b.fileName || '').toLowerCase()));
     let anyAdded = false;
 
     for (const item of list) {
-      if (currentFiles.has((item.name || '').toLowerCase())) continue;
+      if ((item.id && currentIds.has(item.id)) || currentFiles.has((item.name || '').toLowerCase())) continue;
       try {
         const fileRes = await fetch(item.url || `/libros/${encodeURIComponent(item.name)}`);
         if (!fileRes.ok) continue;
@@ -1215,7 +1014,10 @@ async function syncFromLibros(store) {
         const file = new File([blob], item.name, { type: blob.type });
         if (window.__rp?.importBookOnly) {
           const ok = await window.__rp.importBookOnly(file);
-          if (ok) anyAdded = true;
+          if (ok) {
+            anyAdded = true;
+            if (item.id) currentIds.add(item.id);
+          }
         }
       } catch (e) {
         console.warn('Error syncing book from /libros:', item.name, e);
@@ -1274,7 +1076,6 @@ export function teardownLibraryView() {
   renderedEffectiveCats.clear();
   closeLibraryDrawer(true);
   closeMetadataModal();
-  closePcSyncModal();
   closeAllDeleteConfirms();
   exitSelectionMode();
   hideNotice();
@@ -2095,36 +1896,6 @@ export function initLibrary(c) {
   }
   const drawerAddIcon = $('lib-drawer-add-icon');
   if (drawerAddIcon) drawerAddIcon.replaceChildren(icon('plus', 18));
-  const drawerSyncIcon = $('lib-drawer-sync-icon');
-  if (drawerSyncIcon) drawerSyncIcon.replaceChildren(icon('monitor', 18));
-  const drawerSyncPc = $('lib-drawer-sync-pc');
-  if (drawerSyncPc) {
-    drawerSyncPc.addEventListener('click', () => openPcSyncModal());
-  }
-  const pcSyncClose = $('pc-sync-close');
-  if (pcSyncClose) {
-    pcSyncClose.replaceChildren(icon('close', 16));
-    pcSyncClose.addEventListener('click', closePcSyncModal);
-  }
-  const pcSyncBackdrop = $('pc-sync-backdrop');
-  if (pcSyncBackdrop) {
-    pcSyncBackdrop.addEventListener('click', closePcSyncModal);
-  }
-  const pcSyncForm = $('pc-sync-form');
-  if (pcSyncForm) {
-    pcSyncForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      loadPcSyncList($('pc-sync-url')?.value);
-    });
-  }
-  const pcSyncRefresh = $('pc-sync-refresh');
-  if (pcSyncRefresh) {
-    pcSyncRefresh.addEventListener('click', () => loadPcSyncList($('pc-sync-url')?.value));
-  }
-  const pcSyncImportAll = $('pc-sync-import-all');
-  if (pcSyncImportAll) {
-    pcSyncImportAll.addEventListener('click', () => importPendingPcBooks());
-  }
   const drawerAdd = $('lib-drawer-add');
   if (drawerAdd) {
     drawerAdd.addEventListener('click', () => {
@@ -2218,11 +1989,6 @@ export function initLibrary(c) {
       e.stopPropagation();
       closeLibraryDrawer();
       $('lib-menu-btn')?.focus();
-      return;
-    }
-    if (e.key === 'Escape' && $('pc-sync-modal') && !$('pc-sync-modal').hidden) {
-      e.stopPropagation();
-      closePcSyncModal();
       return;
     }
     if (e.key === 'Escape' && $('batch-confirm-modal') && !$('batch-confirm-modal').hidden) {
