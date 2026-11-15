@@ -28,6 +28,29 @@ let selectionMode = false;
 let allTodosBooks = [];
 let currentCategories = {};
 let activeLongPressCancel = null;
+let drawerOpenState = false;
+let scrollLocked = false;
+let lockedScrollY = 0;
+
+function syncHomeScrollLock() {
+  const libraryVisible = !($('library')?.hidden);
+  const metaOpen = Boolean($('meta-modal') && !$('meta-modal').hidden);
+  const batchOpen = Boolean($('batch-confirm-modal') && !$('batch-confirm-modal').hidden);
+  const shouldLock = libraryVisible && (drawerOpenState || metaOpen || batchOpen);
+  if (shouldLock && !scrollLocked) {
+    scrollLocked = true;
+    lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add('home-scroll-locked');
+    document.body.classList.add('home-scroll-locked');
+    document.body.style.top = `-${lockedScrollY}px`;
+  } else if (!shouldLock && scrollLocked) {
+    scrollLocked = false;
+    document.documentElement.classList.remove('home-scroll-locked');
+    document.body.classList.remove('home-scroll-locked');
+    document.body.style.top = '';
+    window.scrollTo(0, lockedScrollY);
+  }
+}
 
 async function deleteBookRecord(book, categories, persistCategories = true) {
   await ctx.store.deleteBook(book.id);
@@ -49,7 +72,7 @@ async function deleteBookRecord(book, categories, persistCategories = true) {
 function closeBatchConfirm() {
   const modal = $('batch-confirm-modal');
   if (modal) modal.hidden = true;
-  if ($('meta-modal')?.hidden !== false) document.body.style.overflow = '';
+  syncHomeScrollLock();
 }
 
 function syncBatchSelectionUI() {
@@ -143,7 +166,7 @@ function openBatchConfirm() {
   heading.textContent = tn('delete_selected_q', count);
   text.textContent = t('frees', formatSize(totalBytes, uiLanguage()));
   modal.hidden = false;
-  document.body.style.overflow = 'hidden';
+  syncHomeScrollLock();
   $('batch-confirm-keep')?.focus();
 }
 
@@ -189,7 +212,7 @@ async function executeBatchDelete() {
 export function closeMetadataModal() {
   const modal = $('meta-modal');
   if (modal) modal.hidden = true;
-  document.body.style.overflow = '';
+  syncHomeScrollLock();
   for (const btn of document.querySelectorAll('.book .btn-meta.active')) {
     btn.classList.remove('active');
     btn.setAttribute('aria-pressed', 'false');
@@ -380,6 +403,7 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
 
   const modal = $('meta-modal');
   if (modal) modal.hidden = false;
+  syncHomeScrollLock();
   $('meta-modal-close')?.focus();
 }
 
@@ -1266,6 +1290,8 @@ let drawerCloseTimer = 0;
 export function closeLibraryDrawer(immediate = false) {
   const drawer = $('lib-drawer');
   const menuBtn = $('lib-menu-btn');
+  drawerOpenState = false;
+  syncHomeScrollLock();
   if (!drawer || drawer.hidden) return;
   clearTimeout(drawerCloseTimer);
   drawer.classList.remove('dragging');
@@ -1277,7 +1303,6 @@ export function closeLibraryDrawer(immediate = false) {
   if (toggle) toggle.setAttribute('aria-expanded', 'false');
   drawer.classList.remove('open');
   if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
-  document.body.style.overflow = '';
   if (immediate) {
     if (panel) panel.style.transform = '';
     if (backdrop) backdrop.style.opacity = '';
@@ -1323,7 +1348,8 @@ function openLibraryDrawer() {
     requestAnimationFrame(() => requestAnimationFrame(() => drawer.classList.add('open')));
   }
   if (menuBtn) menuBtn.setAttribute('aria-expanded', 'true');
-  document.body.style.overflow = 'hidden';
+  drawerOpenState = true;
+  syncHomeScrollLock();
   $('lib-drawer-close')?.focus();
 }
 

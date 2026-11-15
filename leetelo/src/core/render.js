@@ -241,7 +241,7 @@ class ContinuousView {
       this.sync();
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (this.hosts) this.evict(); });
     };
-    el.addEventListener('scroll', this.onScroll);
+    el.addEventListener('scroll', this.onScroll, { passive: true });
     // Viewport resize: scale unmeasured placeholders and re-anchor only when width changes.
     // On phones, browser toolbars hiding/showing during scroll changes clientHeight without
     // changing width or wrapping; calling restore() there cancels momentum and jumps scrollTop.
@@ -589,7 +589,7 @@ class PagedView {
       if (this.el.scrollLeft) this.el.scrollLeft = 0;
       if (this.el.scrollTop) this.el.scrollTop = 0;
     };
-    el.addEventListener('scroll', this.onScroll);
+    el.addEventListener('scroll', this.onScroll, { passive: true });
   }
 
   makeHost() {

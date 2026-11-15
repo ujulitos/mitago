@@ -806,6 +806,7 @@ export function paintChapterTime() {
 }
 
 let clockVisible = true;
+let syncClockTimer = null;
 
 export function setClockVisible(visible) {
   clockVisible = !!visible;
@@ -831,6 +832,11 @@ export function setClockVisible(visible) {
     localStorage.setItem('rp_show_clock', clockVisible ? '1' : '0');
     if (store) store.setSetting('show_clock', clockVisible).catch(() => {});
   } catch {}
+  syncClockTimer?.();
+}
+
+export function stopAnalogClock() {
+  syncClockTimer?.();
 }
 
 function initAnalogClock() {
@@ -864,14 +870,13 @@ function initAnalogClock() {
     });
   }
 
-  function update() {
-    if (clockEl.hidden || clockEl.classList.contains('clock-hidden')) return;
-    const now = new Date();
+  let clockTimer = 0;
+
+  function renderHands(now) {
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    const seconds = now.getSeconds();
-    const hourDeg = ((hours % 12) + minutes / 60 + seconds / 3600) * 30;
-    const minDeg = (minutes + seconds / 60) * 6;
+    const hourDeg = ((hours % 12) + minutes / 60) * 30;
+    const minDeg = minutes * 6;
     const hourHand = $('clock-hour');
     const minHand = $('clock-min');
     if (hourHand) hourHand.setAttribute('transform', `rotate(${hourDeg.toFixed(2)} 88 88)`);
@@ -879,8 +884,19 @@ function initAnalogClock() {
     clockEl.title = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  update();
-  setInterval(update, 1000);
+  function schedule() {
+    clearTimeout(clockTimer);
+    clockTimer = 0;
+    if (document.hidden || !clockVisible || clockEl.hidden || $('reading')?.hidden) return;
+    const now = new Date();
+    renderHands(now);
+    const delay = Math.max(500, (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 30);
+    clockTimer = setTimeout(schedule, delay);
+  }
+
+  syncClockTimer = schedule;
+  document.addEventListener('visibilitychange', schedule);
+  schedule();
 }
 
 /** Called on every position change (debounced saves happen in reader.js). */
@@ -992,6 +1008,7 @@ export function syncMode() {
   $('row-spread').hidden = !paged;
   segs.mode?.set(rp.view.mode);
   renderTicks();
+  syncClockTimer?.();
 }
 
 export function initReading(state, deps) {

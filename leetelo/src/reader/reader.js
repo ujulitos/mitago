@@ -20,7 +20,7 @@ import { openRemote } from './remote.js';
 import { clearHighlights, closeHighlightBar, exportHighlights, highlightSelection, highlights, initHighlights, onTextMoved, paint as paintHighlights, setupHighlights } from './highlights.js';
 import {
   MEASURES, READER_DEFAULTS, addBookmark, applyReadingTheme, bumpSize, closeKeys, closePanel, closeSettings,
-  hideChrome, initReading, openKeys, onPosition as paintPosition, openPanel, paintFolio, runSearch, setStyle, settle, setupBook, syncMode, toggleBookmark, wake,
+  hideChrome, initReading, openKeys, onPosition as paintPosition, openPanel, paintFolio, runSearch, setStyle, settle, setupBook, stopAnalogClock, syncMode, toggleBookmark, wake,
 } from './reading.js';
 
 // Exposed for the e2e suite and debugging; nothing reads it in production paths.
@@ -137,6 +137,7 @@ function closeReading() {
   rp.view.destroy();
   rp.loader?.revoke();
   Object.assign(rp, { view: null, loader: null, book: null, bookId: null, index: null, ready: false, kept: undefined, ownStyle: false });
+  syncReadingTickTimer();
 }
 
 async function showLibrary() {
@@ -145,6 +146,7 @@ async function showLibrary() {
   if (location.search) history.replaceState(null, '', location.pathname);
   $('reading').hidden = true;
   $('library').hidden = false;
+  stopAnalogClock();
   document.title = 'Léetelo';
   await renderLibrary();
 }
@@ -206,6 +208,7 @@ async function show(book, id, { push = false } = {}) {
   if (book.fixedLayout) showToast({ level: 'warn', text: t('fixed_layout'), details: [t('fixed_layout_more')] });
   else if (book.vertical) showToast({ level: 'warn', text: t('vertical_text'), details: [t('vertical_text_more')] });
   rp.ready = true;
+  syncReadingTickTimer();
   return !!saved?.pos;
 }
 
@@ -573,7 +576,18 @@ for (const type of ['gesturestart', 'gesturechange']) document.addEventListener(
 
 // ---- active reading: stats per book (IndexedDB) and support milestones (5+ minutes a day) ----
 // Counts only while a book is open, the tab visible and the reader active in the last 2 minutes.
-const TICK = 15000;
+const TICK = 60000;
+let readingTickTimer = 0;
+function syncReadingTickTimer() {
+  const active = Boolean(rp.view && !document.hidden && !$('reading')?.hidden);
+  if (active && !readingTickTimer) {
+    readingTickTimer = setInterval(readingTick, TICK);
+  } else if (!active && readingTickTimer) {
+    clearInterval(readingTickTimer);
+    readingTickTimer = 0;
+  }
+}
+document.addEventListener('visibilitychange', syncReadingTickTimer);
 async function readingTick() {
   if (!rp.view || document.hidden || Date.now() - (rp.lastActive ?? 0) > 2 * 60 * 1000) return;
   const { bookId } = rp;
@@ -590,7 +604,7 @@ async function readingTick() {
   } catch { /* storage unavailable: no milestone, nothing breaks */ }
 }
 rp.readingTick = readingTick;
-setInterval(readingTick, TICK);
+syncReadingTickTimer();
 
 // ---- start ------------------------------------------------------------------------------
 async function route() {

@@ -186,6 +186,20 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
+html.home-scroll-locked {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
+
+body.home-scroll-locked {
+    position: fixed;
+    left: 0;
+    right: 0;
+    width: 100%;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
+
 ::selection {
     background: var(--rp-sel-bg);
     color: var(--rp-sel-ink);
@@ -234,9 +248,7 @@ button.primary:hover {
     padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 8px;
     display: flex;
     align-items: center;
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--paper) 97%, transparent);
     border-bottom: 1px solid var(--line);
 }
 
@@ -469,6 +481,7 @@ button.primary:hover {
     background: rgba(10, 12, 18, 0.55);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
+    touch-action: none;
     opacity: 0;
     transition: opacity 180ms ease;
 }
@@ -492,6 +505,7 @@ button.primary:hover {
     transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
     overflow-y: auto;
     overscroll-behavior: contain;
+    touch-action: pan-y;
     padding-top: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px));
     padding-left: max(env(safe-area-inset-left, 0px), var(--safe-left, 0px));
     padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
@@ -1200,6 +1214,7 @@ body.dragging .dropzone {
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
     margin-inline-start: auto;
+    margin-right: 5px;
 }
 
 /* Book action buttons (Leyendo, Por leer, Leído, Sinopsis, Eliminar) */
@@ -1262,6 +1277,7 @@ body.dragging .dropzone {
 }
 
 @media (hover: hover) and (pointer: fine) {
+
     .book-action-btn:hover,
     .book-action-btn.btn-delete:hover {
         color: var(--rp-progress, salmon) !important;
@@ -1956,13 +1972,13 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    min-height: 42px;
+    min-height: 46px;
     gap: 8px;
 }
 
 .bar .icon-btn {
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     color: var(--rp-soft);
     -webkit-tap-highlight-color: transparent;
@@ -1970,8 +1986,8 @@ body.dragging .shelf-dropzone {
 }
 
 .bar .icon-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2028,7 +2044,7 @@ body.dragging .shelf-dropzone {
     -webkit-line-clamp: 2;
     overflow-wrap: anywhere;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 600;
     line-height: 1.35;
 }
@@ -2044,7 +2060,7 @@ body.dragging .shelf-dropzone {
     overflow-wrap: anywhere;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--rp-soft);
-    font-size: 15px;
+    font-size: 16.5px;
     line-height: 1.3;
 }
 
@@ -2059,7 +2075,7 @@ body.dragging .shelf-dropzone {
     white-space: nowrap;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--rp-soft);
-    font-size: 13.5px;
+    font-size: 15px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1.25;
@@ -2244,6 +2260,7 @@ body.dragging .shelf-dropzone {
     bottom: 0;
     height: auto;
     min-height: 44px;
+    min-height: 48px;
     padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
     display: flex;
     flex-direction: column;
@@ -2256,12 +2273,12 @@ body.dragging .shelf-dropzone {
     position: relative;
     z-index: 25;
     width: 100%;
-    height: 44px;
-    display: flex;
+    height: 48px;
+    display: grid;
+    grid-template-columns: 21% 33% 21% 25%;
     align-items: center;
-    justify-content: space-between;
     padding-block: 0;
-    padding-inline: calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
+    padding-inline: calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(12px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
     flex-shrink: 0;
     background: var(--rp-paper);
 }
@@ -2282,36 +2299,25 @@ body.dragging .shelf-dropzone {
     height: calc(100% + var(--rp-pad-y, 5vh));
 }
 
-.reading-foot-left {
-    position: relative;
-    z-index: 25;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
-
+.reading-foot-left,
 .reading-foot-right {
-    position: relative;
-    z-index: 25;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-inline-start: auto;
+    display: contents;
 }
 
 .pct {
     position: relative;
     z-index: 25;
+    grid-column: 3;
+    justify-self: center;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: auto;
-    min-width: 44px;
-    height: 30px;
+    min-width: 48px;
+    height: 32px;
     text-align: center;
     color: var(--rp-progress, salmon) !important;
-    font-size: 13.5px;
+    font-size: 15px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -2337,24 +2343,24 @@ body.dragging .shelf-dropzone {
 }
 
 .folio {
-    position: absolute;
+    position: relative;
     z-index: 16;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    grid-column: 2;
+    justify-self: center;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 30px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 32px;
     padding: 0 14px;
-    border-radius: 15px;
-    background: color-mix(in srgb, var(--rp-paper) 88%, transparent);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    border-radius: 16px;
+    background: var(--rp-paper);
     border: 1px solid color-mix(in srgb, var(--rp-rule, var(--line)) 60%, transparent);
     text-align: center;
     color: var(--rp-progress, salmon) !important;
-    font-size: 13.5px;
+    font-size: 15px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -2363,23 +2369,26 @@ body.dragging .shelf-dropzone {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* Chapter remaining time on the bottom left */
+/* Chapter remaining time on the bottom right */
 .chapter-time {
     position: relative;
     z-index: 16;
+    grid-column: 4;
+    justify-self: end;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 30px;
-    padding: 0 13px;
-    border-radius: 15px;
-    background: color-mix(in srgb, var(--rp-paper) 88%, transparent);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 16px;
+    background: var(--rp-paper);
     border: 1px solid color-mix(in srgb, var(--rp-rule, var(--line)) 60%, transparent);
     text-align: center;
     color: var(--rp-progress, salmon) !important;
-    font-size: 13.5px;
+    font-size: 15px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -2397,11 +2406,14 @@ body.dragging .shelf-dropzone {
 .clock-widget {
     position: relative;
     z-index: 15;
+    grid-column: 1;
+    justify-self: start;
     width: auto;
-    height: 30px;
+    min-width: 131px;
+    height: 32px;
     display: inline-flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     flex-shrink: 0;
     pointer-events: none;
 }
@@ -2413,8 +2425,8 @@ body.dragging .shelf-dropzone {
 .analog-clock {
     position: absolute;
     bottom: calc(100% + var(--rail-h, 42px) + 10px);
-    left: 0;
-    transform: translateY(0);
+    left: 50%;
+    transform: translate(-50%, 0);
     width: 131px;
     height: 131px;
     display: flex;
@@ -2475,7 +2487,7 @@ body.dragging .shelf-dropzone {
     background: var(--card);
     box-shadow: none !important;
     width: auto;
-    min-width: 82px;
+    min-width: 88px;
     box-sizing: border-box;
     justify-content: center;
     align-items: center;
@@ -2488,16 +2500,17 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 28px;
-    min-height: 28px;
+    height: 30px;
+    min-height: 30px;
     min-width: 0;
-    padding: 0 10px;
+    padding: 0 11px;
     border: 0 !important;
     border-radius: 10px;
     background: none;
     color: var(--muted);
     font-family: inherit;
     font-size: 13.5px;
+    font-size: 15px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -2675,6 +2688,7 @@ body.dragging .shelf-dropzone {
 }
 
 @media (hover: none) {
+
     .reading .icon-btn:hover,
     #panel .icon-btn:hover {
         background: transparent;
@@ -3593,6 +3607,7 @@ body.dragging .shelf-dropzone {
 
     .books.books-row>.book {
         flex: 0 0 250px;
+        flex: 0 0 230px;
         width: 250px;
         grid-template-columns: 72px minmax(0, 1fr);
         column-gap: 10px;
@@ -3649,17 +3664,18 @@ body.dragging .shelf-dropzone {
 
     .bar-controls {
         min-height: 44px;
+        min-height: 46px;
         gap: 6px;
     }
 
     .bar .icon-btn {
-        width: 44px;
-        height: 44px;
+        width: 46px;
+        height: 46px;
     }
 
     .bar .icon-btn svg {
-        width: 24px;
-        height: 24px;
+        width: 25px;
+        height: 25px;
     }
 
     .bar-tools {
@@ -3673,15 +3689,15 @@ body.dragging .shelf-dropzone {
     }
 
     .book-title {
-        font-size: 16px;
+        font-size: 17.5px;
     }
 
     .chapter {
-        font-size: 14px;
+        font-size: 15.5px;
     }
 
     .chapter-pages {
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .page-btn {
@@ -3708,31 +3724,13 @@ body.dragging .shelf-dropzone {
 
     .reading-foot {
         height: auto;
-        min-height: 42px;
+        min-height: 44px;
         padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
     }
 
     .reading-foot-row {
-        height: 42px;
+        height: 44px;
         padding-inline: calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
-        gap: 6px;
-        justify-content: space-between;
-    }
-
-    .reading-foot-left {
-        gap: 6px;
-        flex: 0 1 auto;
-        min-width: 0;
-    }
-
-    .reading-foot-right {
-        flex-shrink: 0;
-        gap: 6px;
-        margin-inline-start: 0;
-    }
-
-    .reading-foot-row:not(:has(> .folio:not([hidden]):not(:empty))) .reading-foot-right {
-        margin-inline-start: auto;
     }
 
     .rail {
@@ -3754,8 +3752,8 @@ body.dragging .shelf-dropzone {
 
     .clock-widget {
         width: auto;
-        min-width: 72px;
-        height: 28px;
+        min-width: 78px;
+        height: 30px;
     }
 
     .analog-clock {
@@ -3766,51 +3764,46 @@ body.dragging .shelf-dropzone {
 
     .clock-segmented {
         width: auto;
-        min-width: 72px;
+        min-width: 74px;
     }
 
     .clock-segmented .clock-bar-toggle {
-        height: 26px;
-        min-height: 26px;
-        font-size: 12.5px;
+        height: 28px;
+        min-height: 28px;
+        font-size: 13.5px;
         padding: 0 9px;
     }
 
     .chapter-time {
         position: static;
-        height: 28px;
-        border-radius: 14px;
-        font-size: 12.5px;
+        height: 30px;
+        border-radius: 15px;
+        font-size: 13.5px;
         padding: 0 10px;
-        flex: 0 1 auto;
         min-width: 0;
-        max-width: none;
+        max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .folio {
         position: static;
-        left: auto;
-        top: auto;
-        transform: none;
-        flex: 0 1 auto;
         min-width: 0;
+        max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-inline: auto;
-        height: 28px;
-        border-radius: 14px;
-        font-size: 12.5px;
+        height: 30px;
+        border-radius: 15px;
+        font-size: 13.5px;
         padding: 0 10px;
     }
 
     .pct {
+        position: relative;
         width: auto;
         min-width: 38px;
-        height: 28px;
-        font-size: 12.5px;
-        justify-content: flex-end;
+        height: 30px;
+        font-size: 13.5px;
     }
 }
 
@@ -3865,18 +3858,18 @@ body.dragging .shelf-dropzone {
     }
 
     .bar-controls {
-        min-height: 42px;
+        min-height: 44px;
         gap: 4px;
     }
 
     .bar .icon-btn {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
     }
 
     .bar .icon-btn svg {
-        width: 23px;
-        height: 23px;
+        width: 24px;
+        height: 24px;
     }
 
     .bar-tools {
@@ -3890,15 +3883,15 @@ body.dragging .shelf-dropzone {
     }
 
     .book-title {
-        font-size: 15px;
+        font-size: 16.5px;
     }
 
     .chapter {
-        font-size: 13.5px;
+        font-size: 14.5px;
     }
 
     .chapter-pages {
-        font-size: 12.5px;
+        font-size: 13.5px;
     }
 
     #view {
@@ -3941,21 +3934,12 @@ body.dragging .shelf-dropzone {
 
     .reading-foot {
         height: auto;
-        min-height: 40px;
+        min-height: 42px;
     }
 
     .reading-foot-row {
-        height: 40px;
+        height: 42px;
         padding-inline: calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
-        gap: 4px;
-    }
-
-    .reading-foot-left {
-        gap: 4px;
-    }
-
-    .reading-foot-right {
-        gap: 4px;
     }
 
     .rail {
@@ -3975,16 +3959,16 @@ body.dragging .shelf-dropzone {
     }
 
     .folio {
-        height: 26px;
-        border-radius: 13px;
-        font-size: 12px;
+        height: 28px;
+        border-radius: 14px;
+        font-size: 13px;
         padding: 0 9px;
     }
 
     .clock-widget {
         width: auto;
-        min-width: 64px;
-        height: 26px;
+        min-width: 66px;
+        height: 28px;
     }
 
     .analog-clock {
@@ -3995,28 +3979,28 @@ body.dragging .shelf-dropzone {
 
     .clock-segmented {
         width: auto;
-        min-width: 64px;
+        min-width: 66px;
     }
 
     .clock-segmented .clock-bar-toggle {
-        height: 24px;
-        min-height: 24px;
-        font-size: 12px;
+        height: 26px;
+        min-height: 26px;
+        font-size: 13px;
         padding: 0 8px;
     }
 
     .chapter-time {
-        height: 26px;
-        border-radius: 13px;
-        font-size: 12px;
-        padding: 0 8px;
+        height: 28px;
+        border-radius: 14px;
+        font-size: 13px;
+        padding: 0 9px;
     }
 
     .pct {
         width: auto;
         min-width: 36px;
-        height: 26px;
-        font-size: 12px;
+        height: 28px;
+        font-size: 13px;
     }
 
     .shelf-dropzone {
@@ -4049,7 +4033,7 @@ body.dragging .shelf-dropzone {
 }
 
 #reading:not(.mobile-ui-visible) #analog-clock {
-    transform: translateY(var(--rail-h, 42px));
+    transform: translate(-50%, var(--rail-h, 42px));
 }
 
 #reading.mobile-ui-visible #bar {
@@ -4067,7 +4051,7 @@ body.dragging .shelf-dropzone {
 }
 
 #reading.mobile-ui-visible #analog-clock {
-    transform: translateY(0);
+    transform: translate(-50%, 0);
 }
 
 /* ------------------------------------------------------------ what's new */
@@ -4126,9 +4110,8 @@ body.dragging .shelf-dropzone {
 .modal-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(10, 12, 18, 0.65);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(10, 12, 18, 0.72);
+    touch-action: none;
 }
 
 .modal-card {
@@ -4140,6 +4123,7 @@ body.dragging .shelf-dropzone {
     max-height: min(86vh, calc(100dvh - 40px - max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) - max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px))));
     overflow-y: auto;
     overscroll-behavior: contain;
+    touch-action: pan-y;
     background: var(--card);
     color: var(--ink);
     border: 1px solid var(--line);
@@ -4505,7 +4489,6 @@ body.dragging .shelf-dropzone {
     border-radius: 16px;
     padding: 10px 12px;
     box-shadow: 0 12px 32px rgba(20, 24, 36, 0.22);
-    backdrop-filter: blur(10px);
 }
 
 .batch-bar-main {
