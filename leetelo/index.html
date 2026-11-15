@@ -163,6 +163,30 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Wi-Fi PC Sync Modal -->
+            <div id="pc-sync-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pc-sync-heading" hidden>
+                <div class="modal-backdrop" id="pc-sync-backdrop"></div>
+                <div class="modal-card modal-card-compact pc-sync-card">
+                    <header class="modal-header">
+                        <h3 id="pc-sync-heading" data-i18n="sync_from_pc">Sincronizar desde PC</h3>
+                        <button id="pc-sync-close" class="icon-btn modal-close" type="button" data-i18n-aria="close" data-i18n-title="close"></button>
+                    </header>
+                    <div class="pc-sync-body" id="pc-sync-body">
+                        <p class="pc-sync-hint" data-i18n="pc_sync_hint"></p>
+                        <form id="pc-sync-form" class="pc-sync-url-row">
+                            <input id="pc-sync-url" class="pc-sync-input" type="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="http://192.168.1.x:3000" data-i18n-aria="pc_sync_url_label">
+                            <button id="pc-sync-connect" class="pc-sync-btn" type="submit" data-i18n="pc_sync_connect">Conectar</button>
+                        </form>
+                        <p id="pc-sync-status" class="pc-sync-status" role="status" hidden></p>
+                        <ul id="pc-sync-list" class="pc-sync-list" hidden></ul>
+                        <div class="pc-sync-actions">
+                            <button id="pc-sync-refresh" class="batch-btn" type="button" data-i18n="pc_sync_refresh">Actualizar</button>
+                            <button id="pc-sync-import-all" class="pc-sync-btn pc-sync-btn-primary" type="button" hidden></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- Hamburger Menu Drawer -->
@@ -184,13 +208,23 @@
                         <div class="swatches" role="radiogroup" aria-labelledby="lbl-theme" id="lib-theme"></div>
                     </div>
 
-                    <button id="lib-drawer-add" class="lib-drawer-action" type="button">
-                        <span class="lib-drawer-action-icon" id="lib-drawer-add-icon" aria-hidden="true"></span>
-                        <span class="lib-drawer-action-text">
-                            <strong data-i18n="add_books">Agregar libro(s)</strong>
-                            <small data-i18n="add_books_sub">Arrastra aquí o toca · EPUB, FB2 o CBZ</small>
-                        </span>
-                    </button>
+                    <div class="lib-drawer-import">
+                        <button id="lib-drawer-add" class="lib-drawer-action" type="button">
+                            <span class="lib-drawer-action-icon" id="lib-drawer-add-icon" aria-hidden="true"></span>
+                            <span class="lib-drawer-action-text">
+                                <strong data-i18n="add_books_phone">Importar desde el teléfono</strong>
+                                <small data-i18n="add_books_phone_sub">Carpetas del dispositivo o arrastra · EPUB, FB2 o CBZ</small>
+                            </span>
+                        </button>
+
+                        <button id="lib-drawer-sync-pc" class="lib-drawer-action lib-drawer-action-sync" type="button">
+                            <span class="lib-drawer-action-icon lib-drawer-action-icon-sync" id="lib-drawer-sync-icon" aria-hidden="true"></span>
+                            <span class="lib-drawer-action-text">
+                                <strong data-i18n="sync_from_pc">Sincronizar desde PC</strong>
+                                <small data-i18n="sync_from_pc_sub">Importar por Wi-Fi desde la carpeta /libros</small>
+                            </span>
+                        </button>
+                    </div>
 
                     <section id="lib-info" class="lib-drawer-section" aria-labelledby="lib-info-title">
                         <h3 id="lib-info-title" class="lib-drawer-section-title" data-i18n="library_info">Información de la biblioteca</h3>

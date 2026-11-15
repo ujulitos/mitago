@@ -54,6 +54,7 @@ const mime = {
 const send = (res, status, body, headers = {}) => {
   res.writeHead(status, {
     'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Private-Network': 'true',
     'Cache-Control': 'no-cache',
     ...headers
   });
@@ -133,7 +134,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, HEAD, OPTIONS',
-      'Access-Control-Allow-Headers': '*'
+      'Access-Control-Allow-Headers': '*',
+      'Access-Control-Allow-Private-Network': 'true'
     });
     res.end();
     return;
@@ -279,6 +281,7 @@ const server = http.createServer((req, res) => {
     const extraHeaders = {
       'Content-Type': contentType,
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Private-Network': 'true',
       'Accept-Ranges': 'bytes'
     };
     if (path.basename(filePath) === 'sw.js') {
