@@ -4121,9 +4121,7 @@ body.dragging .shelf-dropzone {
     max-width: 1000px;
     min-width: 320px;
     max-height: min(86vh, calc(100dvh - 40px - max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) - max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px))));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    touch-action: pan-y;
+    overflow: hidden;
     background: var(--card);
     color: var(--ink);
     border: 1px solid var(--line);
@@ -4146,6 +4144,12 @@ body.dragging .shelf-dropzone {
 }
 
 .modal-confirm-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
     padding: 20px 24px 22px;
     display: flex;
     flex-direction: column;
@@ -4179,6 +4183,10 @@ body.dragging .shelf-dropzone {
 }
 
 .modal-header {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    background: var(--card);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -4231,6 +4239,12 @@ body.dragging .shelf-dropzone {
 }
 
 .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
     padding: 26px 28px;
     display: grid;
     grid-template-columns: 155px 1fr;
