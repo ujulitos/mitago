@@ -259,18 +259,36 @@ button.primary:hover {
 }
 
 .lib-menu-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
     color: var(--ink);
+    cursor: pointer;
     flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, background-color 80ms ease;
 }
 
-.lib-menu-btn:hover {
-    background: var(--hover);
+@media (hover: hover) and (pointer: fine) {
+    .lib-menu-btn:hover {
+        background: var(--hover);
+        color: var(--rp-progress, var(--ink));
+    }
+}
+
+@media (hover: none) {
+    .lib-menu-btn:hover {
+        background: transparent;
+    }
+}
+
+.lib-menu-btn:active {
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
     color: var(--rp-progress, var(--ink));
 }
 
@@ -319,21 +337,25 @@ button.primary:hover {
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
-    height: 36px;
+    gap: 8px;
+    height: 42px;
     padding: 0 14px;
-    border-radius: 20px;
+    border-radius: 21px;
     border: 1px solid var(--line);
     background: var(--card);
     color: var(--ink);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
     outline: none !important;
     box-shadow: none !important;
     -webkit-tap-highlight-color: transparent;
-    transition: border-color 140ms ease, background-color 140ms ease;
+    transition: border-color 140ms ease, background-color 100ms ease;
+}
+
+.lib-theme-toggle:active {
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
 .lib-theme-toggle:focus,
@@ -387,10 +409,15 @@ button.primary:hover {
 #lib-theme.swatches button {
     flex: none;
     width: 100%;
-    height: 28px;
-    padding: 0 10px;
-    font-size: 12px;
+    height: 36px;
+    padding: 0 12px;
+    font-size: 14px;
     justify-content: center;
+}
+
+#lib-theme.swatches button:active {
+    transform: scale(0.97);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 16%, transparent) !important;
 }
 
 .lib-main {
@@ -453,7 +480,7 @@ button.primary:hover {
 .lib-drawer-panel {
     position: relative;
     z-index: 1;
-    width: min(340px, 86vw);
+    width: min(360px, 88vw);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -490,7 +517,7 @@ button.primary:hover {
 
 .lib-drawer-head h2 {
     margin: 0;
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 700;
 }
 
@@ -508,9 +535,16 @@ button.primary:hover {
     opacity: 1;
 }
 
-.lib-drawer-close:hover {
+@media (hover: hover) and (pointer: fine) {
+    .lib-drawer-close:hover {
+        color: var(--rp-progress, var(--ink));
+        background: var(--panel-hover, var(--hover));
+    }
+}
+
+.lib-drawer-close:active {
     color: var(--rp-progress, var(--ink));
-    background: var(--panel-hover, var(--hover));
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
 }
 
 .lib-drawer-body {
@@ -568,8 +602,8 @@ body.dragging .lib-drawer-action {
 .lib-drawer-action-icon {
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
+    width: 42px;
+    height: 42px;
     border-radius: 10px;
     background: var(--rp-progress, salmon);
     color: #fff;
@@ -584,13 +618,13 @@ body.dragging .lib-drawer-action {
 }
 
 .lib-drawer-action-text strong {
-    font-size: 14.5px;
+    font-size: 16px;
     font-weight: 680;
     line-height: 1.25;
 }
 
 .lib-drawer-action-text small {
-    font-size: 12px;
+    font-size: 13.5px;
     color: var(--muted);
 }
 
@@ -607,7 +641,7 @@ body.dragging .lib-drawer-action {
 
 .lib-drawer-section-title {
     margin: 10px 0 10px 0;
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -617,7 +651,7 @@ body.dragging .lib-drawer-action {
 .lib-info-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 11px;
     margin: 0;
 }
 
@@ -629,13 +663,13 @@ body.dragging .lib-drawer-action {
 }
 
 .lib-info-list dt {
-    font-size: 12.5px;
+    font-size: 14.5px;
     color: var(--muted);
 }
 
 .lib-info-list dd {
     margin: 0;
-    font-size: 13.5px;
+    font-size: 15.5px;
     font-weight: 650;
     font-variant-numeric: tabular-nums;
     text-align: right;
@@ -908,13 +942,12 @@ body.dragging .dropzone {
 .books.books-row {
     display: flex;
     flex-wrap: nowrap;
-    gap: 20px;
+    gap: 18px;
     overflow-x: auto;
     overflow-y: hidden;
     padding: 4px 2px 10px;
-    scroll-behavior: smooth;
-    scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
     touch-action: pan-x pan-y;
     scrollbar-width: thin;
     scrollbar-color: var(--line) transparent;
@@ -927,8 +960,6 @@ body.dragging .dropzone {
 }
 
 .books.books-row.is-dragging {
-    scroll-behavior: auto;
-    scroll-snap-type: none;
     cursor: grabbing;
     user-select: none;
     -webkit-user-select: none;
@@ -957,23 +988,70 @@ body.dragging .dropzone {
 }
 
 .books.books-row>.book {
-    flex: 0 0 106px;
-    width: 106px;
-    scroll-snap-align: start;
+    flex: 0 0 272px;
+    width: 272px;
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: 12px;
+    align-items: start;
+}
+
+.books.books-row>.book .cover-btn {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: 80px;
+}
+
+.books.books-row>.book .meta {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 0;
+}
+
+.books.books-row>.book .read-line {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 5px 0 4px;
+}
+
+.books.books-row>.book .book-actions {
+    grid-column: 2;
+    grid-row: 3;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    height: auto;
+    margin-top: auto;
+    padding-top: 4px;
+}
+
+.books.books-row>.book .book-action-btn {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    aspect-ratio: 1;
+    border-radius: 50%;
 }
 
 .books.books-row .meta .title {
-    font-size: 11.5px;
-    line-height: 1.25;
-    height: 2.5em;
+    font-size: 14px;
+    line-height: 1.28;
+    height: 2.56em;
 }
 
 .books.books-row .meta .author {
-    font-size: 10.5px;
+    font-size: 13px;
 }
 
 .books.books-row .meta .format-size {
-    font-size: 10px;
+    font-size: 12px;
+}
+
+.books.books-row .meta .format-size .meta-pct {
+    font-size: 12.5px;
 }
 
 .book {
@@ -1073,9 +1151,9 @@ body.dragging .dropzone {
 
 .meta .title {
     font-weight: 620;
-    line-height: 1.28;
-    font-size: 12.5px;
-    height: 2.56em;
+    line-height: 1.3;
+    font-size: 14.5px;
+    height: 2.6em;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -1085,13 +1163,13 @@ body.dragging .dropzone {
 
 .meta .author {
     color: var(--muted);
-    font-size: 11.5px;
+    font-size: 13.5px;
     height: 1.35em;
     line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin: 1px 0 0;
+    margin: 2px 0 0;
 }
 
 .meta .format-size {
@@ -1101,10 +1179,10 @@ body.dragging .dropzone {
     gap: 6px;
     width: 100%;
     color: var(--muted);
-    font-size: 10.5px;
+    font-size: 12px;
     height: 1.35em;
     line-height: 1.35;
-    margin: 1px 0 0;
+    margin: 2px 0 0;
 }
 
 .meta .format-size .fmt-txt {
@@ -1117,6 +1195,7 @@ body.dragging .dropzone {
 
 .meta .format-size .meta-pct {
     color: var(--rp-progress, salmon) !important;
+    font-size: 12.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
@@ -1127,38 +1206,66 @@ body.dragging .dropzone {
 .book-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     margin-top: auto;
     padding-top: 4px;
-    gap: 2px;
+    gap: 0;
     flex-shrink: 0;
-    height: 34px;
+    height: auto;
+}
+
+.books.books-all .book-actions {
+    width: 100%;
+    max-width: 116px;
+    margin: auto auto 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0;
+    height: auto;
+    padding-top: 6px;
 }
 
 .book-action-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 1 1 0;
+    flex: 0 0 36px;
+    width: 36px;
     min-width: 0;
-    height: 32px;
+    height: 36px;
+    aspect-ratio: 1;
+    margin: 0;
     padding: 0;
     border: 0;
-    border-radius: 6px;
-    background: transparent !important;
+    border-radius: 50%;
+    background: transparent;
     color: var(--muted);
     cursor: pointer;
-    transition: color 120ms ease;
+    transition: color 120ms ease, background-color 80ms ease;
     outline: none !important;
     -webkit-tap-highlight-color: transparent;
     transform: none !important;
+}
+
+.books.books-all .book-action-btn {
+    flex: 0 0 36px;
+    width: 36px;
+    max-width: calc(100% / 3);
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: 50%;
+}
+
+.book-action-btn .icon {
+    width: 21px;
+    height: 21px;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .book-action-btn:hover,
     .book-action-btn.btn-delete:hover {
         color: var(--rp-progress, salmon) !important;
-        background: transparent !important;
+        background: transparent;
         transform: none !important;
     }
 
@@ -1182,10 +1289,16 @@ body.dragging .dropzone {
     stroke-width: 1.75;
 }
 
-/* Todos los botones activos en color de progreso y SIN fondo de color */
+/* Todos los botones activos en color de progreso y SIN fondo fijo; solo al pulsar se muestra el hit area */
 .book-action-btn.active {
     color: var(--rp-progress, salmon) !important;
-    background: transparent !important;
+    background: transparent;
+}
+
+.book-action-btn:active,
+.book-action-btn.active:active,
+.book-action-btn.btn-delete:active {
+    background: color-mix(in srgb, var(--ink) 12%, transparent) !important;
 }
 
 .book-action-btn.active svg {
@@ -1556,21 +1669,30 @@ body.dragging .shelf-dropzone {
 .tool {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 30px;
-    padding: 0 12px;
+    gap: 7px;
+    height: 38px;
+    padding: 0 14px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     background: none;
     color: var(--muted);
-    font-size: 12.5px;
+    font-size: 14.5px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, background-color 80ms ease;
 }
 
-.tool:hover {
-    background: var(--hover);
+@media (hover: hover) and (pointer: fine) {
+    .tool:hover {
+        background: var(--hover);
+        color: var(--ink);
+    }
+}
+
+.tool:active {
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
     color: var(--ink);
 }
 
@@ -1578,6 +1700,10 @@ body.dragging .shelf-dropzone {
     border: 1px solid var(--line);
     background: var(--card);
     color: var(--ink);
+}
+
+.tool.strong:active {
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
 }
 
 .tool:disabled {
@@ -1830,19 +1956,39 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    min-height: 36px;
+    min-height: 42px;
     gap: 8px;
 }
 
 .bar .icon-btn {
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
     color: var(--rp-soft);
+    -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, background-color 80ms ease;
 }
 
-.bar .icon-btn:hover,
+.bar .icon-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .bar .icon-btn:hover {
+        background: var(--panel-hover);
+        color: var(--rp-ink);
+    }
+}
+
 .bar .icon-btn[aria-expanded="true"] {
     background: var(--panel-hover);
+    color: var(--rp-ink);
+}
+
+.bar .icon-btn:active,
+.bar .icon-btn[aria-expanded="true"]:active {
+    background: color-mix(in srgb, var(--rp-ink, var(--ink)) 14%, transparent);
     color: var(--rp-ink);
 }
 
@@ -1861,7 +2007,7 @@ body.dragging .shelf-dropzone {
     max-width: min(760px, 100%);
     margin: 0 auto;
     padding: 4px 12px 2px;
-    gap: 5px;
+    gap: 6px;
     line-height: 1.3;
     text-align: center;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -1882,7 +2028,7 @@ body.dragging .shelf-dropzone {
     -webkit-line-clamp: 2;
     overflow-wrap: anywhere;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 600;
     line-height: 1.35;
 }
@@ -1898,7 +2044,7 @@ body.dragging .shelf-dropzone {
     overflow-wrap: anywhere;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--rp-soft);
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.3;
 }
 
@@ -1913,7 +2059,7 @@ body.dragging .shelf-dropzone {
     white-space: nowrap;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--rp-soft);
-    font-size: 11.5px;
+    font-size: 13.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1.25;
@@ -1950,14 +2096,15 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: center;
     padding: 0;
-    border-radius: 4px;
+    border-radius: 50%;
     cursor: pointer;
-    transition: transform 120ms ease, opacity 150ms ease;
+    transition: transform 120ms ease, opacity 150ms ease, background-color 80ms ease;
     -webkit-tap-highlight-color: transparent;
 }
 
 .corner-btn:active {
-    transform: scale(0.92);
+    transform: scale(0.94);
+    background: color-mix(in srgb, var(--rp-ink, var(--ink)) 12%, transparent);
 }
 
 .corner-btn:focus-visible {
@@ -1968,8 +2115,8 @@ body.dragging .shelf-dropzone {
 .corner-theme {
     left: 0;
     margin: 0;
-    width: 64px;
-    height: 64px;
+    width: 68px;
+    height: 68px;
     border: 0;
     background: transparent;
     box-shadow: none;
@@ -1978,8 +2125,8 @@ body.dragging .shelf-dropzone {
 .corner-bookmark {
     right: 0;
     margin: 0;
-    width: 64px;
-    height: 64px;
+    width: 68px;
+    height: 68px;
     border: 0;
     background: transparent;
     color: var(--rp-progress, var(--rp-ink));
@@ -2063,13 +2210,13 @@ body.dragging .shelf-dropzone {
     position: absolute;
     bottom: calc(100% + 8px);
     left: 50%;
-    max-width: 260px;
-    padding: 6px 10px;
+    max-width: 280px;
+    padding: 7px 12px;
     transform: translateX(-50%);
     border-radius: 8px;
     background: var(--rp-ink);
     color: var(--rp-paper);
-    font-size: 12px;
+    font-size: 13.5px;
     line-height: 1.35;
     white-space: nowrap;
     pointer-events: none;
@@ -2096,7 +2243,7 @@ body.dragging .shelf-dropzone {
     right: 0;
     bottom: 0;
     height: auto;
-    min-height: 38px;
+    min-height: 44px;
     padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
     display: flex;
     flex-direction: column;
@@ -2109,12 +2256,12 @@ body.dragging .shelf-dropzone {
     position: relative;
     z-index: 25;
     width: 100%;
-    height: 38px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding-block: 0;
-    padding-inline: calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(6px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
+    padding-inline: calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
     flex-shrink: 0;
     background: var(--rp-paper);
 }
@@ -2159,11 +2306,12 @@ body.dragging .shelf-dropzone {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 24px;
+    width: auto;
+    min-width: 44px;
+    height: 30px;
     text-align: center;
     color: var(--rp-progress, salmon) !important;
-    font-size: 11.5px;
+    font-size: 13.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -2197,16 +2345,16 @@ body.dragging .shelf-dropzone {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 24px;
-    padding: 0 12px;
-    border-radius: 12px;
+    height: 30px;
+    padding: 0 14px;
+    border-radius: 15px;
     background: color-mix(in srgb, var(--rp-paper) 88%, transparent);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     border: 1px solid color-mix(in srgb, var(--rp-rule, var(--line)) 60%, transparent);
     text-align: center;
     color: var(--rp-progress, salmon) !important;
-    font-size: 11.5px;
+    font-size: 13.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -2222,16 +2370,16 @@ body.dragging .shelf-dropzone {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 24px;
-    padding: 0 12px;
-    border-radius: 12px;
+    height: 30px;
+    padding: 0 13px;
+    border-radius: 15px;
     background: color-mix(in srgb, var(--rp-paper) 88%, transparent);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     border: 1px solid color-mix(in srgb, var(--rp-rule, var(--line)) 60%, transparent);
     text-align: center;
     color: var(--rp-progress, salmon) !important;
-    font-size: 11.5px;
+    font-size: 13.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -2250,7 +2398,7 @@ body.dragging .shelf-dropzone {
     position: relative;
     z-index: 15;
     width: auto;
-    height: 24px;
+    height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
@@ -2323,31 +2471,33 @@ body.dragging .shelf-dropzone {
     display: inline-flex;
     padding: 2px;
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: 12px;
     background: var(--card);
     box-shadow: none !important;
-    width: 72px;
+    width: auto;
+    min-width: 82px;
     box-sizing: border-box;
     justify-content: center;
     align-items: center;
     flex-shrink: 0;
 }
 
-.clock-bar-toggle {
+.clock-segmented .clock-bar-toggle {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 22px;
+    height: 28px;
+    min-height: 28px;
     min-width: 0;
-    padding: 0 8px;
+    padding: 0 10px;
     border: 0 !important;
-    border-radius: 8px;
+    border-radius: 10px;
     background: none;
     color: var(--muted);
     font-family: inherit;
-    font-size: 11.5px;
+    font-size: 13.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -2357,37 +2507,46 @@ body.dragging .shelf-dropzone {
     outline: none !important;
     box-shadow: none !important;
     -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, background-color 80ms ease;
     flex-shrink: 0;
 }
 
-.clock-bar-toggle::-moz-focus-inner {
+.clock-segmented .clock-bar-toggle::-moz-focus-inner {
     border: 0;
     padding: 0;
 }
 
-.clock-bar-toggle:focus,
-.clock-bar-toggle:focus-visible,
-.clock-bar-toggle:active {
+.clock-segmented .clock-bar-toggle:focus,
+.clock-segmented .clock-bar-toggle:focus-visible {
     outline: none !important;
     box-shadow: none !important;
     -webkit-tap-highlight-color: transparent;
 }
 
-.clock-bar-toggle .clock-bar-label {
+.clock-segmented .clock-bar-toggle .clock-bar-label {
     white-space: nowrap;
     line-height: 1;
     text-align: center;
 }
 
-/* Modo apagado (reloj oculto): idéntico a botón de fuente no seleccionado (sin mouseover) */
-.clock-bar-toggle,
-.clock-bar-toggle[aria-checked="false"],
-.clock-bar-toggle[aria-pressed="false"],
-.clock-bar-toggle:not([aria-checked="true"]) {
-    background: none !important;
-    color: var(--muted) !important;
+/* Modo apagado/prendido del botón reloj: sin fondo fijo en reposo, hit area visible solo al presionar */
+.clock-segmented .clock-bar-toggle[aria-checked="true"],
+.clock-segmented .clock-bar-toggle[aria-checked="false"],
+.clock-segmented .clock-bar-toggle[aria-pressed="false"],
+.clock-segmented .clock-bar-toggle:not([aria-checked="true"]) {
+    background: none;
+    color: var(--muted);
     border: 0 !important;
     box-shadow: none !important;
+}
+
+.clock-segmented .clock-bar-toggle:active,
+.clock-segmented .clock-bar-toggle[aria-checked="true"]:active,
+.clock-segmented .clock-bar-toggle[aria-checked="false"]:active {
+    outline: none !important;
+    box-shadow: none !important;
+    background: color-mix(in srgb, var(--rp-ink, var(--ink)) 14%, transparent);
+    color: var(--rp-ink, var(--ink));
 }
 
 /* Modo prendido (reloj visible): idéntico a botón de fuente seleccionado (sin mouseover) */
@@ -2404,23 +2563,36 @@ body.dragging .shelf-dropzone {
     position: absolute;
     z-index: 12;
     top: 50%;
-    width: 44px;
-    height: 88px;
-    margin-top: -44px;
+    width: 52px;
+    height: 96px;
+    margin-top: -48px;
     display: grid;
     place-items: center;
     border: 0;
-    border-radius: 12px;
+    border-radius: 14px;
     background: none;
     color: var(--rp-soft);
     opacity: 0.35;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 120ms ease, background-color 80ms ease;
 }
 
-.page-btn:hover,
+@media (hover: hover) and (pointer: fine) {
+    .page-btn:hover {
+        opacity: 1;
+        background: color-mix(in srgb, var(--rp-ink) 6%, transparent);
+    }
+}
+
 .page-btn:focus-visible {
     opacity: 1;
     background: color-mix(in srgb, var(--rp-ink) 6%, transparent);
+}
+
+.page-btn:active:not(:disabled) {
+    opacity: 1;
+    background: color-mix(in srgb, var(--rp-ink) 14%, transparent);
 }
 
 .page-btn:disabled {
@@ -2477,7 +2649,7 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    height: calc(56px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
+    height: calc(60px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
     padding-block: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) 0;
     padding-inline: 20px calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
     border-bottom: 1px solid var(--line);
@@ -2485,8 +2657,34 @@ body.dragging .shelf-dropzone {
 }
 
 .panel-head h2 {
-    font-size: 14.5px;
+    font-size: 17px;
     font-weight: 650;
+}
+
+#panel .icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, background-color 80ms ease;
+}
+
+#panel .icon-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+@media (hover: none) {
+    .reading .icon-btn:hover,
+    #panel .icon-btn:hover {
+        background: transparent;
+    }
+}
+
+#panel .icon-btn:active,
+.reading .icon-btn:active {
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
+    color: var(--ink);
 }
 
 .pane {
@@ -2501,7 +2699,13 @@ body.dragging .shelf-dropzone {
 .empty {
     margin: 18px 10px;
     color: var(--muted);
+    font-size: 15.5px;
     line-height: 1.5;
+}
+
+.pane .hint {
+    font-size: 14px;
+    line-height: 1.45;
 }
 
 .toc {
@@ -2516,16 +2720,18 @@ body.dragging .shelf-dropzone {
     justify-content: space-between;
     gap: 10px;
     width: 100%;
-    padding-block: 8px;
+    padding-block: 10px;
     padding-inline: calc(12px + var(--depth, 0) * 16px) 12px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     background: none;
     color: var(--ink);
     text-align: start;
-    font-size: 13.5px;
+    font-size: 15.5px;
     line-height: 1.4;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 80ms ease;
 }
 
 .toc-label {
@@ -2536,7 +2742,7 @@ body.dragging .shelf-dropzone {
 .toc-page {
     flex: none;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -2546,8 +2752,14 @@ body.dragging .shelf-dropzone {
     display: none;
 }
 
-.toc button:hover {
-    background: var(--hover);
+@media (hover: hover) and (pointer: fine) {
+    .toc button:hover {
+        background: var(--hover);
+    }
+}
+
+.toc button:active {
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
 .toc button[data-depth="0"] {
@@ -2578,7 +2790,7 @@ body.dragging .shelf-dropzone {
     display: flex;
     align-items: center;
     gap: 8px;
-    height: 40px;
+    height: 44px;
     margin: 0 2px 4px;
     padding: 0 12px;
     border: 1px solid var(--line);
@@ -2625,7 +2837,7 @@ body.dragging .shelf-dropzone {
     margin: 8px 8px 6px;
     min-height: 1em;
     color: var(--muted);
-    font-size: 12.5px;
+    font-size: 14px;
 }
 
 .back-btn {
@@ -2643,27 +2855,38 @@ body.dragging .shelf-dropzone {
 .results button {
     display: block;
     width: 100%;
-    padding: 9px 12px;
+    padding: 10px 12px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     background: none;
     color: var(--ink);
     text-align: start;
-    font-size: 13px;
+    font-size: 14.5px;
     line-height: 1.5;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 80ms ease;
 }
 
-.results button:hover,
+@media (hover: hover) and (pointer: fine) {
+    .results button:hover {
+        background: var(--hover);
+    }
+}
+
 .results button.current {
     background: var(--hover);
+}
+
+.results button:active {
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
 .results .where {
     display: block;
     color: var(--muted);
-    font-size: 11.5px;
-    margin-bottom: 1px;
+    font-size: 13px;
+    margin-bottom: 2px;
 }
 
 .results mark {
@@ -2678,30 +2901,40 @@ body.dragging .shelf-dropzone {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 4px;
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
-.marks li:hover {
-    background: var(--hover);
+@media (hover: hover) and (pointer: fine) {
+    .marks li:hover {
+        background: var(--hover);
+    }
 }
 
 .marks .jump {
     display: block;
     width: 100%;
-    padding: 9px 12px;
+    padding: 10px 12px;
     border: 0;
+    border-radius: 10px;
     background: none;
     color: var(--ink);
     text-align: start;
-    font-size: 13.5px;
-    line-height: 1.4;
+    font-size: 15px;
+    line-height: 1.45;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 80ms ease;
+}
+
+.marks .jump:active {
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
 .marks .jump small {
     display: block;
     color: var(--rp-progress, salmon) !important;
-    font-size: 11.5px;
+    font-size: 13px;
+    margin-top: 2px;
 }
 
 .marks .icon-btn:hover {
@@ -2724,11 +2957,11 @@ body.dragging .shelf-dropzone {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 4px;
-    max-width: min(340px, calc(100vw - 16px));
-    padding: 5px;
+    gap: 6px;
+    max-width: min(360px, calc(100vw - 16px));
+    padding: 6px;
     border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: 14px;
     background: var(--card);
     color: var(--ink);
     box-shadow: var(--shadow);
@@ -2740,19 +2973,26 @@ body.dragging .shelf-dropzone {
 
 .hl-colors {
     display: inline-flex;
-    gap: 4px;
+    gap: 6px;
     padding-inline: 2px;
 }
 
 .hl-swatch {
     position: relative;
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
     padding: 0;
     border: 1px solid var(--line);
     border-radius: 50%;
     cursor: pointer;
     background: var(--rp-paper);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+.hl-swatch:active {
+    transform: scale(0.94);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ink) 16%, transparent);
 }
 
 .hl-swatch::after {
@@ -2784,11 +3024,24 @@ body.dragging .shelf-dropzone {
 }
 
 .hl-bar .icon-btn {
-    width: 30px;
-    height: 30px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, background-color 80ms ease;
+}
+
+.hl-bar .icon-btn svg {
+    width: 19px;
+    height: 19px;
 }
 
 .hl-bar .icon-btn:hover {
+    color: var(--error);
+}
+
+.hl-bar .icon-btn:active {
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
     color: var(--error);
 }
 
@@ -2827,7 +3080,7 @@ body.dragging .shelf-dropzone {
 .hl-tools {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
     margin: 2px 4px 10px;
 }
 
@@ -2847,14 +3100,14 @@ body.dragging .shelf-dropzone {
     display: block;
     padding-inline-start: 8px;
     border-inline-start: 4px solid var(--hl);
-    line-height: 1.45;
+    line-height: 1.5;
 }
 
 .hl-list .note {
     display: block;
     margin-top: 4px;
     color: var(--muted);
-    font-size: 12.5px;
+    font-size: 14px;
     white-space: pre-line;
 }
 
@@ -2874,7 +3127,7 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    min-height: 44px;
+    min-height: 50px;
 }
 
 .set-row+.set-row {
@@ -2885,33 +3138,47 @@ body.dragging .shelf-dropzone {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
-    padding: 10px 0;
+    padding: 12px 0;
 }
 
 .set-label {
     font-weight: 600;
-    font-size: 13px;
+    font-size: 15px;
 }
 
 .stepper {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 2px;
+    padding: 3px;
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: 12px;
 }
 
 .stepper output {
-    min-width: 32px;
+    min-width: 38px;
+    font-size: 16px;
     text-align: center;
     font-variant-numeric: tabular-nums;
     font-weight: 600;
 }
 
 .stepper .icon-btn {
-    width: 30px;
-    height: 30px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, background-color 80ms ease;
+}
+
+.stepper .icon-btn svg {
+    width: 19px;
+    height: 19px;
+}
+
+.stepper .icon-btn:active {
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
+    color: var(--ink);
 }
 
 /* Sliders (line length & line spacing) */
@@ -2994,8 +3261,8 @@ body.dragging .shelf-dropzone {
 }
 
 .slider-wrap output {
-    min-width: 44px;
-    font-size: 12px;
+    min-width: 48px;
+    font-size: 14px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     text-align: end;
@@ -3025,16 +3292,24 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 24px;
-    min-width: 36px;
-    padding: 0 9px;
+    height: auto;
+    min-height: 32px;
+    min-width: 40px;
+    padding: 5px 12px;
     border: 1px solid transparent;
     border-radius: 20px;
     background: none;
     color: var(--muted);
-    font-size: 12.5px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, background-color 80ms ease;
+}
+
+.segmented button:active {
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
+    color: var(--ink);
 }
 
 .segmented button[aria-checked="true"] {
@@ -3045,29 +3320,29 @@ body.dragging .shelf-dropzone {
 }
 
 .segmented.wide button {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
 }
 
 .segmented.three button {
-    font-size: 12px;
-    padding: 0 4px;
+    font-size: 13.5px;
+    padding: 5px 6px;
     white-space: nowrap;
 }
 
 #seg-font.segmented {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
+    gap: 5px;
     width: 100%;
     border-radius: 14px;
 }
 
 #seg-font.segmented button {
     height: auto;
-    min-height: 28px;
-    padding: 5px 6px;
-    font-size: 12.5px;
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 14px;
     line-height: 1.2;
     white-space: nowrap;
     text-align: center;
@@ -3150,14 +3425,20 @@ body.dragging .shelf-dropzone {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     width: 100%;
-    gap: 5px;
+    gap: 6px;
 }
 
 #seg-theme.swatches button {
     width: 100%;
-    height: 22px;
+    height: 30px;
     padding: 0 4px;
-    font-size: 11px;
+    font-size: 12.5px;
+    transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+#seg-theme.swatches button:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 18%, transparent) !important;
 }
 
 /* Library: reading stats, export / import, time read per book */
@@ -3204,13 +3485,19 @@ body.dragging .shelf-dropzone {
 .switch {
     position: relative;
     flex: none;
-    width: 38px;
-    height: 22px;
+    width: 44px;
+    height: 26px;
     padding: 0;
     border: 1px solid var(--line);
-    border-radius: 11px;
+    border-radius: 13px;
     background: var(--hover);
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 120ms ease, box-shadow 80ms ease;
+}
+
+.switch:active {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ink) 14%, transparent);
 }
 
 .switch::after {
@@ -3218,8 +3505,8 @@ body.dragging .shelf-dropzone {
     position: absolute;
     top: 2px;
     inset-inline-start: 2px;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--card);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -3232,7 +3519,7 @@ body.dragging .shelf-dropzone {
 }
 
 .switch[aria-checked="true"]::after {
-    inset-inline-start: 18px;
+    inset-inline-start: 20px;
 }
 
 #btn-keys {
@@ -3256,7 +3543,7 @@ body.dragging .shelf-dropzone {
 }
 
 .keys h2 {
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 650;
     margin-bottom: 12px;
 }
@@ -3267,7 +3554,7 @@ body.dragging .shelf-dropzone {
     gap: 8px 16px;
     align-items: baseline;
     margin-bottom: 14px;
-    font-size: 13px;
+    font-size: 14.5px;
 }
 
 .keys-list dt {
@@ -3301,12 +3588,18 @@ body.dragging .shelf-dropzone {
     }
 
     .books.books-row {
-        gap: 16px;
+        gap: 14px;
     }
 
     .books.books-row>.book {
-        flex: 0 0 94px;
-        width: 94px;
+        flex: 0 0 250px;
+        width: 250px;
+        grid-template-columns: 72px minmax(0, 1fr);
+        column-gap: 10px;
+    }
+
+    .books.books-row>.book .cover-btn {
+        width: 72px;
     }
 
     .shelf-section-row {
@@ -3355,18 +3648,18 @@ body.dragging .shelf-dropzone {
     }
 
     .bar-controls {
-        min-height: 42px;
+        min-height: 44px;
         gap: 6px;
     }
 
     .bar .icon-btn {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
     }
 
     .bar .icon-btn svg {
-        width: 23px;
-        height: 23px;
+        width: 24px;
+        height: 24px;
     }
 
     .bar-tools {
@@ -3380,15 +3673,15 @@ body.dragging .shelf-dropzone {
     }
 
     .book-title {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .chapter {
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .chapter-pages {
-        font-size: 11px;
+        font-size: 13px;
     }
 
     .page-btn {
@@ -3415,12 +3708,12 @@ body.dragging .shelf-dropzone {
 
     .reading-foot {
         height: auto;
-        min-height: 36px;
+        min-height: 42px;
         padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));
     }
 
     .reading-foot-row {
-        height: 36px;
+        height: 42px;
         padding-inline: calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
         gap: 6px;
         justify-content: space-between;
@@ -3460,8 +3753,9 @@ body.dragging .shelf-dropzone {
     }
 
     .clock-widget {
-        width: 64px;
-        height: 22px;
+        width: auto;
+        min-width: 72px;
+        height: 28px;
     }
 
     .analog-clock {
@@ -3471,20 +3765,23 @@ body.dragging .shelf-dropzone {
     }
 
     .clock-segmented {
-        width: 64px;
+        width: auto;
+        min-width: 72px;
     }
 
-    .clock-bar-toggle {
-        height: 20px;
-        font-size: 11px;
-        padding: 0 6px;
+    .clock-segmented .clock-bar-toggle {
+        height: 26px;
+        min-height: 26px;
+        font-size: 12.5px;
+        padding: 0 9px;
     }
 
     .chapter-time {
         position: static;
-        height: 22px;
-        font-size: 10.5px;
-        padding: 0 8px;
+        height: 28px;
+        border-radius: 14px;
+        font-size: 12.5px;
+        padding: 0 10px;
         flex: 0 1 auto;
         min-width: 0;
         max-width: none;
@@ -3502,16 +3799,17 @@ body.dragging .shelf-dropzone {
         overflow: hidden;
         text-overflow: ellipsis;
         margin-inline: auto;
-        height: 22px;
-        font-size: 10.5px;
-        padding: 0 9px;
+        height: 28px;
+        border-radius: 14px;
+        font-size: 12.5px;
+        padding: 0 10px;
     }
 
     .pct {
         width: auto;
-        min-width: 32px;
-        height: 22px;
-        font-size: 11px;
+        min-width: 38px;
+        height: 28px;
+        font-size: 12.5px;
         justify-content: flex-end;
     }
 }
@@ -3545,9 +3843,9 @@ body.dragging .shelf-dropzone {
     }
 
     #lib-theme.swatches button {
-        height: 28px;
-        padding: 0 10px;
-        font-size: 12px;
+        height: 36px;
+        padding: 0 12px;
+        font-size: 14px;
     }
 
     .lib-foot {
@@ -3567,18 +3865,18 @@ body.dragging .shelf-dropzone {
     }
 
     .bar-controls {
-        min-height: 40px;
+        min-height: 42px;
         gap: 4px;
     }
 
     .bar .icon-btn {
-        width: 40px;
-        height: 40px;
+        width: 42px;
+        height: 42px;
     }
 
     .bar .icon-btn svg {
-        width: 22px;
-        height: 22px;
+        width: 23px;
+        height: 23px;
     }
 
     .bar-tools {
@@ -3592,15 +3890,15 @@ body.dragging .shelf-dropzone {
     }
 
     .book-title {
-        font-size: 13.5px;
+        font-size: 15px;
     }
 
     .chapter {
-        font-size: 11.5px;
+        font-size: 13.5px;
     }
 
     .chapter-pages {
-        font-size: 10.5px;
+        font-size: 12.5px;
     }
 
     #view {
@@ -3623,25 +3921,31 @@ body.dragging .shelf-dropzone {
     }
 
     .slider-wrap output {
-        min-width: 38px;
-        font-size: 11px;
+        min-width: 42px;
+        font-size: 13px;
     }
 
     .set-label {
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .set-row {
-        min-height: 40px;
+        min-height: 46px;
+    }
+
+    #seg-theme.swatches button {
+        height: 28px;
+        font-size: 12px;
+        padding: 0 4px;
     }
 
     .reading-foot {
         height: auto;
-        min-height: 34px;
+        min-height: 40px;
     }
 
     .reading-foot-row {
-        height: 34px;
+        height: 40px;
         padding-inline: calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px)));
         gap: 4px;
     }
@@ -3671,14 +3975,16 @@ body.dragging .shelf-dropzone {
     }
 
     .folio {
-        height: 20px;
-        font-size: 10px;
-        padding: 0 7px;
+        height: 26px;
+        border-radius: 13px;
+        font-size: 12px;
+        padding: 0 9px;
     }
 
     .clock-widget {
-        width: 54px;
-        height: 20px;
+        width: auto;
+        min-width: 64px;
+        height: 26px;
     }
 
     .analog-clock {
@@ -3688,26 +3994,29 @@ body.dragging .shelf-dropzone {
     }
 
     .clock-segmented {
-        width: 54px;
+        width: auto;
+        min-width: 64px;
     }
 
-    .clock-bar-toggle {
-        height: 18px;
-        font-size: 10px;
-        padding: 0 4px;
+    .clock-segmented .clock-bar-toggle {
+        height: 24px;
+        min-height: 24px;
+        font-size: 12px;
+        padding: 0 8px;
     }
 
     .chapter-time {
-        height: 20px;
-        font-size: 10px;
-        padding: 0 6px;
+        height: 26px;
+        border-radius: 13px;
+        font-size: 12px;
+        padding: 0 8px;
     }
 
     .pct {
         width: auto;
-        min-width: 30px;
-        height: 20px;
-        font-size: 10px;
+        min-width: 36px;
+        height: 26px;
+        font-size: 12px;
     }
 
     .shelf-dropzone {
@@ -3825,10 +4134,10 @@ body.dragging .shelf-dropzone {
 .modal-card {
     position: relative;
     z-index: 1;
-    width: 60vw;
+    width: 64vw;
     max-width: 1000px;
     min-width: 320px;
-    max-height: min(85vh, calc(100dvh - 40px - max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) - max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px))));
+    max-height: min(86vh, calc(100dvh - 40px - max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) - max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px))));
     overflow-y: auto;
     overscroll-behavior: contain;
     background: var(--card);
@@ -3843,7 +4152,7 @@ body.dragging .shelf-dropzone {
 
 @media (max-width: 650px) {
     .modal-card {
-        width: 92vw;
+        width: 94vw;
     }
 }
 
@@ -3861,7 +4170,7 @@ body.dragging .shelf-dropzone {
 
 .modal-confirm-text {
     margin: 0;
-    font-size: 14px;
+    font-size: 15.5px;
     line-height: 1.5;
     color: var(--muted);
 }
@@ -3889,19 +4198,19 @@ body.dragging .shelf-dropzone {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px 14px;
+    padding: 18px 24px 16px;
     border-bottom: 1px solid var(--line);
 }
 
 .modal-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 18.5px;
     font-weight: 700;
 }
 
 .modal-close {
-    width: 32px;
-    height: 32px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
@@ -3910,17 +4219,37 @@ body.dragging .shelf-dropzone {
     cursor: pointer;
     background: transparent;
     border: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, background-color 80ms ease;
 }
 
-.modal-close:hover {
+.modal-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .modal-close:hover {
+        color: var(--ink);
+        background: var(--hover);
+    }
+}
+
+@media (hover: none) {
+    .modal-close:hover {
+        background: transparent;
+    }
+}
+
+.modal-close:active {
     color: var(--ink);
-    background: var(--hover);
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
 }
 
 .modal-body {
-    padding: 24px 28px;
+    padding: 26px 28px;
     display: grid;
-    grid-template-columns: 140px 1fr;
+    grid-template-columns: 155px 1fr;
     gap: 28px;
     align-items: start;
 }
@@ -3929,7 +4258,7 @@ body.dragging .shelf-dropzone {
     .modal-body {
         grid-template-columns: 1fr;
         justify-items: center;
-        padding: 20px 16px;
+        padding: 20px 18px;
         gap: 18px;
     }
 
@@ -3948,7 +4277,7 @@ body.dragging .shelf-dropzone {
 }
 
 .modal-cover-wrap {
-    width: 130px;
+    width: 145px;
     aspect-ratio: 2 / 3;
     border-radius: 10px;
     overflow: hidden;
@@ -3967,21 +4296,21 @@ body.dragging .shelf-dropzone {
 .modal-info-col {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
     width: 100%;
 }
 
 .modal-title {
-    font-size: 16.5px;
+    font-size: 19px;
     font-weight: 700;
-    line-height: 1.28;
+    line-height: 1.3;
     margin: 0;
     overflow-wrap: anywhere;
 }
 
 .modal-author {
-    font-size: 13px;
+    font-size: 15px;
     color: var(--muted);
     margin: 0;
 }
@@ -3989,8 +4318,8 @@ body.dragging .shelf-dropzone {
 .modal-meta-grid {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 8px 14px;
-    font-size: 12.5px;
+    gap: 10px 16px;
+    font-size: 14.5px;
     margin: 4px 0 0;
     padding: 0;
 }
@@ -4009,18 +4338,18 @@ body.dragging .shelf-dropzone {
 }
 
 .modal-synopsis-section {
-    margin-top: 12px;
-    padding-top: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
     border-top: 1px solid var(--line);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     text-align: left;
 }
 
 .modal-synopsis-head {
     margin: 0;
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 650;
     color: var(--muted);
     text-transform: uppercase;
@@ -4030,11 +4359,11 @@ body.dragging .shelf-dropzone {
 
 .modal-synopsis-text {
     margin: 0;
-    font-size: 13.5px;
-    line-height: 1.6;
+    font-size: 15.5px;
+    line-height: 1.62;
     color: var(--ink);
     text-align: left;
-    max-height: 280px;
+    max-height: 320px;
     overflow-y: auto;
     overscroll-behavior: contain;
     word-break: break-word;

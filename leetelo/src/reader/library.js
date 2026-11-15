@@ -1216,7 +1216,9 @@ export async function renderLibrary() {
             content.scrollBy({ left: Math.max(260, Math.round(content.clientWidth * 0.7)), behavior: 'smooth' });
           });
           content.addEventListener('scroll', updateRowNav, { passive: true });
-          enableRowDragScroll(content);
+          if (window.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches) {
+            enableRowDragScroll(content);
+          }
           requestAnimationFrame(updateRowNav);
 
           rowNav = el('div', { class: 'row-scroll-nav', hidden: true }, btnPrev, btnNext);
