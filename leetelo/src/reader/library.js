@@ -211,6 +211,10 @@ async function executeBatchDelete() {
 
 export function closeMetadataModal() {
   const modal = $('meta-modal');
+  const card = modal?.querySelector('.modal-card');
+  const body = $('meta-modal-body');
+  if (card) card.scrollTop = 0;
+  if (body) body.scrollTop = 0;
   if (modal) modal.hidden = true;
   syncHomeScrollLock();
   for (const btn of document.querySelectorAll('.book .btn-meta.active')) {
@@ -267,8 +271,6 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
     triggerBtn.classList.add('active');
     triggerBtn.setAttribute('aria-pressed', 'true');
   }
-
-  document.body.style.overflow = 'hidden';
 
   const modalHeading = $('meta-modal-heading');
   if (modalHeading) modalHeading.textContent = t('synopsis_title');
@@ -402,9 +404,16 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
   body.replaceChildren(coverCol, infoCol);
 
   const modal = $('meta-modal');
+  const card = modal?.querySelector('.modal-card');
   if (modal) modal.hidden = false;
+  if (card) card.scrollTop = 0;
+  body.scrollTop = 0;
   syncHomeScrollLock();
-  $('meta-modal-close')?.focus();
+  $('meta-modal-close')?.focus({ preventScroll: true });
+  requestAnimationFrame(() => {
+    if (card) card.scrollTop = 0;
+    body.scrollTop = 0;
+  });
 }
 
 // ---- the drawing in the drop zone: cover art from icons/libro.jpg --------
