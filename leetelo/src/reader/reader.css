@@ -4223,6 +4223,13 @@ body.dragging .shelf-dropzone {
     height: 20px;
 }
 
+#meta-modal .modal-footer {
+    flex-shrink: 0;
+    height: 30px;
+    background: var(--card);
+    pointer-events: none;
+}
+
 .modal-header h3 {
     margin: 0;
     font-size: 15.5px;
@@ -4380,6 +4387,13 @@ body.dragging .shelf-dropzone {
     height: 1px;
     background: var(--line);
     margin: 4px 0;
+}
+
+.modal-meta-divider-after {
+    margin-bottom: 20px;
+}
+.margin-top-divider {
+       margin-top: 20px;
 }
 
 .modal-synopsis-section {

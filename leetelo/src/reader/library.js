@@ -340,14 +340,20 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
   const hasGenre = book.genre !== undefined;
   const genreVal = el('dd', { textContent: hasGenre ? formatGenresText(book.genre) : '…' });
 
+  const metaDivider = (extraClass = '') => el('div', {
+    class: extraClass ? `modal-meta-divider ${extraClass}` : 'modal-meta-divider',
+    'aria-hidden': 'true',
+  });
+
   const grid = el('dl', { class: 'modal-meta-grid' },
+    metaDivider(),
     ...techRow(t('meta_format'), el('dd', { textContent: format })),
     ...techRow(t('meta_size'), el('dd', { textContent: size })),
     ...techRow(t('meta_chapters'), chaptersVal),
     ...techRow(t('meta_pages'), pagesVal),
     ...techRow(t('meta_reading_time'), el('dd', { textContent: readingTime })),
     ...techRow(t('meta_last_opened'), el('dd', { textContent: lastOpened })),
-    el('div', { class: 'modal-meta-divider', 'aria-hidden': 'true' }),
+    metaDivider('modal-meta-divider-after'),
     seriesLabel,
     seriesVal,
     genreLabel,
