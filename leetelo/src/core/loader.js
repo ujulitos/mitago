@@ -15,6 +15,7 @@ const DROP = new Set(['script', 'iframe', 'frame', 'frameset', 'object', 'embed'
 const URL_ATTRS = new Set(['src', 'href', 'poster', 'data', 'xlink:href', 'action', 'formaction', 'background', 'ping']);
 const isRemote = (u) => /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(u.trim()) && !/^(?:blob:|#)/i.test(u.trim());
 const URL_RE = /url\(\s*(['"]?)([^'")]+)\1\s*\)/g;
+const VIEWPORT_UNIT_RE = /[0-9.]+\s*(?:[sdl]?v[wh]|vmin|vmax|vi|vb)\b/i;
 
 export function createLoader(book) {
   const blobUrls = new Map(); // zip path -> Promise<blob: URL>
@@ -58,7 +59,8 @@ export function createLoader(book) {
 
   // Selectors for html/body/:root -> the section wrapper (no <html>/<body> in a shadow root).
   const faces = new Set();
-  function rewriteRules(owner) {
+  const MEDIA_VIEWPORT_RE = /\b(?:orientation|min-width|max-width|width|min-height|max-height|height|aspect-ratio)\b/i;
+  function rewriteRules(owner, inMediaViewport = false) {
     for (let i = owner.cssRules.length - 1; i >= 0; i--) {
       const rule = owner.cssRules[i];
       if (rule instanceof CSSFontFaceRule) {
@@ -67,9 +69,18 @@ export function createLoader(book) {
         continue;
       }
       if (rule.selectorText) rule.selectorText = rule.selectorText.replace(/(^|[\s>+~,(])(html|body|:root)(?=$|[\s.#:[>+~,)])/gi, '$1.rp-body');
-      // Book content must never cover the reader UI.
-      if (rule.style && /fixed|sticky/.test(rule.style.position)) rule.style.position = 'static';
-      if (rule.cssRules) rewriteRules(rule);
+      if (rule.style) {
+        // Prevent book CSS from changing font size across phone orientations or re-enabling browser text autosizing.
+        rule.style.removeProperty('-webkit-text-size-adjust');
+        rule.style.removeProperty('text-size-adjust');
+        if (inMediaViewport || VIEWPORT_UNIT_RE.test(rule.style.fontSize)) rule.style.removeProperty('font-size');
+        // Book content must never cover the reader UI.
+        if (/fixed|sticky/.test(rule.style.position)) rule.style.position = 'static';
+      }
+      if (rule.cssRules) {
+        const nextViewport = inMediaViewport || MEDIA_VIEWPORT_RE.test(rule.conditionText || rule.media?.mediaText || '');
+        rewriteRules(rule, nextViewport);
+      }
     }
   }
 
@@ -135,7 +146,12 @@ export function createLoader(book) {
     for (const el of [...body.querySelectorAll('*')]) {
       if (!body.contains(el)) continue; // inside an already dropped subtree
       if (DROP.has(el.localName)) { el.remove(); stats.removedElements++; continue; }
-      if (el.style && /fixed|sticky/.test(el.style.position)) el.style.position = 'static';
+      if (el.style) {
+        if (/fixed|sticky/.test(el.style.position)) el.style.position = 'static';
+        if (VIEWPORT_UNIT_RE.test(el.style.fontSize)) el.style.removeProperty('font-size');
+        el.style.removeProperty('-webkit-text-size-adjust');
+        el.style.removeProperty('text-size-adjust');
+      }
       const res = [];
       for (const attr of [...el.attributes]) {
         const name = attr.name.toLowerCase();

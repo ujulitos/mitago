@@ -230,6 +230,19 @@ export function closeMetadataModal() {
   currentMetaTrigger = null;
 }
 
+function formatGenresText(raw) {
+  const seen = new Set();
+  const tags = [];
+  for (const part of String(raw || '').split(/[,;]/)) {
+    const clean = part.trim();
+    const key = clean.toLowerCase();
+    if (!clean || seen.has(key)) continue;
+    seen.add(key);
+    tags.push(clean);
+  }
+  return tags.length ? tags.join(', ') : t('no_genre');
+}
+
 function renderHtmlSynopsis(container, html) {
   if (!html || !html.trim()) {
     container.textContent = t('no_synopsis');
@@ -304,18 +317,41 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
     ? new Intl.DateTimeFormat(uiLanguage(), { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastOpenedTs))
     : t('meta_never');
 
-  const row = (label, valEl) => [
-    el('dt', { textContent: label }),
-    valEl,
-  ];
+  const techRow = (label, valEl) => {
+    valEl.classList.add('modal-meta-tech');
+    return [
+      el('dt', { class: 'modal-meta-tech', textContent: label }),
+      valEl,
+    ];
+  };
+
+  const seriesLabel = el('dt', { textContent: t('meta_series'), hidden: true });
+  const seriesVal = el('dd', { hidden: true });
+  const syncSeriesRow = (rawSeries) => {
+    const clean = String(rawSeries || '').trim();
+    seriesLabel.hidden = !clean;
+    seriesVal.hidden = !clean;
+    seriesVal.textContent = clean;
+  };
+  const hasSeries = book.series !== undefined;
+  if (hasSeries) syncSeriesRow(book.series);
+
+  const genreLabel = el('dt', { textContent: t('genre') });
+  const hasGenre = book.genre !== undefined;
+  const genreVal = el('dd', { textContent: hasGenre ? formatGenresText(book.genre) : '…' });
 
   const grid = el('dl', { class: 'modal-meta-grid' },
-    ...row(t('meta_format'), el('dd', { textContent: format })),
-    ...row(t('meta_size'), el('dd', { textContent: size })),
-    ...row(t('meta_chapters'), chaptersVal),
-    ...row(t('meta_pages'), pagesVal),
-    ...row(t('meta_reading_time'), el('dd', { textContent: readingTime })),
-    ...row(t('meta_last_opened'), el('dd', { textContent: lastOpened }))
+    ...techRow(t('meta_format'), el('dd', { textContent: format })),
+    ...techRow(t('meta_size'), el('dd', { textContent: size })),
+    ...techRow(t('meta_chapters'), chaptersVal),
+    ...techRow(t('meta_pages'), pagesVal),
+    ...techRow(t('meta_reading_time'), el('dd', { textContent: readingTime })),
+    ...techRow(t('meta_last_opened'), el('dd', { textContent: lastOpened })),
+    el('div', { class: 'modal-meta-divider', 'aria-hidden': 'true' }),
+    seriesLabel,
+    seriesVal,
+    genreLabel,
+    genreVal
   );
 
   // Sinopsis en formato HTML
@@ -329,16 +365,28 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
     synopsisText.textContent = t('loading_synopsis');
   }
 
-  const needsBackfill = !book.description || !hasCurrentStats(book);
+  const needsBackfill = !hasGenre || !hasSeries || !book.description || !hasCurrentStats(book);
   if (needsBackfill && ctx?.store?.getBook) {
     ctx.store.getBook(book.id).then(async (data) => {
       if (!data) {
-        if (!book.description && currentMetaBookId === book.id) synopsisText.textContent = t('no_synopsis');
+        if (currentMetaBookId === book.id) {
+          if (book.genre === undefined) genreVal.textContent = formatGenresText('');
+          if (book.series === undefined) syncSeriesRow('');
+          if (!book.description) synopsisText.textContent = t('no_synopsis');
+        }
         return;
       }
       const savedMeta = data.meta || {};
       let updated = false;
 
+      if (book.genre === undefined && savedMeta.genre !== undefined) {
+        book.genre = savedMeta.genre;
+        if (currentMetaBookId === book.id) genreVal.textContent = formatGenresText(book.genre);
+      }
+      if (book.series === undefined && savedMeta.series !== undefined) {
+        book.series = savedMeta.series;
+        if (currentMetaBookId === book.id) syncSeriesRow(book.series);
+      }
       if (!book.description && savedMeta.description) {
         book.description = savedMeta.description;
         if (currentMetaBookId === book.id) renderHtmlSynopsis(synopsisText, book.description);
@@ -356,7 +404,7 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
         }
       }
 
-      if ((!book.description || !hasCurrentStats(book)) && data.blob) {
+      if ((book.genre === undefined || book.series === undefined || !book.description || !hasCurrentStats(book)) && data.blob) {
         try {
           const opened = await openAny(data.blob, book.fileName);
           const nextMeta = { ...savedMeta };
@@ -369,6 +417,20 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
               chaptersVal.textContent = formatChapters(book);
               pagesVal.textContent = formatPages(book);
             }
+          }
+          if (book.genre === undefined) {
+            const genre = String(opened?.genre || '').trim();
+            book.genre = genre;
+            nextMeta.genre = genre;
+            updated = true;
+            if (currentMetaBookId === book.id) genreVal.textContent = formatGenresText(genre);
+          }
+          if (book.series === undefined) {
+            const series = String(opened?.series || '').trim();
+            book.series = series;
+            nextMeta.series = series;
+            updated = true;
+            if (currentMetaBookId === book.id) syncSeriesRow(series);
           }
           const desc = (book.description || opened?.description || '').trim();
           if (!book.description && desc) {
@@ -387,12 +449,16 @@ export function openMetadataModal(book, pos, stat, triggerBtn) {
         }
       }
 
-      if (!book.description && currentMetaBookId === book.id) {
-        synopsisText.textContent = t('no_synopsis');
+      if (currentMetaBookId === book.id) {
+        if (book.genre === undefined) genreVal.textContent = formatGenresText('');
+        if (book.series === undefined) syncSeriesRow('');
+        if (!book.description) synopsisText.textContent = t('no_synopsis');
       }
     }).catch(() => {
-      if (!book.description && currentMetaBookId === book.id) {
-        synopsisText.textContent = t('no_synopsis');
+      if (currentMetaBookId === book.id) {
+        if (book.genre === undefined) genreVal.textContent = formatGenresText('');
+        if (book.series === undefined) syncSeriesRow('');
+        if (!book.description) synopsisText.textContent = t('no_synopsis');
       }
     });
   } else if (!book.description) {

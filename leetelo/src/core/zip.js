@@ -8,6 +8,15 @@ export class BookError extends Error {
   constructor(code, message, detail) { super(message); this.code = code; this.detail = detail; }
 }
 
+/** Format series/saga name and optional number (dropping redundant `.0` decimals). */
+export function formatSeries(name, index) {
+  const cleanName = String(name || '').replace(/\s+/g, ' ').trim();
+  if (!cleanName) return '';
+  const rawIdx = String(index ?? '').trim();
+  const cleanIdx = /^\d+(?:\.\d+)?$/.test(rawIdx) ? String(Number(rawIdx)) : rawIdx;
+  return cleanIdx ? `${cleanName} #${cleanIdx}` : cleanName;
+}
+
 const EOCD_SIG = 0x06054b50;
 const EOCD64_SIG = 0x06064b50;
 const EOCD64_LOC_SIG = 0x07064b50;

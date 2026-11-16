@@ -201,11 +201,18 @@
     display: none !important;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 body {
     margin: 0;
     background: var(--bg);
     color: var(--fg);
     font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 h1,

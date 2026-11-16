@@ -6,7 +6,7 @@
 // PURE (no DOM): runs in node tests. Generated names (c0001.xhtml, img/1.jpg) are
 // saved in positions and bookmarks: never renumber them.
 
-import { BookError, memZip } from './zip.js';
+import { BookError, memZip, formatSeries } from './zip.js';
 import { parseXml } from './xml.js';
 
 /** PURE: bytes -> text, honouring a BOM or the XML declaration (often windows-1251). */
@@ -82,6 +82,17 @@ export function fb2Book(text, name = '') {
   const imageOf = (href) => (href.startsWith('#') ? images.get(href.slice(1)) : null);
   const coverEl = info?.first('coverpage')?.first('image');
   const cover = coverEl ? imageOf(hrefOf(coverEl)) : null;
+  const seenGenres = new Set();
+  const genres = [];
+  for (const raw of (info?.children ?? []).filter((c) => c.localName === 'genre').map(words)) {
+    const clean = /^[a-z0-9_]+$/.test(raw) ? raw.replace(/_/g, ' ') : raw;
+    const key = clean.toLowerCase();
+    if (!clean || seenGenres.has(key)) continue;
+    seenGenres.add(key);
+    genres.push(clean);
+  }
+  const seqEl = (info?.children ?? []).find((c) => c.localName === 'sequence' && c.attr('name')?.trim());
+  const series = seqEl ? formatSeries(seqEl.attr('name'), seqEl.attr('number')) : '';
 
   // Units: one per top-level section of the main body; leading title/epigraphs get their own.
   const main = bodies.find((b) => !b.attr('name')) ?? bodies[0];
@@ -211,6 +222,8 @@ export function fb2Book(text, name = '') {
     manifest, manifestByPath: manifest,
     version: 'fb2', identifier: words(kid(kid(description, 'document-info'), 'id')),
     title: bookTitle, creator: authors.join(', '), language: words(info?.first('lang')),
+    genre: genres.join(', '),
+    series,
     description: kid(info, 'annotation')?.children?.length
       ? kid(info, 'annotation').children.map((c) => `<p>${words(c)}</p>`).join('')
       : words(kid(info, 'annotation')),

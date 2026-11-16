@@ -2,7 +2,7 @@
 // nav (EPUB 3) or NCX (EPUB 2). DRM and fixed-layout detection. Uses the pure
 // XML parser, so it runs in node tests as well as in the reader page.
 
-import { openZip, memZip, BookError } from './zip.js';
+import { openZip, memZip, BookError, formatSeries } from './zip.js';
 import { parseXml } from './xml.js';
 
 export { BookError };
@@ -89,12 +89,32 @@ export function parseOpf(opfText, opfPath) {
   const layout = metaProp('rendition:layout');
   const descEl = metadata?.first('description');
   const descriptionHtml = descEl ? (descEl.children.length > 0 ? descEl.innerHTML : descEl.textContent).trim() : '';
+  const seenSubjects = new Set();
+  const subjects = [];
+  for (const raw of (metadata?.all('subject') ?? []).map(text)) {
+    const clean = raw.trim();
+    const key = clean.toLowerCase();
+    if (!clean || seenSubjects.has(key)) continue;
+    seenSubjects.add(key);
+    subjects.push(clean);
+  }
+  const calibreSeries = metaName('calibre:series') || metaProp('calibre:series');
+  const calibreIndex = metaName('calibre:series_index') || metaProp('calibre:series_index');
+  const colMeta = metas.find((m) => m.attr('property') === 'belongs-to-collection');
+  const colName = text(colMeta);
+  const colId = colMeta?.attr('id');
+  const colPos = colId
+    ? text(metas.find((m) => m.attr('refines') === `#${colId}` && m.attr('property') === 'group-position'))
+    : metaProp('group-position');
+  const series = formatSeries(calibreSeries || colName, calibreSeries ? calibreIndex : colPos);
   return {
     version: pkg.attr('version') ?? '',
     identifier: text(ids.find((i) => i.attr('id') === uidId) ?? ids[0]),
     title: text(metadata?.first('title')),
     creator: (metadata?.all('creator') ?? []).map(text).filter(Boolean).join(', '),
     language: text(metadata?.first('language')),
+    genre: subjects.join(', '),
+    series,
     description: descriptionHtml,
     dir: spineEl?.attr('page-progression-direction') ?? null,
     manifest,
@@ -280,7 +300,7 @@ export async function openBook(blob, opened = null) {
     manifest: opf.manifest,
     manifestByPath: new Map(items.map((m) => [m.path, m])),
     version: opf.version, identifier: opf.identifier,
-    title: opf.title, creator: opf.creator, language: opf.language,
+    title: opf.title, creator: opf.creator, language: opf.language, genre: opf.genre, series: opf.series,
     description: opf.description,
     dir: opf.dir, cover: opf.cover, fixedLayout, vertical, obfuscatedFonts: obfuscated,
   };

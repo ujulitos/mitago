@@ -4,7 +4,7 @@
 // ComicInfo.xml gives the title, writer, language and manga reading direction.
 // Generated names (rp-page/0001.xhtml) are saved in positions: never renumber.
 
-import { memZip } from './zip.js';
+import { memZip, formatSeries } from './zip.js';
 import { parseXml } from './xml.js';
 
 const IMAGE = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', bmp: 'image/bmp' };
@@ -72,7 +72,8 @@ export async function cbzBook(zip, name = '', { pageLabel = (n) => `Page ${n}` }
     zip: memZip(files, zip), opfPath: '', spine, spineIndex, toc, tocSource: 'cbz', tocPages: !folders, missing: 0,
     manifest, manifestByPath: manifest,
     version: 'cbz', identifier: '',
-    title, creator: field('Writer'), language: field('LanguageISO'),
+    title, creator: field('Writer'), language: field('LanguageISO'), genre: field('Genre'),
+    series: formatSeries(field('Series'), field('Number') || field('Volume')),
     dir: /^yes.*right.*left$/i.test(field('Manga')) ? 'rtl' : null,
     cover: images[0], fixedLayout: false, vertical: false, obfuscatedFonts: [], format: 'cbz',
   };

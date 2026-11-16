@@ -350,6 +350,8 @@ async function openFile(file) {
           const stats = await extractBookStats(book);
           await store.putBook(file, {
             id, title: resolvedTitle, creator: book.creator, language: book.language,
+            genre: book.genre || '',
+            series: book.series || '',
             description: book.description || '',
             fileName: file.name ?? '', spineLength: book.spine.length, ...stats,
             cover: await coverThumb(book),
@@ -401,6 +403,8 @@ async function importBookStatus(file) {
       title: resolvedTitle,
       creator: book.creator || '',
       language: book.language || '',
+      genre: book.genre || '',
+      series: book.series || '',
       description: book.description || '',
       fileName: file.name ?? '',
       spineLength: book.spine.length,

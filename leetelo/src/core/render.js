@@ -45,6 +45,7 @@ const FORCED_COLORS = `
 // Inside every section's shadow root, after the book's own sheets.
 const SECTION_CSS = `
 :host { display: block; contain: layout style; }
+:host, .rp-body, .rp-body * { -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; }
 .rp-body { font-size: var(--rp-font-size) !important; line-height: var(--rp-line-height) !important; overflow-wrap: break-word; }
 .rp-body * { line-height: inherit !important; }
 .rp-body p { margin-top: 0 !important; margin-bottom: 0.75em !important; }
@@ -111,6 +112,7 @@ const FXL_CSS = `
 
 // Page-level rules for the view element itself.
 const VIEW_CSS = `
+.rp-scroll-view, .rp-paged-view { -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; }
 .rp-scroll-view { overflow-y: auto; overflow-x: hidden; overflow-anchor: none;
   padding-block: calc(max(var(--rp-pad-y, 5vh), calc(max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) + 14px)) + 8px) max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)))) !important;
   padding-inline: max(var(--rp-margin-x, 10vw), max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) max(var(--rp-margin-x, 10vw), max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) !important; box-sizing: border-box; }
@@ -991,6 +993,7 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
     const fam = FAMILIES[s.fontFamily] ?? (s.fontFamily === 'readable' ? FAMILIES.atkinson : FAMILIES.condensed);
     const text = '.rp-body, .rp-body :not(code, kbd, samp, pre, pre *)';
     settingsSheet.replaceSync([
+      `:host, .rp-body { --rp-font-size: ${s.fontSize}px; --rp-line-height: ${s.lineHeight}; }`,
       fam ? `${text} { font-family: ${fam} !important; }` : '',
       s.letterSpacing ? `${text} { letter-spacing: ${s.letterSpacing}em !important; }` : '',
       s.wordSpacing ? `${text} { word-spacing: ${s.wordSpacing}em !important; }` : '',
@@ -1004,6 +1007,15 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
   let currentMode = mode;
   const make = (m) => (m === 'paged' ? new PagedView(el, book, ctx) : new ContinuousView(el, book, ctx));
   impl = make(mode);
+
+  let orientTimer = 0;
+  const onOrient = () => {
+    clearTimeout(orientTimer);
+    applyStyle();
+    orientTimer = setTimeout(() => { if (impl) applyStyle(); }, 180);
+  };
+  window.addEventListener('orientationchange', onOrient, { passive: true });
+  screen.orientation?.addEventListener?.('change', onOrient, { passive: true });
 
   const clean = (pos) => {
     if (pos?.id !== undefined && Number.isInteger(pos.spine)) return { spine: pos.spine, path: null, offset: 0, frac: 0, id: pos.id };
@@ -1066,6 +1078,12 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
     },
     next: () => impl.next(),
     prev: () => impl.prev(),
-    destroy() { impl.destroy(); cache.clear(); },
+    destroy() {
+      clearTimeout(orientTimer);
+      window.removeEventListener('orientationchange', onOrient);
+      screen.orientation?.removeEventListener?.('change', onOrient);
+      impl.destroy();
+      cache.clear();
+    },
   };
 }

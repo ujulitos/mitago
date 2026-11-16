@@ -1033,20 +1033,21 @@ body.dragging .dropzone {
 .books.books-row>.book .book-actions {
     grid-column: 2;
     grid-row: 3;
+    width: 100%;
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 0;
     height: auto;
     margin-top: auto;
-    padding-top: 4px;
 }
 
 .books.books-row>.book .book-action-btn {
-    flex: 0 0 36px;
+    flex: 0 1 36px;
     width: 36px;
-    height: 36px;
+    max-width: calc(100% / 4);
+    height: auto;
     aspect-ratio: 1;
     border-radius: 50%;
 }
@@ -1224,7 +1225,9 @@ body.dragging .dropzone {
     align-items: center;
     justify-content: center;
     margin-top: auto;
-    padding-top: 4px;
+    /* padding: 0px 10%; */
+    background-color: color-mix(in srgb, var(--ink) 4%, transparent);
+    border-radius: 0 0 8px 8px;
     gap: 0;
     flex-shrink: 0;
     height: auto;
@@ -1232,13 +1235,12 @@ body.dragging .dropzone {
 
 .books.books-all .book-actions {
     width: 100%;
-    max-width: 116px;
-    margin: auto auto 0;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0;
+    margin: 5px 0 0;
+    padding: 0 2px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 2px;
     height: auto;
-    padding-top: 6px;
 }
 
 .book-action-btn {
@@ -1264,12 +1266,16 @@ body.dragging .dropzone {
 }
 
 .books.books-all .book-action-btn {
-    flex: 0 0 36px;
-    width: 36px;
-    max-width: calc(100% / 3);
-    height: auto;
-    aspect-ratio: 1;
-    border-radius: 50%;
+    flex: 1 1 0;
+    width: auto;
+    height: 34px;
+    aspect-ratio: auto;
+    border-radius: 8px;
+}
+
+.books.books-all .book-action-btn .icon {
+    width: 19px;
+    height: 19px;
 }
 
 .book-action-btn .icon {
@@ -4196,6 +4202,27 @@ body.dragging .shelf-dropzone {
     border-bottom: 1px solid var(--line);
 }
 
+#meta-modal .modal-header {
+    height: 60px;
+    min-height: 60px;
+    padding: 0 10px 0 20px;
+}
+
+#meta-modal .modal-header h3 {
+    font-size: 17px;
+    font-weight: 650;
+}
+
+#meta-modal .modal-close {
+    width: 40px;
+    height: 40px;
+}
+
+#meta-modal .modal-close svg {
+    width: 20px;
+    height: 20px;
+}
+
 .modal-header h3 {
     margin: 0;
     font-size: 15.5px;
@@ -4338,10 +4365,25 @@ body.dragging .shelf-dropzone {
     overflow-wrap: anywhere;
 }
 
+.modal-meta-grid .modal-meta-tech {
+    font-size: 12.5px;
+    color: var(--muted);
+    opacity: 0.78;
+}
+
+.modal-meta-grid dd.modal-meta-tech {
+    font-weight: 500;
+}
+
+.modal-meta-divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: var(--line);
+    margin: 4px 0;
+}
+
 .modal-synopsis-section {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--line);
+    margin-top: 10px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -4364,11 +4406,8 @@ body.dragging .shelf-dropzone {
     line-height: 1.62;
     color: var(--ink);
     text-align: left;
-    max-height: 320px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    overflow-y: visible;
     word-break: break-word;
-    padding-right: 6px;
 }
 
 .modal-synopsis-text p {
@@ -4404,15 +4443,6 @@ body.dragging .shelf-dropzone {
     padding-left: 12px;
     border-left: 3px solid var(--line);
     color: var(--muted);
-}
-
-.modal-synopsis-text::-webkit-scrollbar {
-    width: 4px;
-}
-
-.modal-synopsis-text::-webkit-scrollbar-thumb {
-    background: var(--line);
-    border-radius: 4px;
 }
 
 /* ---------- Batch selection in #todos (Google Photos style) ---------- */
