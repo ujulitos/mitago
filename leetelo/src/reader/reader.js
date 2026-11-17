@@ -770,7 +770,7 @@ if (veilIcon) {
 }
 function dismissSplash() {
   const splash = $('splash-screen');
-  if (!splash || splash.dataset.dismissed) return;
+  if (!splash || splash.dataset.dismissed || window.__rpUpdating) return;
   splash.dataset.dismissed = '1';
   const finish = () => {
     splash.hidden = true;
@@ -790,8 +790,11 @@ function dismissSplash() {
 applyReadingTheme(await (await storeReady).getSetting('theme', null));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const fontsReady = document.fonts?.ready ? Promise.race([document.fonts.ready.catch(() => {}), wait(1500)]) : Promise.resolve();
-const swReady = window.__rpSwCheck ? Promise.race([window.__rpSwCheck.catch(() => {}), wait(5000)]) : Promise.resolve();
-const splashFallbackTimer = setTimeout(dismissSplash, 8000);
+const swReady = window.__rpSwCheck ? Promise.race([window.__rpSwCheck.catch(() => {}), wait(7500)]) : Promise.resolve();
+const splashFallbackTimer = setTimeout(() => {
+  window.__rpUpdating = false;
+  dismissSplash();
+}, 9000);
 try {
   await Promise.all([route(), fontsReady, swReady]);
 } finally {

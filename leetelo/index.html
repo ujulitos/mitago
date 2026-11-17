@@ -425,12 +425,14 @@
     <!-- WebApp Scripts: Service Worker & Sync -->
     <script>
         // 1. PWA Service Worker Registration (startup update check behind splash screen)
+        window.__rpUpdating = false;
         if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
             const hadController = !!navigator.serviceWorker.controller;
             let reloaded = false;
             navigator.serviceWorker.addEventListener('controllerchange', async () => {
                 if (hadController && !reloaded) {
                     reloaded = true;
+                    window.__rpUpdating = true;
                     try {
                         await window.__rp?.flush?.();
                     } catch {}
@@ -439,15 +441,15 @@
             });
             const waitWorker = (worker) => new Promise((resolve) => {
                 if (!worker || worker.state === 'activated' || worker.state === 'redundant') {
-                    resolve();
+                    resolve(worker?.state || 'none');
                     return;
                 }
-                const done = () => resolve();
-                const timer = setTimeout(done, 4000);
+                const done = (state) => resolve(state);
+                const timer = setTimeout(() => done(worker.state), 6500);
                 worker.addEventListener('statechange', () => {
                     if (worker.state === 'activated' || worker.state === 'redundant') {
                         clearTimeout(timer);
-                        done();
+                        done(worker.state);
                     }
                 });
             });
@@ -457,17 +459,30 @@
                         updateViaCache: 'none'
                     });
                     if (!reg) return;
+                    let found = reg.installing || (hadController ? reg.waiting : null);
+                    reg.addEventListener('updatefound', () => {
+                        if (!found) found = reg.installing;
+                    });
                     if (navigator.onLine !== false) {
                         await Promise.race([
                             reg.update().catch(() => {}),
-                            new Promise((r) => setTimeout(r, 2000))
+                            new Promise((r) => setTimeout(r, 2500))
                         ]);
                     }
-                    const incoming = reg.installing || (hadController ? reg.waiting : null);
-                    if (incoming) {
-                        await waitWorker(incoming);
+                    const incoming = found || reg.installing || (hadController ? reg.waiting : null);
+                    if (incoming && hadController) {
+                        window.__rpUpdating = true;
+                        const state = await waitWorker(incoming);
+                        if (state === 'redundant') {
+                            window.__rpUpdating = false;
+                            return;
+                        }
+                        await new Promise((r) => setTimeout(r, 1000));
+                        if (!reloaded) window.__rpUpdating = false;
                     }
-                } catch {}
+                } catch {
+                    window.__rpUpdating = false;
+                }
             };
             if (navigator.onLine !== false || !hadController) {
                 window.__rpSwCheck = checkUpdates();

@@ -24,15 +24,37 @@ export function resolveTheme(theme) {
   return 'sepia';
 }
 
+let themeRaf = 0;
+
 function syncThemeColorMeta(color, isDark) {
   document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
   const head = document.head;
   if (!head) return;
-  for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
-  const meta = document.createElement('meta');
-  meta.name = 'theme-color';
-  meta.content = color;
-  head.append(meta);
+  let existing = head.querySelector('meta[name="theme-color"]');
+  if (existing) {
+    existing.setAttribute('content', color);
+  } else {
+    existing = document.createElement('meta');
+    existing.name = 'theme-color';
+    existing.content = color;
+    head.append(existing);
+  }
+  if (typeof requestAnimationFrame === 'function') {
+    cancelAnimationFrame(themeRaf);
+    themeRaf = requestAnimationFrame(() => {
+      for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
+      const fresh = document.createElement('meta');
+      fresh.name = 'theme-color';
+      fresh.content = color;
+      head.append(fresh);
+      const readingEl = document.getElementById('reading');
+      if (readingEl && !readingEl.hidden) {
+        try {
+          history.replaceState(history.state, '', location.href);
+        } catch { /* ignore */ }
+      }
+    });
+  }
 }
 
 // Apply a theme choice ('sepia' | 'twilight' | 'fog' | 'contrast' | 'wood') and mirror it for theme-boot.js.

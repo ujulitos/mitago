@@ -1,7 +1,7 @@
 // PWA Service Worker for Léetelo WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'leetelo-pwa-v139';
+const CACHE_NAME = 'leetelo-pwa-v140';
 
 const STATIC_ASSETS = [
   './',
@@ -129,11 +129,22 @@ function fetchWithTimeout(request, init, ms = 1200) {
 }
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(STATIC_ASSETS.map((url) => new Request(url, { cache: 'reload' }))))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.all(STATIC_ASSETS.map(async (url) => {
+      if (url.startsWith('./fonts/')) {
+        const existing = await caches.match(url, { ignoreSearch: true });
+        if (existing) {
+          await cache.put(url, existing.clone());
+          return;
+        }
+      }
+      const res = await fetch(new Request(url, { cache: 'reload' }));
+      if (!res || !res.ok) throw new Error(`Failed to precache ${url}`);
+      await cache.put(url, res);
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
