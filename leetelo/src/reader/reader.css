@@ -187,18 +187,11 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-html.home-scroll-locked {
-    overflow: hidden !important;
-    overscroll-behavior: none;
-}
-
+html.home-scroll-locked,
 body.home-scroll-locked {
-    position: fixed;
-    left: 0;
-    right: 0;
-    width: 100%;
     overflow: hidden !important;
     overscroll-behavior: none;
+    touch-action: none;
 }
 
 ::selection {
@@ -209,8 +202,6 @@ body.home-scroll-locked {
 .logo {
     flex: none;
     display: block;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
 }
 
 .brand {
@@ -251,7 +242,7 @@ button.primary:hover {
     padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 8px;
     display: flex;
     align-items: center;
-    background: color-mix(in srgb, var(--paper) 97%, transparent);
+    background: var(--paper);
     border-bottom: 1px solid var(--line);
 }
 
@@ -809,16 +800,13 @@ html:has(body.lib-scroll-dragging) {
     display: block;
     width: 130px;
     height: 130px;
-    object-fit: cover;
-    border-radius: 26px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+    object-fit: contain;
     margin-bottom: 6px;
-    transition: transform 140ms ease, box-shadow 140ms ease;
+    transition: transform 140ms ease;
 }
 
 body.dragging .drop-art-img {
     transform: scale(1.05);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
 body.dragging .dropzone {

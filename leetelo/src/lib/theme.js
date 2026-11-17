@@ -60,18 +60,21 @@ function syncThemeColorMeta(choice) {
   }
 
   if (typeof requestAnimationFrame !== 'function') return;
-  const activeLayer = inReading ? readingEl : document.getElementById('lib-drawer');
+  const activeLayer = inReading ? readingEl : document.querySelector('.lib-head');
+  const drawerEl = !inReading ? document.getElementById('lib-drawer') : null;
   if (restoreUrl === null && location.hash !== '#_') {
     restoreUrl = `${location.pathname}${location.search}${location.hash}`;
   }
   themeRaf = requestAnimationFrame(() => {
     for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
     if (activeLayer && !activeLayer.hidden) activeLayer.style.transform = 'translateZ(0)';
+    if (drawerEl && !drawerEl.hidden) drawerEl.style.backgroundColor = 'transparent';
     if (restoreUrl !== null) {
       try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
     }
     themeRaf = requestAnimationFrame(() => {
       if (activeLayer) activeLayer.style.transform = '';
+      if (drawerEl) drawerEl.style.backgroundColor = '';
       if (restoreUrl !== null) {
         const cleanUrl = restoreUrl;
         restoreUrl = null;

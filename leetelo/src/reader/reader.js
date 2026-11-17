@@ -762,12 +762,11 @@ initHighlights(rp, { store: await storeReady });
 const veilIcon = $('veil-icon');
 if (veilIcon) {
   const img = document.createElement('img');
-  img.src = 'icons/libro.jpg';
+  img.src = 'icons/icon.svg';
   img.alt = '';
   img.style.width = '44px';
   img.style.height = '44px';
-  img.style.borderRadius = '10px';
-  img.style.objectFit = 'cover';
+  img.style.objectFit = 'contain';
   veilIcon.append(img);
 }
 function dismissSplash() {

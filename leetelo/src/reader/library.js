@@ -24,7 +24,6 @@ let currentCategories = {};
 let activeLongPressCancel = null;
 let drawerOpenState = false;
 let scrollLocked = false;
-let lockedScrollY = 0;
 
 function syncHomeScrollLock() {
   const libraryVisible = !($('library')?.hidden);
@@ -33,16 +32,12 @@ function syncHomeScrollLock() {
   const shouldLock = libraryVisible && (drawerOpenState || metaOpen || batchOpen);
   if (shouldLock && !scrollLocked) {
     scrollLocked = true;
-    lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
     document.documentElement.classList.add('home-scroll-locked');
     document.body.classList.add('home-scroll-locked');
-    document.body.style.top = `-${lockedScrollY}px`;
   } else if (!shouldLock && scrollLocked) {
     scrollLocked = false;
     document.documentElement.classList.remove('home-scroll-locked');
     document.body.classList.remove('home-scroll-locked');
-    document.body.style.top = '';
-    window.scrollTo(0, lockedScrollY);
   }
 }
 
@@ -482,10 +477,10 @@ function openMetadataModal(book, pos, stat, triggerBtn) {
   });
 }
 
-// ---- the drawing in the drop zone: cover art from icons/libro.jpg --------
+// ---- the drawing in the drop zone: cover art from icons/icon.svg --------
 function dropArt() {
   const img = document.createElement('img');
-  img.src = 'icons/libro.jpg';
+  img.src = 'icons/icon.svg';
   img.alt = '';
   img.className = 'drop-art-img';
   return img;
@@ -547,13 +542,13 @@ function coverOf(book) {
     urls.push(url);
     const img = el('img', { src: url, alt: '', decoding: 'async', loading: 'lazy' });
     img.addEventListener('error', () => {
-      img.src = 'icons/libro.jpg';
+      img.src = 'icons/icon.svg';
       healBookCover(book);
     }, { once: true });
     healBookCover(book);
     return img;
   }
-  const img = el('img', { src: 'icons/libro.jpg', alt: book.title || '', decoding: 'async', loading: 'lazy' });
+  const img = el('img', { src: 'icons/icon.svg', alt: book.title || '', decoding: 'async', loading: 'lazy' });
   healBookCover(book);
   return img;
 }
@@ -1903,6 +1898,7 @@ export function initLibrary(c) {
   const drawerBackdrop = $('lib-drawer-backdrop');
   if (drawerBackdrop) {
     drawerBackdrop.addEventListener('click', () => closeLibraryDrawer());
+    drawerBackdrop.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   }
   const drawerAddIcon = $('lib-drawer-add-icon');
   if (drawerAddIcon) drawerAddIcon.replaceChildren(icon('plus', 18));

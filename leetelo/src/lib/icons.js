@@ -73,13 +73,12 @@ export function icon(name, size = 18) {
  */
 export function logo(size = 28) {
   const img = document.createElement('img');
-  img.src = 'icons/libro.jpg';
+  img.src = 'icons/icon.svg';
   img.alt = '';
   img.width = size;
   img.height = size;
   img.className = 'logo';
-  img.style.borderRadius = '6px';
-  img.style.objectFit = 'cover';
+  img.style.objectFit = 'contain';
   img.style.display = 'inline-block';
   img.style.verticalAlign = 'middle';
   return img;
