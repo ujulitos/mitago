@@ -19,25 +19,6 @@ export function mergeStats(a, b) {
   return { bookId: a.bookId, ms: Math.max(a.ms ?? 0, b.ms ?? 0, sum), days, firstAt: Math.min(a.firstAt ?? Infinity, b.firstAt ?? Infinity), lastAt: Math.max(a.lastAt ?? 0, b.lastAt ?? 0) };
 }
 
-/**
- * The library's summary: total time, the last 7 days (today included), days-read
- * streak (ending today, or yesterday while today is still unread) and books finished.
- */
-export function libraryStats(stats, positions, today) {
-  const perDay = new Map();
-  let total = 0;
-  for (const s of stats) {
-    total += s.ms ?? 0;
-    for (const [d, ms] of Object.entries(s.days ?? {})) perDay.set(Number(d), (perDay.get(Number(d)) ?? 0) + ms);
-  }
-  let week = 0;
-  for (let d = today - 6; d <= today; d++) week += perDay.get(d) ?? 0;
-  let streak = 0;
-  for (let d = perDay.get(today) ? today : today - 1; perDay.get(d) > 0; d--) streak++;
-  const finished = positions.filter((p) => (p.progress ?? 0) >= 0.9995).length;
-  return { total, week, streak, finished };
-}
-
 /** Whole hours and minutes (rounded down to the minute). */
 export function hoursMinutes(ms) {
   const min = Math.floor(Math.max(0, ms) / 60000);

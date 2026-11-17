@@ -20,14 +20,13 @@ const WORD_SPACINGS = [0, 0.12, 0.25];
 
 let rp;
 let store;
+let onConfigChange = null;
 let marks = [];
 let segs = {};
 let lastFocus = null;
 let prevTheme = null;
 
 // ---------------------------------------------------------------------------------- chrome
-/** Show the bar (bar is always visible). */
-export function wake() { $('reading').classList.remove('calm'); }
 export function hideChrome() { $('reading')?.classList.remove('mobile-ui-visible'); }
 export const settle = () => { hideChrome(); };
 
@@ -60,7 +59,6 @@ export function openPanel(which) {
   for (const [k, id] of Object.entries(PANES)) $(id).hidden = k !== which;
   for (const [k, id] of Object.entries(BUTTONS)) $(id).setAttribute('aria-expanded', String(k === which));
   $('panel-title').textContent = { toc: t('contents'), search: t('search'), marks: t('bookmarks'), hl: t('highlights'), settings: t('settings_title') }[which];
-  wake();
   if (which === 'search') { $('q').focus(); $('q').select(); }
   if (which === 'toc') {
     refreshTocPages();
@@ -301,7 +299,7 @@ export async function runSearch(query) {
   return res;
 }
 
-export async function backToReadingPlace() {
+async function backToReadingPlace() {
   if (rp.beforeSearch) await rp.view.goTo(rp.beforeSearch);
   rp.beforeSearch = null;
   $('search-back').hidden = true;
@@ -311,7 +309,7 @@ export async function backToReadingPlace() {
 // ------------------------------------------------------------------------------ bookmarks
 const hereMark = () => { const pos = rp.view?.position; return marks.find((m) => samePlace(m.pos, pos)); };
 
-export async function renderMarks() {
+async function renderMarks() {
   marks = (await store.listBookmarks(rp.bookId)).sort((a, b) => a.progress - b.progress);
   $('marks-empty').hidden = marks.length > 0;
   $('bookmarks').replaceChildren(...marks.map((m) => {
@@ -408,23 +406,33 @@ export async function setStyle(partial) {
     try {
       const globalStyle = { ...(await store.getSetting('style', {})), marginV: keep.marginV, marginH: keep.marginH };
       await store.setSetting('style', globalStyle);
+      onConfigChange?.('style');
     } catch {}
   }
   // A book with its own settings keeps them to itself; the global defaults stay untouched.
-  if (rp.ownStyle) await store.setSetting(`book:${rp.bookId}`, { style: keep });
-  else await store.setSetting('style', keep);
+  if (rp.ownStyle) {
+    const ownKey = `book:${rp.bookId}`;
+    await store.setSetting(ownKey, { style: keep });
+    onConfigChange?.(ownKey);
+  } else {
+    await store.setSetting('style', keep);
+    onConfigChange?.('style');
+  }
 }
 
 /** "Use these settings for this book only": on = a copy kept for this book; off = back to the global ones. */
 async function setOwnStyle(on) {
   rp.ownStyle = on;
+  const ownKey = `book:${rp.bookId}`;
   if (on) {
     const { forceColors, ...keep } = rp.view.style;
-    await store.setSetting(`book:${rp.bookId}`, { style: keep });
+    await store.setSetting(ownKey, { style: keep });
+    onConfigChange?.(ownKey);
     syncSettings();
     return;
   }
-  await store.deleteSetting(`book:${rp.bookId}`);
+  await store.deleteSetting(ownKey);
+  onConfigChange?.(ownKey, { deleted: true });
   await setStyle({ ...READER_DEFAULTS, ...(await store.getSetting('style', {})) });
 }
 
@@ -579,6 +587,7 @@ function initSettings() {
     rp.view.setEffect(v);
     syncSettings();
     await store.setSetting('turn', v);
+    onConfigChange?.('turn');
   });
   if (reducedMotion()) $('seg-turn').title = t('turn_reduced');
   segs.spread = radioGroup($('seg-spread'), [['auto', 'spread_auto_hint', 'spread_auto'], ['1', 'spread_one'], ['2', 'spread_two']].map(([v, k, short = k]) => ({
@@ -609,6 +618,7 @@ function initSettings() {
     })), async (v) => {
       applyReadingTheme(v);
       await store.setSetting('theme', v);
+      onConfigChange?.('theme');
     });
   };
   segs.theme = setupThemeGroup('seg-theme');
@@ -758,7 +768,7 @@ function countWords(root) {
   return count;
 }
 
-export function paintChapterTime() {
+function paintChapterTime() {
   const el = $('chapter-time');
   if (!el || !rp?.view) return;
   const pos = rp.view.position;
@@ -818,7 +828,7 @@ export function paintChapterTime() {
 let clockVisible = true;
 let syncClockTimer = null;
 
-export function setClockVisible(visible) {
+function setClockVisible(visible) {
   clockVisible = !!visible;
   const clockEl = $('analog-clock');
   if (clockEl) {
@@ -840,7 +850,6 @@ export function setClockVisible(visible) {
   }
   try {
     localStorage.setItem('rp_show_clock', clockVisible ? '1' : '0');
-    if (store) store.setSetting('show_clock', clockVisible).catch(() => {});
   } catch {}
   syncClockTimer?.();
 }
@@ -854,14 +863,10 @@ function initAnalogClock() {
   if (!clockEl || clockEl._clockInited) return;
   clockEl._clockInited = true;
 
-  const saved = localStorage.getItem('rp_show_clock');
-  if (saved !== null) {
-    setClockVisible(saved === '1');
-  } else {
-    store?.getSetting?.('show_clock', true).then((v) => {
-      if (v !== undefined) setClockVisible(!!v);
-    }).catch(() => {});
-  }
+  try {
+    const saved = localStorage.getItem('rp_show_clock');
+    if (saved !== null) setClockVisible(saved === '1');
+  } catch {}
 
   const barToggle = $('clock-bar-toggle');
   if (barToggle && !barToggle._inited) {
@@ -978,7 +983,7 @@ export function paintFolio() {
   }
   if (impl?.folio) {
     const [a, b, n, book] = impl.folio;
-    const folioText = a === b ? t('page_of', a, n) : t('folio_spread', a, b, n);
+    const folioText = a === b ? t('footer_page_of', a, n) : t('footer_folio_spread', a, b, n);
     const folioTitle = book ? folioText : a === b ? t('page_of_chapter', a, n) : t('folio_spread_chapter', a, b, n);
     setTextIfChanged($('folio'), folioText);
     if ($('folio').title !== folioTitle) $('folio').title = folioTitle;
@@ -1081,6 +1086,7 @@ export function syncMode() {
 export function initReading(state, deps) {
   rp = state;
   store = deps.store;
+  onConfigChange = deps.onConfigChange ?? null;
   const set = (id, name, label, key) => { $(id).replaceChildren(icon(name, 19)); labelled($(id), key ? `${label} (${key})` : label); };
   set('back', 'back', t('back_to_library'));
   set('btn-toc', 'contents', t('contents'), 'T');
@@ -1109,6 +1115,7 @@ export function initReading(state, deps) {
     const next = quickThemeTarget();
     applyReadingTheme(next);
     await store.setSetting('theme', next);
+    onConfigChange?.('theme');
   });
   store.getSetting('prevTheme', null).then((v) => {
     if (!prevTheme && THEMES.includes(v)) prevTheme = v;
@@ -1168,8 +1175,6 @@ export function initReading(state, deps) {
   addEventListener('keydown', (e) => {
     if (!e.target?.closest?.('.panel, .popover, .hl-bar, dialog, #rail')) lastInput = performance.now();
   }, { passive: true, capture: true });
-  $('bar').addEventListener('focusin', wake);
-  document.addEventListener('pointermove', (e) => { if (e.clientY < 72 && !$('reading').hidden) wake(); }, { passive: true });
   // Click outside the settings popover closes it.
   let tapStartX = 0;
   let tapStartY = 0;

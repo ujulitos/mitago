@@ -20,7 +20,7 @@ import { openRemote } from './remote.js';
 import { clearHighlights, closeHighlightBar, exportHighlights, highlightSelection, highlights, initHighlights, onTextMoved, paint as paintHighlights, setupHighlights } from './highlights.js';
 import {
   MEASURES, READER_DEFAULTS, addBookmark, applyReadingTheme, bumpSize, closeKeys, closePanel, closeSettings,
-  hideChrome, initReading, openKeys, onPosition as paintPosition, openPanel, paintFolio, runSearch, setStyle, settle, setupBook, stopAnalogClock, syncMode, teardownReadingView, toggleBookmark, wake,
+  hideChrome, initReading, openKeys, onPosition as paintPosition, openPanel, paintFolio, runSearch, setStyle, settle, setupBook, stopAnalogClock, syncMode, teardownReadingView, toggleBookmark,
 } from './reading.js';
 
 // Exposed for the e2e suite and debugging; nothing reads it in production paths.
@@ -65,17 +65,31 @@ addEventListener('pageshow', () => syncSafeAreaFallback(true));
 addEventListener('orientationchange', () => syncSafeAreaFallback(true));
 addEventListener('resize', () => syncSafeAreaFallback(false));
 
-// ---- position saving ----------------------------------------------------------------
-let saveTimer = 0;
+// ---- position & reading config saving (persisted to DB only when closing/leaving book) ----
 let pending = null;
 let flushingPromise = null;
 let section = null;
 let lastReportedCatBook = null;
 let lastReportedCat = null;
+const dirtyConfigKeys = new Set();
+const deletedConfigKeys = new Set();
+
+function markConfigDirty(key, { deleted = false } = {}) {
+  if (!key || !rp.view) return;
+  if (deleted) {
+    dirtyConfigKeys.delete(key);
+    deletedConfigKeys.add(key);
+  } else {
+    deletedConfigKeys.delete(key);
+    dirtyConfigKeys.add(key);
+  }
+}
+
 function onPosition(pos, progress) {
   if (rp.view?.impl?.atEnd) {
     progress = 1;
-    pos = { ...pos, spine: (rp.book?.spine?.length ? rp.book.spine.length - 1 : pos.spine), frac: 1 };
+    const lastSpine = rp.book?.spine?.length ? rp.book.spine.length - 1 : pos.spine;
+    pos = pos.spine === lastSpine ? { ...pos, frac: 1 } : { spine: lastSpine, path: null, offset: 0, frac: 1 };
   }
   const now = Date.now();
   if (section?.bookId !== rp.bookId || section.spine !== pos.spine) section = { bookId: rp.bookId, spine: pos.spine, since: now };
@@ -84,9 +98,8 @@ function onPosition(pos, progress) {
   rp.lastActive = now;
   paintPosition(pos, progress);
   onTextMoved();
+  if (!rp.ready) return;
   pending = { pos, progress };
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(flush, 1800);
   if (rp.bookId) {
     const nextCat = progress >= 0.9995 ? 'read' : (progress > 0 ? 'reading' : null);
     if (nextCat && (lastReportedCatBook !== rp.bookId || lastReportedCat !== nextCat)) {
@@ -106,27 +119,36 @@ function onPosition(pos, progress) {
   }
 }
 async function flush() {
-  clearTimeout(saveTimer);
   while (flushingPromise) {
     try { await flushingPromise; } catch {}
   }
-  if (!pending || !rp.bookId || !rp.view) return;
-  const { pos, progress } = pending;
-  const { bookId, view: { mode } } = rp; // read now: closing the book clears them during the await
-  pending = null;
+  const hasPos = Boolean(pending && rp.bookId && rp.view);
+  const hasCfg = dirtyConfigKeys.size > 0 || deletedConfigKeys.size > 0;
+  if (!hasPos && !hasCfg) return;
+  const posSnapshot = hasPos ? { ...pending, bookId: rp.bookId, mode: rp.view.mode } : null;
+  if (hasPos) pending = null;
+  const dirtySnapshot = [...dirtyConfigKeys];
+  const deletedSnapshot = [...deletedConfigKeys];
+  dirtyConfigKeys.clear();
+  deletedConfigKeys.clear();
   flushingPromise = (async () => {
     const store = await storeReady;
-    await store.savePosition(bookId, pos, { progress, mode });
-    if (progress >= 0.9995) {
-      try {
-        const categories = await store.getSetting('book_categories', {});
-        if (categories[bookId] !== 'read') {
-          categories[bookId] = 'read';
-          await store.setSetting('book_categories', categories);
-        }
-      } catch {}
+    if (posSnapshot) {
+      await store.savePosition(posSnapshot.bookId, posSnapshot.pos, { progress: posSnapshot.progress, mode: posSnapshot.mode });
+      if (posSnapshot.progress >= 0.9995) {
+        try {
+          const categories = await store.getSetting('book_categories', {});
+          if (categories[posSnapshot.bookId] !== 'read') {
+            categories[posSnapshot.bookId] = 'read';
+            await store.setSetting('book_categories', categories);
+          }
+        } catch {}
+      }
+      rp.saves = (rp.saves ?? 0) + 1;
     }
-    rp.saves = (rp.saves ?? 0) + 1;
+    if (dirtySnapshot.length || deletedSnapshot.length) {
+      await store.flushSettingsToDb(dirtySnapshot, deletedSnapshot);
+    }
   })();
   try {
     await flushingPromise;
@@ -134,10 +156,18 @@ async function flush() {
     flushingPromise = null;
   }
 }
-rp.flush = flush;
-document.addEventListener('visibilitychange', () => { if (document.hidden) { flush(); flushReadingStats(); } });
-addEventListener('pagehide', () => { flush(); flushReadingStats(); });
-addEventListener('beforeunload', () => { flush(); flushReadingStats(); });
+rp.flush = () => {
+  syncPendingFromView();
+  return flush();
+};
+const persistOnExit = () => {
+  syncPendingFromView();
+  flush();
+  flushReadingStats();
+};
+document.addEventListener('visibilitychange', () => { if (document.hidden) persistOnExit(); });
+addEventListener('pagehide', persistOnExit);
+addEventListener('beforeunload', persistOnExit);
 
 // Scroll mode reads at this line, with top breathing space below the bar.
 const READING_EDGE = 24;
@@ -146,9 +176,11 @@ const READING_EDGE = 24;
 function syncPendingFromView() {
   if (!rp.view || !rp.bookId || !rp.ready) return;
   const liveProgress = rp.view.impl?.atEnd ? 1 : rp.view.progress;
+  const rawPos = rp.view.position;
+  const lastSpine = rp.book?.spine?.length ? rp.book.spine.length - 1 : rawPos?.spine;
   const livePos = rp.view.impl?.atEnd
-    ? { ...(rp.view.position || {}), spine: (rp.book?.spine?.length ? rp.book.spine.length - 1 : rp.view.position?.spine), frac: 1 }
-    : rp.view.position;
+    ? (rawPos?.spine === lastSpine ? { ...rawPos, frac: 1 } : { spine: lastSpine, path: null, offset: 0, frac: 1 })
+    : rawPos;
   if (livePos && Number.isFinite(liveProgress)) {
     pending = { pos: livePos, progress: liveProgress };
   }
@@ -199,7 +231,6 @@ async function show(book, id, { push = false } = {}) {
   closeLibraryDrawer(true);
   $('library').hidden = true;
   $('reading').hidden = false;
-  wake();
   const saved = await store.getPosition(id);
   try {
     const categories = await store.getSetting('book_categories', {});
@@ -533,8 +564,8 @@ rp.setMode = async (m) => {
   wheelFor(m);
   syncMode();
   await (await storeReady).setSetting('mode', m);
+  markConfigDirty('mode');
   pending = { pos: rp.view.position, progress: rp.view.progress };
-  await flush();
 };
 rp.setStyle = setStyle;
 rp.search = runSearch;
@@ -660,7 +691,6 @@ for (const type of ['gesturestart', 'gesturechange']) document.addEventListener(
 // ---- active reading: stats per book (IndexedDB) and support milestones (5+ minutes a day) ----
 // Counts only while a book is open, the tab visible and the reader active in the last 2 minutes.
 const TICK = 60000;
-const STATS_FLUSH_MS = TICK * 3;
 let readingTickTimer = 0;
 let pendingStatBookId = null;
 let pendingStatMs = 0;
@@ -697,9 +727,7 @@ async function readingTick() {
   if (pendingStatBookId && pendingStatBookId !== bookId) await flushReadingStats();
   pendingStatBookId = bookId;
   pendingStatMs += TICK;
-  if (pendingStatMs >= STATS_FLUSH_MS) await flushReadingStats();
 }
-rp.readingTick = readingTick;
 syncReadingTickTimer();
 
 // ---- start ------------------------------------------------------------------------------
@@ -727,7 +755,7 @@ if (isAppleTouch) {
 
 localizeDom();
 initLibrary({ store: await storeReady, openBook: (id) => openStored(id), pickFile, addFiles: addFilesToLibrary });
-initReading(rp, { store: await storeReady, onBack: backToLibrary });
+initReading(rp, { store: await storeReady, onBack: backToLibrary, onConfigChange: markConfigDirty });
 initHighlights(rp, { store: await storeReady });
 const veilIcon = $('veil-icon');
 if (veilIcon) {

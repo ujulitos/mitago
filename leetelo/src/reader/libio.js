@@ -3,29 +3,13 @@
 // entries as slices of the dropped file and writes them straight to IndexedDB.
 
 import { openZip } from '../core/zip.js';
-import { zipBlob } from '../core/zipwrite.js';
-import { LibraryFileError, buildManifest, planImport } from './libfile.js';
+import { LibraryFileError, planImport } from './libfile.js';
 import { hasRoom } from './logic.js';
 import { saveBookPhysically } from './reader.js';
 
 const req = (r) => new Promise((resolve, reject) => { r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
 const done = (tx) => new Promise((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = tx.onabort = () => reject(tx.error); });
 const all = (store, name) => req(store.db.transaction(name).objectStore(name).getAll());
-
-/** The whole library as a Blob, ready for <a download>. */
-export async function exportLibrary(store) {
-  const [books, files, positions, bookmarks, highlights, stats, settings] = await Promise.all(
-    ['books', 'files', 'positions', 'bookmarks', 'highlights', 'stats', 'settings'].map((n) => all(store, n)));
-  const blobs = new Map(files.map((f) => [f.id, f.blob]));
-  const kept = books.filter((b) => blobs.has(b.id));
-  const manifest = buildManifest({ books: kept, positions, bookmarks, highlights, stats, settings });
-  const entries = [{ name: 'manifest.json', data: JSON.stringify(manifest) }];
-  for (const [i, b] of manifest.books.entries()) {
-    entries.push({ name: b.file, data: blobs.get(b.meta.id) });
-    if (b.cover) entries.push({ name: b.cover, data: kept[i].cover });
-  }
-  return zipBlob(entries);
-}
 
 /**
  * Merge a .readpane file into the library. estimate = navigator.storage.estimate() result.
@@ -78,7 +62,9 @@ export async function importLibrary(store, file, estimate) {
   for (const m of marks) tx.objectStore('bookmarks').put(m);
   for (const h of hls) tx.objectStore('highlights').put(h);
   for (const s of keep(plan.stats)) tx.objectStore('stats').put(s);
-  for (const s of plan.settings.filter(settingFor)) tx.objectStore('settings').put(s);
+  const importedSettings = plan.settings.filter(settingFor);
+  for (const s of importedSettings) tx.objectStore('settings').put(s);
   await done(tx);
+  for (const s of importedSettings) await store.setSetting(s.key, s.value);
   return { books: added.size, kept: plan.kept, bookmarks: marks.length, highlights: hls.length };
 }

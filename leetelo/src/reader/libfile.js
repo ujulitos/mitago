@@ -12,37 +12,8 @@ import { mergeStats } from './stats.js';
 export const FORMAT = 'readpane-library';
 export const EXTENSION = 'readpane';
 
-const bookFile = (meta) => `books/${meta.id}.${/\.([a-z0-9]{1,5})$/i.exec(meta.fileName ?? '')?.[1]?.toLowerCase() ?? 'epub'}`;
-const without = (o, ...keys) => Object.fromEntries(Object.entries(o).filter(([k]) => !keys.includes(k)));
-
-/** Everything the stores hold -> the manifest. settings = [{ key, value }]. */
-export function buildManifest({ books, positions = [], bookmarks = [], highlights = [], stats = [], settings = [] }, exportedAt = Date.now()) {
-  const by = (list, key = 'bookId') => list.reduce((m, r) => m.set(r[key], [...(m.get(r[key]) ?? []), r]), new Map());
-  const pos = by(positions);
-  const marks = by(bookmarks);
-  const hls = by(highlights);
-  const st = by(stats);
-  const own = new Map(settings.filter((s) => s.key.startsWith('book:')).map((s) => [s.key.slice(5), s.value]));
-  return {
-    format: FORMAT,
-    version: 1,
-    exportedAt,
-    settings: Object.fromEntries(settings.filter((s) => !s.key.startsWith('book:')).map((s) => [s.key, s.value])),
-    books: books.map((b) => ({
-      meta: without(b, 'cover'),
-      file: bookFile(b),
-      cover: b.cover ? `covers/${b.id}.img` : undefined,
-      position: pos.get(b.id)?.[0],
-      bookmarks: (marks.get(b.id) ?? []).map((m) => without(m, 'id')),
-      highlights: (hls.get(b.id) ?? []).map((h) => without(h, 'id')),
-      stats: st.get(b.id)?.[0],
-      settings: own.get(b.id),
-    })),
-  };
-}
-
 /** A place as a stable string (key order does not matter). */
-export function placeKey(v) {
+function placeKey(v) {
   if (v === null || typeof v !== 'object') return JSON.stringify(v);
   if (Array.isArray(v)) return `[${v.map(placeKey).join(',')}]`;
   return `{${Object.keys(v).sort().map((k) => `${k}:${placeKey(v[k])}`).join(',')}}`;
@@ -53,7 +24,7 @@ export class LibraryFileError extends Error {
 }
 
 /** Throws LibraryFileError('not-library' | 'newer') for a manifest we cannot read. */
-export function checkManifest(m) {
+function checkManifest(m) {
   if (m?.format !== FORMAT || !Array.isArray(m.books)) throw new LibraryFileError('not-library');
   if (m.version > 1) throw new LibraryFileError('newer');
   return m;

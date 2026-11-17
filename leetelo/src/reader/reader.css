@@ -1623,71 +1623,6 @@ body.dragging .shelf-dropzone {
     text-align: left;
 }
 
-/* Quiet cards: file access, pin hint. */
-.cards {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.quiet-card {
-    position: relative;
-    display: grid;
-    grid-template-columns: 30px minmax(0, 1fr);
-    gap: 10px;
-    padding: 14px 44px 14px 14px;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    background: var(--card);
-}
-
-.quiet-card .lead {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: var(--hover);
-    color: var(--ink);
-}
-
-.quiet-card h3 {
-    margin: 4px 0 4px;
-    font-size: 13.5px;
-    font-weight: 650;
-}
-
-.quiet-card p {
-    margin: 0;
-    color: var(--muted);
-    line-height: 1.5;
-}
-
-.quiet-card .close {
-    position: absolute;
-    top: 8px;
-    inset-inline-end: 8px;
-    width: 28px;
-    height: 28px;
-}
-
-.copy-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.copy-row code {
-    padding: 6px 9px;
-    border-radius: 7px;
-    background: var(--hover);
-    font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
-    user-select: all;
-    overflow-wrap: anywhere;
-}
-
 .tool {
     display: inline-flex;
     align-items: center;
@@ -4059,42 +3994,6 @@ body.dragging .shelf-dropzone {
 
 #reading.mobile-ui-visible #analog-clock {
     transform: translate(-50%, 0);
-}
-
-/* ------------------------------------------------------------ what's new */
-.whats-new {
-    margin-bottom: 22px;
-    border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
-}
-
-.whats-new .lead {
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    color: var(--accent);
-}
-
-.whats-new h3 {
-    margin: 2px 0 6px;
-    font-size: 13.5px;
-    font-weight: 650;
-}
-
-.wn-list {
-    margin: 0 0 12px;
-    padding-inline-start: 18px;
-    color: var(--muted);
-    line-height: 1.5;
-}
-
-.wn-list li+li {
-    margin-top: 3px;
-}
-
-.whats-new .close {
-    position: absolute;
-    top: 8px;
-    inset-inline-end: 8px;
-    width: 28px;
-    height: 28px;
 }
 
 /* ------------------------------------------------------------ metadata modal */

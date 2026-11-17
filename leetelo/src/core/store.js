@@ -157,7 +157,7 @@ export async function openStore(name = DB_NAME) {
       }
       return fallback;
     },
-    async setSetting(key, value) {
+    async setSetting(key, value, { db: writeDb = false } = {}) {
       try {
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem(`rp-setting:${key}`, JSON.stringify(value));
@@ -173,9 +173,9 @@ export async function openStore(name = DB_NAME) {
       } catch (err) {
         console.warn('[Léetelo] Error guardando ajuste en localStorage:', err);
       }
-      return put('settings', { key, value });
+      if (writeDb) return put('settings', { key, value });
     },
-    async deleteSetting(key) {
+    async deleteSetting(key, { db: writeDb = false } = {}) {
       try {
         if (typeof localStorage !== 'undefined') {
           localStorage.removeItem(`rp-setting:${key}`);
@@ -188,8 +188,24 @@ export async function openStore(name = DB_NAME) {
           }
         }
       } catch {}
+      if (!writeDb) return;
       const tx = db.transaction('settings', 'readwrite');
       tx.objectStore('settings').delete(key);
+      await done(tx);
+    },
+    async flushSettingsToDb(keys = [], deleteKeys = []) {
+      const updates = [];
+      for (const key of keys) {
+        try {
+          const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(`rp-setting:${key}`) : null;
+          if (raw !== null) updates.push({ key, value: JSON.parse(raw) });
+        } catch {}
+      }
+      if (!updates.length && !deleteKeys.length) return;
+      const tx = db.transaction('settings', 'readwrite');
+      const store = tx.objectStore('settings');
+      for (const entry of updates) store.put(entry);
+      for (const key of deleteKeys) store.delete(key);
       await done(tx);
     },
 

@@ -324,6 +324,7 @@ class ContinuousView {
   }
 
   capture() {
+    if (this.el.scrollTop <= 1) return { ...START };
     const i = this.hostAtTop();
     const host = this.hosts[i];
     const edge = this.top + 1;
@@ -439,10 +440,8 @@ class ContinuousView {
   get bookProgress() {
     if (!this.hosts?.length) return 0;
     if (this.atEnd) return 1;
-    const maxScroll = Math.max(0, this.el.scrollHeight - this.el.clientHeight);
-    if (maxScroll <= 10) return 1;
     if (this.el.scrollTop <= 1) return 0;
-    return clamp01(this.el.scrollTop / maxScroll);
+    return progressOf(this.position, this.weights);
   }
 
   async goToProgress(f) {
@@ -452,7 +451,7 @@ class ContinuousView {
       await this.goTo(START);
       if (!this.hosts) return;
       this.el.scrollTop = 0;
-      this.position = this.capture();
+      this.position = { ...START };
       this.knownTop = this.el.scrollTop;
       this.ctx.emit(this.position);
       return;
@@ -462,25 +461,13 @@ class ContinuousView {
       await this.materialize(last);
       if (!this.hosts) return;
       this.el.scrollTop = Math.max(0, this.el.scrollHeight - this.el.clientHeight);
-      this.position = this.capture();
+      this.position = { ...this.capture(), spine: last, path: null, offset: 0, frac: 1 };
       this.knownTop = this.el.scrollTop;
       this.ctx.emit(this.position);
       return;
     }
-    const maxBefore = Math.max(0, this.el.scrollHeight - this.el.clientHeight);
-    const targetY = (this.hosts[0]?.offsetTop ?? 0) + frac * maxBefore + this.padYPx() + 1;
-    let lo = 0, hi = this.hosts.length - 1, hit = hi;
-    while (lo <= hi) {
-      const mid = (lo + hi) >> 1;
-      if (this.hosts[mid].offsetTop + this.hosts[mid].offsetHeight > targetY) { hit = mid; hi = mid - 1; } else lo = mid + 1;
-    }
-    await this.materialize(hit);
-    if (!this.hosts) return;
-    const maxAfter = Math.max(0, this.el.scrollHeight - this.el.clientHeight);
-    this.el.scrollTop = frac * maxAfter;
-    this.position = this.capture();
-    this.knownTop = this.el.scrollTop;
-    this.ctx.emit(this.position);
+    const target = atProgress(frac, this.weights);
+    await this.goTo(target);
   }
 
   async goTo(pos) {
@@ -853,7 +840,7 @@ class PagedView {
     return { counts, starts, total: Math.max(1, acc) };
   }
 
-  bookWeights() { return this.bookLayout().counts; }
+  bookWeights() { return spineWeightsOf(this.book); }
 
   /** Current chapter page numbers on screen: [first, last, totalInChapter]. */
   get chapterFolio() {
@@ -876,11 +863,7 @@ class PagedView {
   get bookProgress() {
     if (this.atStart) return 0;
     if (this.atEnd) return 1;
-    const { starts, total } = this.bookLayout();
-    const sp = Math.max(0, this.spine);
-    const idx = (starts[sp] ?? 0) + (this.pair ? 0 : this.page);
-    const maxIdx = Math.max(1, total - Math.min(this.span, total));
-    return clamp01(idx / maxIdx);
+    return progressOf(this.position, this.bookWeights());
   }
 
   async goToProgress(f) {
@@ -890,17 +873,7 @@ class PagedView {
       const last = Math.max(0, (this.book?.spine?.length ?? 1) - 1);
       return this.goTo({ spine: last, path: null, offset: 0, frac: 1 });
     }
-    const { counts, starts, total } = this.bookLayout();
-    const maxIdx = Math.max(1, total - Math.min(this.span, total));
-    const target = Math.min(total - 1, Math.max(0, Math.round(frac * maxIdx)));
-    let sp = 0;
-    for (let i = 0; i < starts.length; i++) {
-      if (starts[i] <= target) sp = i;
-      else break;
-    }
-    const localPage = target - starts[sp];
-    const secFrac = (localPage + 0.05) / Math.max(1, counts[sp]);
-    return this.goTo({ spine: sp, path: null, offset: 0, frac: clamp01(secFrac) });
+    return this.goTo(atProgress(frac, this.bookWeights()));
   }
 
   async turn(dir) {

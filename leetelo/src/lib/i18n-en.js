@@ -218,6 +218,8 @@ export default {
 "page_of_chapter": "Page $1 of $2 in this chapter",
 "folio_spread": "Pages $1–$2 of $3",
 "folio_spread_chapter": "Pages $1–$2 of $3 in this chapter",
+"footer_page_of": "$1 of $2",
+"footer_folio_spread": "$1–$2 of $3",
 "toc_page": "p. $1",
 "pages_per_screen": "Layout",
 "spread_auto": "Auto",

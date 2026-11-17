@@ -9,14 +9,8 @@ import { showToast } from '../lib/toast.js';
 import { $, el, formatSize, hideLoadingOverlay, labelled, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
 import { ERROR_FALLBACK, errorCode, percent } from './logic.js';
 import { hoursMinutes } from './stats.js';
-import { EXTENSION } from './libfile.js';
 import { importLibrary } from './libio.js';
 import { openAny, extractBookStats, STATS_VERSION } from '../core/formats.js';
-
-const local = {
-  get: async (key, fallback) => { try { return (await chrome.storage.local.get(key))[key] ?? fallback; } catch { return fallback; } },
-  set: (key, value) => chrome.storage.local.set({ [key]: value }).catch(() => {}),
-};
 
 var ctx = null; // { store, openBook(id), pickFile() }
 let urls = [];
@@ -136,7 +130,7 @@ function enterSelectionMode(bookId) {
   syncBatchSelectionUI();
 }
 
-export function exitSelectionMode() {
+function exitSelectionMode() {
   if (!selectionMode && !selectedBookIds.size) return;
   selectionMode = false;
   selectedBookIds.clear();
@@ -209,7 +203,7 @@ async function executeBatchDelete() {
   }
 }
 
-export function closeMetadataModal() {
+function closeMetadataModal() {
   const modal = $('meta-modal');
   const card = modal?.querySelector('.modal-card');
   const body = $('meta-modal-body');
@@ -272,7 +266,7 @@ function renderHtmlSynopsis(container, html) {
   container.replaceChildren(...doc.body.childNodes);
 }
 
-export function openMetadataModal(book, pos, stat, triggerBtn) {
+function openMetadataModal(book, pos, stat, triggerBtn) {
   closeAllDeleteConfirms();
   currentMetaBookId = book.id;
   currentMetaTrigger = triggerBtn;
@@ -577,7 +571,7 @@ function duration(ms, zero = false) {
   return h ? t('time_hm', h, m) : t('time_m', m);
 }
 
-export function resolveCategory(bookId, pos, categories) {
+function resolveCategory(bookId, pos, categories) {
   const manual = categories?.[bookId];
   if (manual === 'none') return 'all_books';
   if (manual === 'reading') return 'reading';
@@ -1022,27 +1016,6 @@ export async function importFile(file) {
   });
 }
 
-// ---- quiet cards ---------------------------------------------------------------------
-async function renderTier2() {
-  let allowed = true;
-  try { allowed = await chrome.extension.isAllowedFileSchemeAccess(); } catch { /* not in an extension page */ }
-  const dismissed = await local.get('rpTier2Dismissed', false);
-  $('tier2').hidden = allowed || dismissed;
-  if ($('tier2').hidden) return;
-  const link = `chrome://extensions/?id=${chrome.runtime.id}`;
-  $('tier2-link').textContent = link;
-  $('tier2-body').textContent = t('tier2_body', t('tier2_toggle'));
-}
-
-const WHATS_NEW = '1.1'; // set by the service worker on an update from an older version
-async function renderWhatsNew() {
-  $('whats-new').hidden = (await local.get('rpWhatsNew', null)) !== WHATS_NEW;
-}
-function closeWhatsNew() {
-  local.set('rpWhatsNew', `seen-${WHATS_NEW}`);
-  $('whats-new').hidden = true;
-}
-
 // ---- render ----------------------------------------------------------------------------
 let syncDone = false;
 async function syncFromLibros(store) {
@@ -1141,27 +1114,6 @@ let renderSeq = 0;
 let hasRenderedShelf = false;
 const renderedEffectiveCats = new Map();
 
-/** Tear down Home library DOM and image blob URLs when entering reading view. */
-export function teardownLibraryView() {
-  renderSeq++;
-  hasRenderedShelf = false;
-  renderedEffectiveCats.clear();
-  closeLibraryDrawer(true);
-  closeMetadataModal();
-  closeAllDeleteConfirms();
-  exitSelectionMode();
-  hideNotice();
-  $('shelf-sections')?.replaceChildren();
-  for (const u of urls) URL.revokeObjectURL(u);
-  urls = [];
-  allTodosBooks = [];
-  currentCategories = {};
-  if ($('lib-scrollbar')) $('lib-scrollbar').hidden = true;
-  if ($('shelf')) $('shelf').hidden = true;
-  if ($('first-run')) $('first-run').hidden = true;
-  syncHomeScrollLock();
-}
-
 export async function renderLibrary() {
   const { store } = ctx;
   const seq = ++renderSeq;
@@ -1210,7 +1162,7 @@ export async function renderLibrary() {
     if (shelfSections) shelfSections.replaceChildren();
     for (const u of oldUrls) URL.revokeObjectURL(u);
     renderLibraryInfoCounts([], byId, currentCategories);
-    await Promise.all([renderStorage(), renderWhatsNew(), renderTier2()]);
+    await renderStorage();
     window.__rp.libraryReady = true;
     requestAnimationFrame(updateLibScrollbar);
     return;
@@ -1395,7 +1347,7 @@ export async function renderLibrary() {
   }
   hasRenderedShelf = true;
   renderLibraryInfoCounts(books, byId, currentCategories);
-  await Promise.all([renderStorage(), renderWhatsNew(), renderTier2()]);
+  await renderStorage();
   window.__rp.libraryReady = true;
   requestAnimationFrame(updateLibScrollbar);
 }
@@ -1940,20 +1892,6 @@ export function initLibrary(c) {
     });
   }
   const noticeClose = $('notice-close'); if (noticeClose) { noticeClose.append(icon('close', 16)); noticeClose.addEventListener('click', hideNotice); }
-  const tier2Icon = $('tier2-icon'); if (tier2Icon) tier2Icon.append(icon('file', 18));
-  const tier2Close = $('tier2-close'); if (tier2Close) { tier2Close.append(icon('close', 14)); tier2Close.addEventListener('click', () => { local.set('rpTier2Dismissed', true); const tier2 = $('tier2'); if (tier2) tier2.hidden = true; }); }
-  const wnIcon = $('wn-icon'); if (wnIcon) wnIcon.append(icon('sparkle', 18));
-  const wnClose = $('wn-close'); if (wnClose) { wnClose.append(icon('close', 14)); wnClose.addEventListener('click', closeWhatsNew); }
-  const wnOk = $('wn-ok'); if (wnOk) wnOk.addEventListener('click', closeWhatsNew);
-  const tier2Copy = $('tier2-copy'); if (tier2Copy) { tier2Copy.prepend(icon('copy', 14)); tier2Copy.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText($('tier2-link').textContent);
-      showToast({ text: t('link_copied') });
-    } catch {
-      getSelection().selectAllChildren($('tier2-link'));
-      showToast({ level: 'warn', text: t('copy_failed') });
-    }
-  }); }
   const menuBtn = $('lib-menu-btn');
   if (menuBtn) {
     menuBtn.addEventListener('click', () => openLibraryDrawer());
