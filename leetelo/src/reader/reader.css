@@ -456,11 +456,13 @@ button.primary:hover {
 
 /* Hamburger menu slide-over drawer */
 .lib-drawer {
+    --drawer-top: max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px));
     position: fixed;
     inset: 0;
     z-index: 1000;
     display: flex;
     justify-content: flex-start;
+    pointer-events: none;
 }
 
 /* Franja superior opaca del color del tema, sobre el fondo oscuro del menú (igual que la lectura):
@@ -471,9 +473,9 @@ button.primary:hover {
     top: 0;
     left: 0;
     right: 0;
-    height: max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px));
+    height: var(--drawer-top);
     background: var(--paper);
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 .lib-drawer[hidden] {
@@ -482,9 +484,13 @@ button.primary:hover {
 
 .lib-drawer-backdrop {
     position: absolute;
-    inset: 0;
+    top: var(--drawer-top);
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(10, 12, 18, 0.64);
     touch-action: none;
+    pointer-events: auto;
     opacity: 0;
     transition: opacity 180ms ease;
 }
@@ -497,7 +503,8 @@ button.primary:hover {
     position: relative;
     z-index: 1;
     width: min(360px, 88vw);
-    height: 100%;
+    margin-top: var(--drawer-top);
+    height: calc(100% - var(--drawer-top));
     display: flex;
     flex-direction: column;
     background: var(--panel-bg, var(--card));
@@ -509,6 +516,7 @@ button.primary:hover {
     overflow-y: auto;
     overscroll-behavior: contain;
     touch-action: pan-y;
+    pointer-events: auto;
     padding-top: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px));
     padding-left: max(env(safe-area-inset-left, 0px), var(--safe-left, 0px));
     padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));

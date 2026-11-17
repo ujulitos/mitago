@@ -34,6 +34,8 @@ const HOME_BG = {
 
 let themeRaf = 0;
 let restoreUrl = null;
+// Tiempo breve en que .lib-drawer-tint cede paso a .lib-head para que WebKit actualice la barra sin ocultar el menú.
+const DRAWER_SYNC_MS = 60;
 
 function syncThemeColorMeta(choice) {
   cancelAnimationFrame(themeRaf);
@@ -62,6 +64,7 @@ function syncThemeColorMeta(choice) {
   if (typeof requestAnimationFrame !== 'function') return;
   const activeLayer = inReading ? readingEl : document.querySelector('.lib-head');
   const drawerEl = !inReading ? document.getElementById('lib-drawer') : null;
+  const tintEl = drawerEl ? drawerEl.querySelector('.lib-drawer-tint') : null;
   if (restoreUrl === null && location.hash !== '#_') {
     restoreUrl = `${location.pathname}${location.search}${location.hash}`;
   }
@@ -71,9 +74,10 @@ function syncThemeColorMeta(choice) {
       activeLayer.style.backgroundColor = color;
       activeLayer.style.transform = 'translateZ(0)';
     }
-    // Menú abierto: se oculta el menú un instante (igual que al cerrarlo, que es cuando el navegador sí
-    // actualiza la barra superior) y se vuelve a mostrar enseguida.
-    if (drawerEl && !drawerEl.hidden) drawerEl.style.visibility = 'hidden';
+    if (tintEl && !drawerEl.hidden) {
+      tintEl.style.backgroundColor = color;
+      tintEl.style.visibility = 'hidden';
+    }
     if (restoreUrl !== null) {
       try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
     }
@@ -93,7 +97,12 @@ function syncThemeColorMeta(choice) {
         fresh.content = color;
         head.append(fresh);
       }
-      if (drawerEl) setTimeout(() => { drawerEl.style.visibility = ''; }, 140);
+      if (tintEl) {
+        setTimeout(() => {
+          tintEl.style.visibility = '';
+          tintEl.style.backgroundColor = '';
+        }, DRAWER_SYNC_MS);
+      }
     });
   });
 }
