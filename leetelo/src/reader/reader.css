@@ -189,9 +189,7 @@ body {
 
 html.home-scroll-locked,
 body.home-scroll-locked {
-    overflow: hidden !important;
     overscroll-behavior: none;
-    touch-action: none;
 }
 
 ::selection {
@@ -483,6 +481,11 @@ button.primary:hover {
 
 .lib-drawer.open .lib-drawer-backdrop {
     opacity: 1;
+}
+
+.lib-drawer.theme-sync .lib-drawer-backdrop {
+    visibility: hidden;
+    transition: none;
 }
 
 .lib-drawer-panel {

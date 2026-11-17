@@ -1899,6 +1899,7 @@ export function initLibrary(c) {
   if (drawerBackdrop) {
     drawerBackdrop.addEventListener('click', () => closeLibraryDrawer());
     drawerBackdrop.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    drawerBackdrop.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
   }
   const drawerAddIcon = $('lib-drawer-add-icon');
   if (drawerAddIcon) drawerAddIcon.replaceChildren(icon('plus', 18));
