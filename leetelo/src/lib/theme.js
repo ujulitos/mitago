@@ -67,14 +67,22 @@ function syncThemeColorMeta(choice) {
   }
   themeRaf = requestAnimationFrame(() => {
     for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
-    if (activeLayer && !activeLayer.hidden) activeLayer.style.transform = 'translateZ(0)';
-    if (drawerEl && !drawerEl.hidden) drawerEl.style.backgroundColor = 'transparent';
+    if (activeLayer && !activeLayer.hidden) {
+      activeLayer.style.backgroundColor = color;
+      activeLayer.style.transform = 'translateZ(0)';
+    }
+    if (drawerEl && !drawerEl.hidden) {
+      drawerEl.style.top = '4px';
+    }
     if (restoreUrl !== null) {
       try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
     }
     themeRaf = requestAnimationFrame(() => {
-      if (activeLayer) activeLayer.style.transform = '';
-      if (drawerEl) drawerEl.style.backgroundColor = '';
+      if (activeLayer) {
+        activeLayer.style.transform = '';
+        if (!inReading) activeLayer.style.backgroundColor = '';
+      }
+      if (drawerEl) drawerEl.style.top = '';
       if (restoreUrl !== null) {
         const cleanUrl = restoreUrl;
         restoreUrl = null;

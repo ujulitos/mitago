@@ -459,7 +459,10 @@ button.primary:hover {
 /* Hamburger menu slide-over drawer */
 .lib-drawer {
     position: fixed;
-    inset: 0;
+    top: max(2px, env(safe-area-inset-top, 0px));
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 1000;
     display: flex;
     justify-content: flex-start;
