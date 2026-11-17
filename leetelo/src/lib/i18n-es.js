@@ -179,7 +179,6 @@ export default {
   "margin_h": "Márgenes der./izq.",
   "time_left_chapter": "$1 min",
   "time_left_chapter_hours": "$1 h $2 min",
-  "time_left_chapter_less_minute": "0 min",
   "text_width": "Longitud de línea",
   "width_narrow": "Líneas cortas",
   "width_medium": "Líneas medias",

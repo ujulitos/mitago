@@ -811,16 +811,10 @@ function paintChapterTime() {
     mins = Math.ceil((bytesLeft / 6) / 220);
   }
 
-  let nextText;
-  if (mins <= 0) {
-    nextText = t('time_left_chapter_less_minute');
-  } else if (mins < 60) {
-    nextText = t('time_left_chapter', mins);
-  } else {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    nextText = t('time_left_chapter_hours', h, m);
-  }
+  mins = Math.max(1, mins);
+  const nextText = mins < 60
+    ? t('time_left_chapter', mins)
+    : t('time_left_chapter_hours', Math.floor(mins / 60), mins % 60);
   setTextIfChanged(el, nextText);
   if (el.hidden) el.hidden = false;
 }

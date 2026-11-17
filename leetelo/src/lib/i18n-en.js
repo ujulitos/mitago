@@ -182,7 +182,6 @@ export default {
 "margin_h": "Side margins",
 "time_left_chapter": "$1 min left in chapter",
 "time_left_chapter_hours": "$1 hr $2 min left in chapter",
-"time_left_chapter_less_minute": "< 1 min left in chapter",
 "text_width": "Line length",
 "width_narrow": "Short lines",
 "width_medium": "Medium lines",
