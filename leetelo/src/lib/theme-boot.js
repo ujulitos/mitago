@@ -21,5 +21,6 @@
   }
   document.documentElement.dataset.theme = choice;
   delete document.documentElement.dataset.paper;
+  document.documentElement.style.colorScheme = choice === 'sepia' ? 'light' : 'dark';
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg[choice]);
 })();

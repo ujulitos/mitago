@@ -24,13 +24,24 @@ export function resolveTheme(theme) {
   return 'sepia';
 }
 
+function syncThemeColorMeta(color, isDark) {
+  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+  const head = document.head;
+  if (!head) return;
+  for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
+  const meta = document.createElement('meta');
+  meta.name = 'theme-color';
+  meta.content = color;
+  head.append(meta);
+}
+
 // Apply a theme choice ('sepia' | 'twilight' | 'fog' | 'contrast' | 'wood') and mirror it for theme-boot.js.
 export function applyTheme(theme) {
   const choice = resolveTheme(theme);
   const root = document.documentElement.dataset;
   root.theme = choice;
   delete root.paper;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_BG[choice]);
+  syncThemeColorMeta(THEME_BG[choice], choice !== 'sepia');
   try {
     localStorage.setItem('rpTheme', choice);
   } catch { /* storage unavailable */ }

@@ -772,17 +772,28 @@ function dismissSplash() {
   const splash = $('splash-screen');
   if (!splash || splash.dataset.dismissed) return;
   splash.dataset.dismissed = '1';
-  splash.classList.add('is-hidden');
-  setTimeout(() => {
+  const finish = () => {
     splash.hidden = true;
     splash.remove();
-  }, 300);
+  };
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      splash.addEventListener('transitionend', (e) => {
+        if (e.target === splash) finish();
+      }, { once: true });
+      splash.classList.add('is-hidden');
+      setTimeout(finish, 400);
+    });
+  });
 }
 
 applyReadingTheme(await (await storeReady).getSetting('theme', null));
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const fontsReady = document.fonts?.ready ? Promise.race([document.fonts.ready.catch(() => {}), wait(1500)]) : Promise.resolve();
+const swReady = window.__rpSwCheck ? Promise.race([window.__rpSwCheck.catch(() => {}), wait(5000)]) : Promise.resolve();
 const splashFallbackTimer = setTimeout(dismissSplash, 8000);
 try {
-  await route();
+  await Promise.all([route(), fontsReady, swReady]);
 } finally {
   clearTimeout(splashFallbackTimer);
   dismissSplash();

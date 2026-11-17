@@ -424,7 +424,7 @@
 
     <!-- WebApp Scripts: Service Worker & Sync -->
     <script>
-        // 1. PWA Service Worker Registration (network check + reload when an updated SW takes over)
+        // 1. PWA Service Worker Registration (startup update check behind splash screen)
         if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
             const hadController = !!navigator.serviceWorker.controller;
             let reloaded = false;
@@ -437,20 +437,48 @@
                     location.reload();
                 }
             });
-            const registerSw = () => navigator.serviceWorker.register('./sw.js', {
-                    updateViaCache: 'none'
-                })
-                .then((reg) => {
-                    if (navigator.onLine !== false) return reg?.update?.();
-                })
-                .catch(() => {});
-            window.addEventListener('load', () => {
-                if (navigator.onLine !== false || !navigator.serviceWorker.controller) {
-                    registerSw();
-                } else {
-                    window.addEventListener('online', registerSw, { once: true });
+            const waitWorker = (worker) => new Promise((resolve) => {
+                if (!worker || worker.state === 'activated' || worker.state === 'redundant') {
+                    resolve();
+                    return;
                 }
+                const done = () => resolve();
+                const timer = setTimeout(done, 4000);
+                worker.addEventListener('statechange', () => {
+                    if (worker.state === 'activated' || worker.state === 'redundant') {
+                        clearTimeout(timer);
+                        done();
+                    }
+                });
             });
+            const checkUpdates = async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register('./sw.js', {
+                        updateViaCache: 'none'
+                    });
+                    if (!reg) return;
+                    if (navigator.onLine !== false) {
+                        await Promise.race([
+                            reg.update().catch(() => {}),
+                            new Promise((r) => setTimeout(r, 2000))
+                        ]);
+                    }
+                    const incoming = reg.installing || (hadController ? reg.waiting : null);
+                    if (incoming) {
+                        await waitWorker(incoming);
+                    }
+                } catch {}
+            };
+            if (navigator.onLine !== false || !hadController) {
+                window.__rpSwCheck = checkUpdates();
+            } else {
+                window.__rpSwCheck = Promise.resolve();
+                window.addEventListener('online', () => {
+                    checkUpdates();
+                }, { once: true });
+            }
+        } else {
+            window.__rpSwCheck = Promise.resolve();
         }
 
         // Notificar a la biblioteca para actualizar automáticamente al guardar un libro

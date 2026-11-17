@@ -1766,7 +1766,8 @@ body.dragging .shelf-dropzone {
     background: var(--paper, var(--rp-paper));
     color: var(--ink, var(--rp-ink));
     opacity: 1;
-    transition: opacity 280ms ease, transform 280ms ease;
+    will-change: opacity, transform;
+    transition: opacity 320ms ease, transform 320ms ease;
 }
 
 .splash-screen.is-hidden {
@@ -1846,6 +1847,11 @@ body.dragging .shelf-dropzone {
 }
 
 /* =================================================================== reading */
+html:has(#reading:not([hidden])),
+body:has(#reading:not([hidden])) {
+    background: var(--rp-paper);
+}
+
 .reading {
     --rail-h: 42px;
     position: fixed;
