@@ -189,7 +189,37 @@ body {
 
 html.home-scroll-locked,
 body.home-scroll-locked {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
     overscroll-behavior: none;
+}
+
+body.home-scroll-locked .library {
+    position: relative;
+    width: 100%;
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--paper);
+}
+
+body.home-scroll-locked .lib-head {
+    position: absolute;
+}
+
+body.home-scroll-locked .lib-main {
+    max-width: calc(1120px - 64px);
+    width: 100%;
+    margin-inline: auto;
+}
+
+body.home-scroll-locked .lib-scrollbar {
+    display: none !important;
 }
 
 ::selection {
@@ -456,26 +486,11 @@ button.primary:hover {
 
 /* Hamburger menu slide-over drawer */
 .lib-drawer {
-    --drawer-top: max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px));
-    position: fixed;
+    position: absolute;
     inset: 0;
     z-index: 1000;
     display: flex;
     justify-content: flex-start;
-    pointer-events: none;
-}
-
-/* Franja superior opaca del color del tema, sobre el fondo oscuro del menú (igual que la lectura):
-   es lo que iOS toma para pintar la barra superior del teléfono, y cambia al instante con el tema. */
-.lib-drawer-tint {
-    position: absolute;
-    z-index: 3;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--drawer-top);
-    background: var(--paper);
-    pointer-events: auto;
 }
 
 .lib-drawer[hidden] {
@@ -484,13 +499,9 @@ button.primary:hover {
 
 .lib-drawer-backdrop {
     position: absolute;
-    top: var(--drawer-top);
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(10, 12, 18, 0.64);
     touch-action: none;
-    pointer-events: auto;
     opacity: 0;
     transition: opacity 180ms ease;
 }
@@ -503,8 +514,7 @@ button.primary:hover {
     position: relative;
     z-index: 1;
     width: min(360px, 88vw);
-    margin-top: var(--drawer-top);
-    height: calc(100% - var(--drawer-top));
+    height: 100%;
     display: flex;
     flex-direction: column;
     background: var(--panel-bg, var(--card));
@@ -516,7 +526,6 @@ button.primary:hover {
     overflow-y: auto;
     overscroll-behavior: contain;
     touch-action: pan-y;
-    pointer-events: auto;
     padding-top: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px));
     padding-left: max(env(safe-area-inset-left, 0px), var(--safe-left, 0px));
     padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px));

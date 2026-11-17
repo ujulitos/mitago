@@ -24,20 +24,26 @@ let currentCategories = {};
 let activeLongPressCancel = null;
 let drawerOpenState = false;
 let scrollLocked = false;
+let lockedScrollY = 0;
 
 function syncHomeScrollLock() {
   const libraryVisible = !($('library')?.hidden);
   const metaOpen = Boolean($('meta-modal') && !$('meta-modal').hidden);
   const batchOpen = Boolean($('batch-confirm-modal') && !$('batch-confirm-modal').hidden);
   const shouldLock = libraryVisible && (drawerOpenState || metaOpen || batchOpen);
+  const libMain = document.querySelector('#library .lib-main');
   if (shouldLock && !scrollLocked) {
     scrollLocked = true;
+    lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    if (libMain) libMain.style.marginTop = lockedScrollY > 0 ? `-${lockedScrollY}px` : '';
     document.documentElement.classList.add('home-scroll-locked');
     document.body.classList.add('home-scroll-locked');
   } else if (!shouldLock && scrollLocked) {
     scrollLocked = false;
     document.documentElement.classList.remove('home-scroll-locked');
     document.body.classList.remove('home-scroll-locked');
+    if (libMain) libMain.style.marginTop = '';
+    window.scrollTo(0, lockedScrollY);
   }
 }
 
