@@ -71,9 +71,9 @@ function syncThemeColorMeta(choice) {
       activeLayer.style.backgroundColor = color;
       activeLayer.style.transform = 'translateZ(0)';
     }
-    // Menu abierto: iOS no vuelve a muestrear el color de la barra mientras el fondo oscuro del menú
-    // cubre la pantalla. Se oculta ese fondo un instante, igual que al cerrar el menú.
-    if (drawerEl && !drawerEl.hidden) drawerEl.classList.add('theme-sync');
+    // Menú abierto: se oculta el menú un instante (igual que al cerrarlo, que es cuando el navegador sí
+    // actualiza la barra superior) y se vuelve a mostrar enseguida.
+    if (drawerEl && !drawerEl.hidden) drawerEl.style.visibility = 'hidden';
     if (restoreUrl !== null) {
       try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
     }
@@ -93,7 +93,7 @@ function syncThemeColorMeta(choice) {
         fresh.content = color;
         head.append(fresh);
       }
-      if (drawerEl) setTimeout(() => drawerEl.classList.remove('theme-sync'), 140);
+      if (drawerEl) setTimeout(() => { drawerEl.style.visibility = ''; }, 140);
     });
   });
 }

@@ -457,13 +457,23 @@ button.primary:hover {
 /* Hamburger menu slide-over drawer */
 .lib-drawer {
     position: fixed;
-    top: max(2px, env(safe-area-inset-top, 0px));
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     z-index: 1000;
     display: flex;
     justify-content: flex-start;
+}
+
+/* Franja superior opaca del color del tema, sobre el fondo oscuro del menú (igual que la lectura):
+   es lo que iOS toma para pintar la barra superior del teléfono, y cambia al instante con el tema. */
+.lib-drawer-tint {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px));
+    background: var(--paper);
+    pointer-events: none;
 }
 
 .lib-drawer[hidden] {
@@ -481,11 +491,6 @@ button.primary:hover {
 
 .lib-drawer.open .lib-drawer-backdrop {
     opacity: 1;
-}
-
-.lib-drawer.theme-sync .lib-drawer-backdrop {
-    visibility: hidden;
-    transition: none;
 }
 
 .lib-drawer-panel {
