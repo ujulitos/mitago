@@ -25,9 +25,22 @@ export function resolveTheme(theme) {
 }
 
 let themeRaf = 0;
+let restoreUrl = null;
 
 function syncThemeColorMeta(color, isDark) {
-  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+  cancelAnimationFrame(themeRaf);
+  const root = document.documentElement;
+  root.style.colorScheme = isDark ? 'dark' : 'light';
+  const readingEl = document.getElementById('reading');
+  const inReading = Boolean(readingEl && !readingEl.hidden);
+  if (inReading) {
+    root.style.backgroundColor = color;
+    if (document.body) document.body.style.backgroundColor = color;
+  } else {
+    root.style.backgroundColor = '';
+    if (document.body) document.body.style.backgroundColor = '';
+  }
+
   const head = document.head;
   if (!head) return;
   let existing = head.querySelector('meta[name="theme-color"]');
@@ -39,22 +52,36 @@ function syncThemeColorMeta(color, isDark) {
     existing.content = color;
     head.append(existing);
   }
-  if (typeof requestAnimationFrame === 'function') {
-    cancelAnimationFrame(themeRaf);
+
+  if (typeof requestAnimationFrame !== 'function' || !inReading) return;
+  if (restoreUrl === null && location.hash !== '#_') {
+    restoreUrl = `${location.pathname}${location.search}${location.hash}`;
+  }
+  themeRaf = requestAnimationFrame(() => {
+    for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
+    if (!readingEl.hidden) {
+      readingEl.style.transform = 'translateZ(0)';
+      if (restoreUrl !== null) {
+        try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
+      }
+    }
     themeRaf = requestAnimationFrame(() => {
-      for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
-      const fresh = document.createElement('meta');
-      fresh.name = 'theme-color';
-      fresh.content = color;
-      head.append(fresh);
-      const readingEl = document.getElementById('reading');
-      if (readingEl && !readingEl.hidden) {
-        try {
-          history.replaceState(history.state, '', location.href);
-        } catch { /* ignore */ }
+      readingEl.style.transform = '';
+      if (restoreUrl !== null) {
+        const cleanUrl = restoreUrl;
+        restoreUrl = null;
+        if (!readingEl.hidden) {
+          try { history.replaceState(history.state, '', cleanUrl); } catch { /* ignore */ }
+        }
+      }
+      if (!head.querySelector('meta[name="theme-color"]')) {
+        const fresh = document.createElement('meta');
+        fresh.name = 'theme-color';
+        fresh.content = color;
+        head.append(fresh);
       }
     });
-  }
+  });
 }
 
 // Apply a theme choice ('sepia' | 'twilight' | 'fog' | 'contrast' | 'wood') and mirror it for theme-boot.js.

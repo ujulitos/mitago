@@ -210,9 +210,11 @@ async function showLibrary() {
   syncPendingFromView();
   await Promise.all([flush(), flushReadingStats()]);
   closeReading();
-  if (location.search) history.replaceState(null, '', location.pathname);
+  if (location.search || location.hash === '#_') history.replaceState(null, '', location.pathname);
   $('reading').hidden = true;
   $('library').hidden = false;
+  document.documentElement.style.backgroundColor = '';
+  if (document.body) document.body.style.backgroundColor = '';
   stopAnalogClock();
   document.title = 'Léetelo';
   await (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary());
