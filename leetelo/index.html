@@ -19,14 +19,68 @@
     <link rel="shortcut icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-    <!-- Local self-hosted fonts for 100% offline reading -->
-    <link rel="stylesheet" href="src/lib/fonts.css">
+    <link rel="preload" as="image" href="icons/libro.jpg">
 
-    <!-- Core styles -->
-    <script src="src/lib/version.js"></script>
-    <script src="src/lib/theme-boot.js"></script>
-    <link rel="stylesheet" href="src/lib/base.css">
-    <link rel="stylesheet" href="src/reader/reader.css">
+    <!-- Early theme & instant critical splashscreen styles (zero blank screen on launch) -->
+    <script>
+        (() => {
+            const bg = { sepia: '#F0DEC6', twilight: '#2B2B2B', fog: '#313745', contrast: '#000000', wood: '#17181b' };
+            let choice = 'sepia';
+            try {
+                let theme = localStorage.getItem('rp-setting:theme') || localStorage.getItem('rpTheme');
+                if (theme && theme.startsWith('"')) {
+                    try { theme = JSON.parse(theme); } catch {}
+                }
+                if (theme === 'sepia' || theme === 'twilight' || theme === 'fog' || theme === 'contrast' || theme === 'wood') choice = theme;
+                else if (theme === 'crepusculo') choice = 'twilight';
+                else if (theme === 'niebla' || theme === 'mist') choice = 'fog';
+                else if (theme === 'madera') choice = 'wood';
+                else if (theme === 'contraste' || theme === 'dark') choice = 'contrast';
+                else if (theme === 'light') choice = 'sepia';
+                else if (typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches) choice = 'contrast';
+            } catch {
+                if (typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches) choice = 'contrast';
+            }
+            const root = document.documentElement;
+            root.dataset.theme = choice;
+            delete root.dataset.paper;
+            root.style.colorScheme = choice === 'sepia' ? 'light' : 'dark';
+            document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg[choice]);
+        })();
+        window.__rpStylesReady = new Promise((resolve) => {
+            window.__rpCssDone = ((n) => () => { if (--n <= 0) resolve(); })(2);
+        });
+    </script>
+    <style>
+        :root, :root[data-theme="sepia"] { --paper: #F0DEC6; --ink: #614D34; --muted: #826d53; }
+        :root[data-theme="twilight"] { --paper: #17181b; --ink: #ACBAC3; --muted: #8997a0; }
+        :root[data-theme="fog"] { --paper: #313745; --ink: #FFFFFB; --muted: #b8c0d0; }
+        :root[data-theme="wood"] { --paper: #2B2B2B; --ink: #d6d8dc; --muted: #9a9fa8; }
+        :root[data-theme="contrast"] { --paper: #000000; --ink: #F2F2F2; --muted: #a8a8a8; }
+        @media (prefers-color-scheme: dark) { :root:not([data-theme]) { --paper: #000000; --ink: #F2F2F2; --muted: #a8a8a8; } }
+        [hidden] { display: none !important; }
+        html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+        .splash-screen { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); background: var(--paper); color: var(--ink); opacity: 1; }
+        .splash-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+        .splash-logo { display: block; width: 84px; height: 84px; border-radius: 22px; object-fit: cover; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22); }
+        .splash-title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+        .splash-spinner { display: inline-flex; align-items: center; justify-content: center; margin-top: 4px; color: var(--muted, var(--ink)); }
+        .splash-spinner svg { display: block; animation: rp-spin 0.85s linear infinite; }
+        .splash-spinner .loading-track { opacity: 0.2; }
+        .splash-version { position: absolute; left: 50%; bottom: max(28px, calc(18px + env(safe-area-inset-bottom, 0px))); transform: translateX(-50%); font-size: 12px; color: var(--muted); font-weight: 550; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+        @keyframes rp-spin { to { transform: rotate(360deg); } }
+    </style>
+
+    <!-- Non-blocking stylesheets (splash paints on frame 0) -->
+    <link rel="stylesheet" href="src/lib/fonts.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="src/lib/base.css" media="print" onload="this.media='all';window.__rpCssDone?.()" onerror="window.__rpCssDone?.()">
+    <link rel="stylesheet" href="src/reader/reader.css" media="print" onload="this.media='all';window.__rpCssDone?.()" onerror="window.__rpCssDone?.()">
+    <noscript>
+        <link rel="stylesheet" href="src/lib/fonts.css">
+        <link rel="stylesheet" href="src/lib/base.css">
+        <link rel="stylesheet" href="src/reader/reader.css">
+    </noscript>
+    <script src="src/lib/version.js" defer></script>
     <script type="module" src="src/reader/reader.js"></script>
 </head>
 
@@ -34,7 +88,7 @@
     <!-- App startup splash screen -->
     <div id="splash-screen" class="splash-screen" aria-hidden="true">
         <div class="splash-inner">
-            <img class="splash-logo" src="icons/libro.jpg" alt="" width="84" height="84">
+            <img class="splash-logo" src="icons/libro.jpg" alt="" width="84" height="84" decoding="sync" fetchpriority="high">
             <div class="splash-title">Léetelo</div>
             <span class="splash-spinner" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
@@ -46,10 +100,14 @@
         <div id="splash-version" class="splash-version"></div>
     </div>
     <script>
-        if (window.APP_VERSION) {
-            const sv = document.getElementById('splash-version');
-            if (sv) sv.textContent = 'v ' + window.APP_VERSION;
-        }
+        const fillSplashVersion = () => {
+            if (window.APP_VERSION) {
+                const sv = document.getElementById('splash-version');
+                if (sv) sv.textContent = 'v ' + window.APP_VERSION;
+            }
+        };
+        fillSplashVersion();
+        window.addEventListener('DOMContentLoaded', fillSplashVersion, { once: true });
     </script>
 
     <input id="file" type="file" accept=".epub,application/epub+zip,.fb2,.fbz,.fb2.zip,.zip,.cbz" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">

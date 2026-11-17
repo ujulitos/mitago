@@ -1,7 +1,7 @@
 // PWA Service Worker for Léetelo WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'leetelo-pwa-v141';
+const CACHE_NAME = 'leetelo-pwa-v142';
 
 const STATIC_ASSETS = [
   './',
@@ -163,33 +163,38 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // App shell (HTML, CSS, JS, manifest) uses Network-First with fast timeout and offline cache fallback
+  // App shell (HTML, CSS, JS, manifest): Cache-First + background revalidation for instant startup paint
   const isAppShell = event.request.mode === 'navigate'
     || /\.(?:html|css|js|mjs|webmanifest)$/i.test(url.pathname)
     || url.pathname.endsWith('/');
 
   if (isAppShell) {
-    const isNavigate = event.request.mode === 'navigate';
     event.respondWith((async () => {
-      const skipNetwork = self.navigator?.onLine === false
-        || (!isNavigate && Date.now() < networkBackoffUntil);
-      if (skipNetwork) {
-        const cached = await matchCached(event.request);
-        if (cached) return cached;
-      }
-      try {
-        const networkResponse = await fetchWithTimeout(event.request, { cache: 'no-cache' }, 1200);
-        networkBackoffUntil = 0;
-        if (networkResponse && networkResponse.ok && networkResponse.type === 'basic') {
-          const copy = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return networkResponse;
+      const cached = await matchCached(event.request);
+      const revalidate = async () => {
+        if (self.navigator?.onLine === false) return cached;
+        try {
+          const networkResponse = await fetchWithTimeout(event.request, { cache: 'no-cache' }, 1500);
+          networkBackoffUntil = 0;
+          if (networkResponse && networkResponse.ok && networkResponse.type === 'basic') {
+            const copy = networkResponse.clone();
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(event.request, copy);
+            return networkResponse;
+          }
+          return cached || networkResponse;
+        } catch {
+          networkBackoffUntil = Date.now() + 10000;
+          return cached;
         }
-        return (await matchCached(event.request)) || networkResponse;
-      } catch {
-        networkBackoffUntil = Date.now() + 10000;
-        return matchCached(event.request);
+      };
+      if (cached) {
+        if (self.navigator?.onLine !== false && Date.now() >= networkBackoffUntil) {
+          event.waitUntil(revalidate());
+        }
+        return cached;
       }
+      return revalidate();
     })());
     return;
   }

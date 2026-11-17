@@ -789,8 +789,10 @@ function dismissSplash() {
   });
 }
 
-applyReadingTheme(await (await storeReady).getSetting('theme', null));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const stylesReady = window.__rpStylesReady ? Promise.race([window.__rpStylesReady, wait(2500)]) : Promise.resolve();
+await stylesReady;
+applyReadingTheme(await (await storeReady).getSetting('theme', null));
 const fontsReady = document.fonts?.ready ? Promise.race([document.fonts.ready.catch(() => {}), wait(1500)]) : Promise.resolve();
 const swReady = window.__rpSwCheck ? Promise.race([window.__rpSwCheck.catch(() => {}), wait(7500)]) : Promise.resolve();
 const splashFallbackTimer = setTimeout(() => {
