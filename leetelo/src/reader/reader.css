@@ -1755,7 +1755,7 @@ body.dragging .shelf-dropzone {
     }
 }
 
-/* App startup splash screen */
+/* App startup splash screen (siempre en Crepúsculo) */
 .splash-screen {
     position: fixed;
     inset: 0;
@@ -1763,8 +1763,8 @@ body.dragging .shelf-dropzone {
     display: grid;
     place-items: center;
     padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
-    background: var(--paper, var(--rp-paper));
-    color: var(--ink, var(--rp-ink));
+    background: #2B2B2B;
+    color: #ACBAC3;
     opacity: 1;
     will-change: opacity, transform;
     transition: opacity 320ms ease, transform 320ms ease;
@@ -1790,11 +1790,9 @@ body.dragging .shelf-dropzone {
 
 .splash-logo {
     display: block;
-    width: 84px;
-    height: 84px;
-    border-radius: 22px;
-    object-fit: cover;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
 }
 
 .splash-title {
@@ -1802,6 +1800,7 @@ body.dragging .shelf-dropzone {
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.2;
+    color: #ACBAC3;
 }
 
 .splash-spinner {
@@ -1809,7 +1808,7 @@ body.dragging .shelf-dropzone {
     align-items: center;
     justify-content: center;
     margin-top: 4px;
-    color: var(--muted, var(--ink));
+    color: #8997a0;
 }
 
 .splash-spinner svg {
@@ -1818,7 +1817,7 @@ body.dragging .shelf-dropzone {
 }
 
 .splash-spinner .loading-track {
-    opacity: 0.2;
+    opacity: 0.22;
 }
 
 .splash-version {
@@ -1827,7 +1826,7 @@ body.dragging .shelf-dropzone {
     bottom: max(28px, calc(18px + env(safe-area-inset-bottom, 0px)));
     transform: translateX(-50%);
     font-size: 12px;
-    color: var(--muted);
+    color: #8997a0;
     font-weight: 550;
     letter-spacing: 0.04em;
     font-variant-numeric: tabular-nums;

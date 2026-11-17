@@ -8,7 +8,7 @@
 
     <!-- PWA & Mobile WebApp Tags -->
     <link rel="manifest" href="app.webmanifest">
-    <meta name="theme-color" content="#17181b">
+    <meta name="theme-color" content="#2B2B2B">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Léetelo">
@@ -19,12 +19,9 @@
     <link rel="shortcut icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-    <link rel="preload" as="image" href="icons/libro.jpg">
-
-    <!-- Early theme & instant critical splashscreen styles (zero blank screen on launch) -->
+    <!-- Early theme & instant critical splashscreen styles (splash siempre en Crepúsculo) -->
     <script>
         (() => {
-            const bg = { sepia: '#F0DEC6', twilight: '#2B2B2B', fog: '#313745', contrast: '#000000', wood: '#17181b' };
             let choice = 'sepia';
             try {
                 let theme = localStorage.getItem('rp-setting:theme') || localStorage.getItem('rpTheme');
@@ -44,30 +41,23 @@
             const root = document.documentElement;
             root.dataset.theme = choice;
             delete root.dataset.paper;
-            root.style.colorScheme = choice === 'sepia' ? 'light' : 'dark';
-            document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg[choice]);
+            root.style.colorScheme = 'dark';
         })();
         window.__rpStylesReady = new Promise((resolve) => {
             window.__rpCssDone = ((n) => () => { if (--n <= 0) resolve(); })(2);
         });
     </script>
     <style>
-        :root, :root[data-theme="sepia"] { --paper: #F0DEC6; --ink: #614D34; --muted: #826d53; }
-        :root[data-theme="twilight"] { --paper: #17181b; --ink: #ACBAC3; --muted: #8997a0; }
-        :root[data-theme="fog"] { --paper: #313745; --ink: #FFFFFB; --muted: #b8c0d0; }
-        :root[data-theme="wood"] { --paper: #2B2B2B; --ink: #d6d8dc; --muted: #9a9fa8; }
-        :root[data-theme="contrast"] { --paper: #000000; --ink: #F2F2F2; --muted: #a8a8a8; }
-        @media (prefers-color-scheme: dark) { :root:not([data-theme]) { --paper: #000000; --ink: #F2F2F2; --muted: #a8a8a8; } }
         [hidden] { display: none !important; }
-        html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-        .splash-screen { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); background: var(--paper); color: var(--ink); opacity: 1; }
+        html, body { margin: 0; background: #2B2B2B; color: #ACBAC3; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+        .splash-screen { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); background: #2B2B2B; color: #ACBAC3; opacity: 1; }
         .splash-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
-        .splash-logo { display: block; width: 84px; height: 84px; border-radius: 22px; object-fit: cover; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22); }
-        .splash-title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
-        .splash-spinner { display: inline-flex; align-items: center; justify-content: center; margin-top: 4px; color: var(--muted, var(--ink)); }
+        .splash-logo { display: block; width: 88px; height: 88px; flex-shrink: 0; }
+        .splash-title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; color: #ACBAC3; }
+        .splash-spinner { display: inline-flex; align-items: center; justify-content: center; margin-top: 4px; color: #8997a0; }
         .splash-spinner svg { display: block; animation: rp-spin 0.85s linear infinite; }
-        .splash-spinner .loading-track { opacity: 0.2; }
-        .splash-version { position: absolute; left: 50%; bottom: max(28px, calc(18px + env(safe-area-inset-bottom, 0px))); transform: translateX(-50%); font-size: 12px; color: var(--muted); font-weight: 550; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+        .splash-spinner .loading-track { opacity: 0.22; }
+        .splash-version { position: absolute; left: 50%; bottom: max(28px, calc(18px + env(safe-area-inset-bottom, 0px))); transform: translateX(-50%); font-size: 12px; color: #8997a0; font-weight: 550; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
         @keyframes rp-spin { to { transform: rotate(360deg); } }
     </style>
 
@@ -88,7 +78,12 @@
     <!-- App startup splash screen -->
     <div id="splash-screen" class="splash-screen" aria-hidden="true">
         <div class="splash-inner">
-            <img class="splash-logo" src="icons/libro.jpg" alt="" width="84" height="84" decoding="sync" fetchpriority="high">
+            <svg class="splash-logo" viewBox="0 0 64 64" width="88" height="88" fill="none" aria-hidden="true">
+                <path d="M32 19c-4.8-3.8-11.5-5.2-19.5-4.6a2 2 0 0 0-1.8 2v27.4a1.8 1.8 0 0 0 1.9 1.8c7.6-.4 14.1 1 19.4 4.4 5.3-3.4 11.8-4.8 19.4-4.4a1.8 1.8 0 0 0 1.9-1.8V16.4a2 2 0 0 0-1.8-2c-8-.6-14.7.8-19.5 4.6Z" stroke="#9ec5e6" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M32 19v31" stroke="#9ec5e6" stroke-width="1.9" stroke-linecap="round" />
+                <path d="M10.7 19.5H7.8a1.8 1.8 0 0 0-1.8 1.8v26.8a1.8 1.8 0 0 0 1.8 1.8c8-.3 15.2.8 21.2 4.1h6c6-3.3 13.2-4.4 21.2-4.1a1.8 1.8 0 0 0 1.8-1.8V21.3a1.8 1.8 0 0 0-1.8-1.8h-2.9" stroke="#ACBAC3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.82" />
+                <path d="M16.5 23.8c4.2-.2 7.8.6 10.7 2.2M16.5 30.2c4.2-.2 7.8.6 10.7 2.2M16.5 36.6c4.2-.2 7.8.6 10.7 2.2M47.5 23.8c-4.2-.2-7.8.6-10.7 2.2M47.5 30.2c-4.2-.2-7.8.6-10.7 2.2M47.5 36.6c-4.2-.2-7.8.6-10.7 2.2" stroke="#ACBAC3" stroke-width="1.4" stroke-linecap="round" opacity="0.55" />
+            </svg>
             <div class="splash-title">Léetelo</div>
             <span class="splash-spinner" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="26" height="26" fill="none">

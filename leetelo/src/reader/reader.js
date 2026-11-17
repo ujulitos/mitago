@@ -10,6 +10,7 @@ import { openStore, bookKey } from '../core/store.js';
 import { atProgress, START } from '../core/position.js';
 import { icon } from '../lib/icons.js';
 import { localizeDom, t, tn } from '../lib/i18n.js';
+import { resolveTheme } from '../lib/theme.js';
 import { showToast } from '../lib/toast.js';
 import { $, hideLoadingOverlay, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
 import { addReadingTime, errorCode, fileProblem, findDuplicateBook, hasRoom, localDay } from './logic.js';
@@ -213,8 +214,7 @@ async function showLibrary() {
   if (location.search || location.hash === '#_') history.replaceState(null, '', location.pathname);
   $('reading').hidden = true;
   $('library').hidden = false;
-  document.documentElement.style.backgroundColor = '';
-  if (document.body) document.body.style.backgroundColor = '';
+  applyReadingTheme(await (await storeReady).getSetting('theme', null));
   stopAnalogClock();
   document.title = 'Léetelo';
   await (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary());
@@ -792,16 +792,19 @@ function dismissSplash() {
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const stylesReady = window.__rpStylesReady ? Promise.race([window.__rpStylesReady, wait(2500)]) : Promise.resolve();
 await stylesReady;
-applyReadingTheme(await (await storeReady).getSetting('theme', null));
+const savedTheme = await (await storeReady).getSetting('theme', null);
+document.documentElement.dataset.theme = resolveTheme(savedTheme);
 const fontsReady = document.fonts?.ready ? Promise.race([document.fonts.ready.catch(() => {}), wait(1500)]) : Promise.resolve();
 const swReady = window.__rpSwCheck ? Promise.race([window.__rpSwCheck.catch(() => {}), wait(7500)]) : Promise.resolve();
 const splashFallbackTimer = setTimeout(() => {
   window.__rpUpdating = false;
+  applyReadingTheme(savedTheme);
   dismissSplash();
 }, 9000);
 try {
   await Promise.all([route(), fontsReady, swReady]);
 } finally {
   clearTimeout(splashFallbackTimer);
+  if (!window.__rpUpdating) applyReadingTheme(rp.theme ?? savedTheme);
   dismissSplash();
 }

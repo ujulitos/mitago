@@ -24,22 +24,28 @@ export function resolveTheme(theme) {
   return 'sepia';
 }
 
+const HOME_BG = {
+  sepia: '#F0DEC6',
+  twilight: '#17181b',
+  fog: '#313745',
+  wood: '#2B2B2B',
+  contrast: '#000000',
+};
+
 let themeRaf = 0;
 let restoreUrl = null;
 
-function syncThemeColorMeta(color, isDark) {
+function syncThemeColorMeta(choice) {
   cancelAnimationFrame(themeRaf);
   const root = document.documentElement;
-  root.style.colorScheme = isDark ? 'dark' : 'light';
   const readingEl = document.getElementById('reading');
   const inReading = Boolean(readingEl && !readingEl.hidden);
-  if (inReading) {
-    root.style.backgroundColor = color;
-    if (document.body) document.body.style.backgroundColor = color;
-  } else {
-    root.style.backgroundColor = '';
-    if (document.body) document.body.style.backgroundColor = '';
-  }
+  const color = (inReading ? THEME_BG[choice] : HOME_BG[choice]) || THEME_BG[choice];
+  const isDark = choice !== 'sepia';
+
+  root.style.colorScheme = isDark ? 'dark' : 'light';
+  root.style.backgroundColor = color;
+  if (document.body) document.body.style.backgroundColor = color;
 
   const head = document.head;
   if (!head) return;
@@ -53,26 +59,23 @@ function syncThemeColorMeta(color, isDark) {
     head.append(existing);
   }
 
-  if (typeof requestAnimationFrame !== 'function' || !inReading) return;
+  if (typeof requestAnimationFrame !== 'function') return;
+  const activeLayer = inReading ? readingEl : document.getElementById('lib-drawer');
   if (restoreUrl === null && location.hash !== '#_') {
     restoreUrl = `${location.pathname}${location.search}${location.hash}`;
   }
   themeRaf = requestAnimationFrame(() => {
     for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
-    if (!readingEl.hidden) {
-      readingEl.style.transform = 'translateZ(0)';
-      if (restoreUrl !== null) {
-        try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
-      }
+    if (activeLayer && !activeLayer.hidden) activeLayer.style.transform = 'translateZ(0)';
+    if (restoreUrl !== null) {
+      try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
     }
     themeRaf = requestAnimationFrame(() => {
-      readingEl.style.transform = '';
+      if (activeLayer) activeLayer.style.transform = '';
       if (restoreUrl !== null) {
         const cleanUrl = restoreUrl;
         restoreUrl = null;
-        if (!readingEl.hidden) {
-          try { history.replaceState(history.state, '', cleanUrl); } catch { /* ignore */ }
-        }
+        try { history.replaceState(history.state, '', cleanUrl); } catch { /* ignore */ }
       }
       if (!head.querySelector('meta[name="theme-color"]')) {
         const fresh = document.createElement('meta');
@@ -90,7 +93,7 @@ export function applyTheme(theme) {
   const root = document.documentElement.dataset;
   root.theme = choice;
   delete root.paper;
-  syncThemeColorMeta(THEME_BG[choice], choice !== 'sepia');
+  syncThemeColorMeta(choice);
   try {
     localStorage.setItem('rpTheme', choice);
   } catch { /* storage unavailable */ }
