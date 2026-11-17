@@ -437,12 +437,19 @@
                     location.reload();
                 }
             });
+            const registerSw = () => navigator.serviceWorker.register('./sw.js', {
+                    updateViaCache: 'none'
+                })
+                .then((reg) => {
+                    if (navigator.onLine !== false) return reg?.update?.();
+                })
+                .catch(() => {});
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js', {
-                        updateViaCache: 'none'
-                    })
-                    .then((reg) => reg ?.update ?.())
-                    .catch(() => {});
+                if (navigator.onLine !== false || !navigator.serviceWorker.controller) {
+                    registerSw();
+                } else {
+                    window.addEventListener('online', registerSw, { once: true });
+                }
             });
         }
 

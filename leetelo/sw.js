@@ -1,7 +1,7 @@
 // PWA Service Worker for Léetelo WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'leetelo-pwa-v136';
+const CACHE_NAME = 'leetelo-pwa-v137';
 
 const STATIC_ASSETS = [
   './',
@@ -119,7 +119,9 @@ async function matchCached(request) {
   return caches.match(request, { ignoreSearch: true });
 }
 
-function fetchWithTimeout(request, init, ms = 3500) {
+let networkBackoffUntil = 0;
+
+function fetchWithTimeout(request, init, ms = 1200) {
   if (typeof AbortController === 'undefined') return fetch(request, init);
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), ms);
@@ -156,18 +158,28 @@ self.addEventListener('fetch', (event) => {
     || url.pathname.endsWith('/');
 
   if (isAppShell) {
-    event.respondWith(
-      fetchWithTimeout(event.request, { cache: 'no-cache' }, 3500)
-        .then(async (networkResponse) => {
-          if (networkResponse && networkResponse.ok && networkResponse.type === 'basic') {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-            return networkResponse;
-          }
-          return (await matchCached(event.request)) || networkResponse;
-        })
-        .catch(() => matchCached(event.request))
-    );
+    const isNavigate = event.request.mode === 'navigate';
+    event.respondWith((async () => {
+      const skipNetwork = self.navigator?.onLine === false
+        || (!isNavigate && Date.now() < networkBackoffUntil);
+      if (skipNetwork) {
+        const cached = await matchCached(event.request);
+        if (cached) return cached;
+      }
+      try {
+        const networkResponse = await fetchWithTimeout(event.request, { cache: 'no-cache' }, 1200);
+        networkBackoffUntil = 0;
+        if (networkResponse && networkResponse.ok && networkResponse.type === 'basic') {
+          const copy = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return networkResponse;
+        }
+        return (await matchCached(event.request)) || networkResponse;
+      } catch {
+        networkBackoffUntil = Date.now() + 10000;
+        return matchCached(event.request);
+      }
+    })());
     return;
   }
 
@@ -175,7 +187,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     matchCached(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        if (self.navigator?.onLine !== false) {
+        if (self.navigator?.onLine !== false && Date.now() >= networkBackoffUntil) {
           fetch(event.request).then((networkResponse) => {
             if (networkResponse && networkResponse.ok && networkResponse.type === 'basic') {
               caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
