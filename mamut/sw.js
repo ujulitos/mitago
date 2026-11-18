@@ -1,7 +1,7 @@
 // PWA Service Worker for Mamut WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'mamut-pwa-v160';
+const CACHE_NAME = 'mamut-pwa-v161';
 
 const STATIC_ASSETS = [
   './',
