@@ -114,7 +114,7 @@ const FXL_CSS = `
 const VIEW_CSS = `
 .rp-scroll-view, .rp-paged-view { -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; }
 .rp-scroll-view { overflow-y: auto; overflow-x: hidden; overflow-anchor: none;
-  padding-block: calc(max(var(--rp-pad-y, 5vh), max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) + 8px) max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)))) !important;
+  padding-block: calc(max(var(--rp-pad-y, 5vh), var(--safe-top-ui, max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)))) + 6px) max(35vh, calc(var(--rp-pad-y, 5vh) + 24px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)))) !important;
   padding-inline: max(var(--rp-margin-x, 10vw), max(env(safe-area-inset-left, 0px), var(--safe-left, 0px))) max(var(--rp-margin-x, 10vw), max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) !important; box-sizing: border-box; }
 .rp-scroll-view > .rp-section { display: block; }
 .rp-paged-view { overflow: hidden !important; padding: 0 !important; }
@@ -290,7 +290,7 @@ class ContinuousView {
   }
 
   /** The reading edge: the view's top plus the vertical margin area kept clear for page chrome. */
-  get top() { return this.el.getBoundingClientRect().top + this.el.clientTop + this.padYPx() + 8; }
+  get top() { return this.el.getBoundingClientRect().top + this.el.clientTop + this.padYPx() + 6; }
 
   get atEnd() {
     if (!this.hosts?.length) return false;

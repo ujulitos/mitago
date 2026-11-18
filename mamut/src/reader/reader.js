@@ -37,8 +37,8 @@ function syncSafeAreaFallback(notify = true) {
   const root = document.documentElement;
   const ua = navigator.userAgent || '';
   const isIOS = /iPhone|iPod|iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!isIOS) return;
   const isStandalone = navigator.standalone === true || matchMedia?.('(display-mode: standalone)')?.matches;
-  if (!isIOS || !isStandalone) return;
   const probe = document.createElement('div');
   probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)';
   (document.body || root).appendChild(probe);
@@ -53,13 +53,17 @@ function syncSafeAreaFallback(notify = true) {
   const maxDim = Math.max(screen.width || 0, screen.height || 0);
   const statusBarStyle = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.getAttribute('content') || 'default';
   const translucentBar = statusBarStyle === 'black-translucent';
-  const wantTop = (!translucentBar || !fullViewport || envTop >= 20) ? '' : (!portrait ? '' : `${maxDim >= 852 ? 59 : maxDim >= 812 ? 47 : 20}px`);
-  const wantBottom = (!fullViewport || envBottom > 0) ? '' : (maxDim >= 812 ? `${portrait ? 34 : 21}px` : '');
+  const wantTop = (!isStandalone || !translucentBar || !fullViewport || envTop >= 20) ? '' : (!portrait ? '' : `${maxDim >= 852 ? 59 : maxDim >= 812 ? 47 : 20}px`);
+  const wantBottom = (!isStandalone || !fullViewport || envBottom > 0) ? '' : (maxDim >= 812 ? `${portrait ? 34 : 21}px` : '');
+  const effectiveTop = envTop > 0 ? envTop : (parseFloat(wantTop) || 0);
+  const wantTopUi = effectiveTop >= 44 ? `${Math.round(effectiveTop - 10)}px` : '';
   const prevTop = root.style.getPropertyValue('--safe-top');
+  const prevTopUi = root.style.getPropertyValue('--safe-top-ui');
   const prevBottom = root.style.getPropertyValue('--safe-bottom');
   if (wantTop) root.style.setProperty('--safe-top', wantTop); else root.style.removeProperty('--safe-top');
+  if (wantTopUi) root.style.setProperty('--safe-top-ui', wantTopUi); else root.style.removeProperty('--safe-top-ui');
   if (wantBottom) root.style.setProperty('--safe-bottom', wantBottom); else root.style.removeProperty('--safe-bottom');
-  if (notify && (wantTop !== prevTop || wantBottom !== prevBottom)) window.dispatchEvent(new Event('resize'));
+  if (notify && (wantTop !== prevTop || wantTopUi !== prevTopUi || wantBottom !== prevBottom)) window.dispatchEvent(new Event('resize'));
 }
 syncSafeAreaFallback(false);
 addEventListener('pageshow', () => syncSafeAreaFallback(true));
