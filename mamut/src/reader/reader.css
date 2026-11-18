@@ -256,7 +256,7 @@ button.primary:hover {
     margin: 0 auto;
     touch-action: pan-y;
     overscroll-behavior-x: none;
-    padding: calc(108px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(32px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(32px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+    padding: calc(102px + max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(32px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(32px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
 }
 
 .lib-head {
@@ -266,8 +266,8 @@ button.primary:hover {
     right: 0;
     z-index: 50;
     height: auto;
-    min-height: calc(64px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
-    padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 8px;
+    min-height: calc(58px + max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
+    padding: max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px)) 0 8px;
     display: flex;
     align-items: center;
     background: var(--paper);
@@ -1898,7 +1898,7 @@ body:has(#reading:not([hidden])) {
 }
 
 #view.rp-scroll-view {
-    padding-top: calc(max(var(--rp-pad-y, 5vh), calc(max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) + 14px)) + 8px) !important;
+    padding-top: calc(max(var(--rp-pad-y, 5vh), max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) + 8px) !important;
     padding-bottom: max(35vh, calc(var(--rp-pad-y, 5vh) + 48px + max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)))) !important;
 }
 
@@ -1918,7 +1918,7 @@ body:has(#reading:not([hidden])) {
     flex-direction: column;
     align-items: stretch;
     gap: 6px;
-    padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+    padding: max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px)) calc(16px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     background: var(--panel-bg);
     /* opaque: the book scrolls under it */
     border-bottom: 1px solid var(--panel-line);
@@ -2055,7 +2055,7 @@ body:has(#reading:not([hidden])) {
     top: 0;
     left: 0;
     right: 0;
-    height: max(var(--rp-pad-y, 5vh), calc(max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)) + 14px));
+    height: max(var(--rp-pad-y, 5vh), max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
     background: var(--rp-paper);
     pointer-events: none;
 }
@@ -3539,11 +3539,11 @@ body:has(#reading:not([hidden])) {
 
 @media (max-width: 640px) {
     .library {
-        padding: calc(104px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(24px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: calc(98px + max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(24px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .lib-head {
-        padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) 0 8px;
+        padding: max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px)) 0 8px;
     }
 
     .lib-head-inner {
@@ -3616,7 +3616,7 @@ body:has(#reading:not([hidden])) {
     .bar {
         height: auto;
         gap: 5px;
-        padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px)) calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .bar-controls {
@@ -3766,12 +3766,12 @@ body:has(#reading:not([hidden])) {
 
 @media (max-width: 480px) {
     .library {
-        padding: calc(102px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(30px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: calc(96px + max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(30px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) max(env(safe-area-inset-bottom, 0px), var(--safe-bottom, 0px)) calc(16px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .lib-head {
         height: auto;
-        min-height: calc(56px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
+        min-height: calc(50px + max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px)));
     }
 
     .lib-tools {
@@ -3811,7 +3811,7 @@ body:has(#reading:not([hidden])) {
     .bar {
         height: auto;
         gap: 5px;
-        padding: calc(6px + max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px)) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .bar-controls {
