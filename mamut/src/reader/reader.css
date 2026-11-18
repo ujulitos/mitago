@@ -2606,19 +2606,6 @@ body:has(#reading:not([hidden])) {
     animation: panel-in 160ms ease-out;
 }
 
-.panel.dragging {
-    animation: none;
-    transition: none;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.panel.snapping,
-.panel.closing {
-    animation: none;
-    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 160ms ease;
-}
-
 @keyframes panel-in {
     from {
         transform: translateX(16px);
@@ -2635,6 +2622,23 @@ body:has(#reading:not([hidden])) {
 
 :root[dir="rtl"] .panel {
     animation-name: panel-in-rtl;
+}
+
+.panel.no-anim {
+    animation: none;
+}
+
+.panel.dragging {
+    animation: none;
+    transition: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.panel.snapping,
+.panel.closing {
+    animation: none;
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease;
 }
 
 .panel-head {

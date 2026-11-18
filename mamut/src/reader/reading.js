@@ -48,13 +48,19 @@ function onViewScroll() {
 const PANES = { toc: 'toc-pane', search: 'search-pane', marks: 'marks-pane', hl: 'hl-pane', settings: 'settings' };
 const BUTTONS = { toc: 'btn-toc', search: 'btn-search', marks: 'btn-marks', hl: 'btn-hl', settings: 'btn-settings' };
 let panelCloseTimer = 0;
+let panelTransitionHandler = null;
 
-function resetPanelDragState() {
+function resetPanelDragState({ clearNoAnim = false } = {}) {
   clearTimeout(panelCloseTimer);
   panelCloseTimer = 0;
   const panel = $('panel');
   if (!panel) return;
+  if (panelTransitionHandler) {
+    panel.removeEventListener('transitionend', panelTransitionHandler);
+    panelTransitionHandler = null;
+  }
   panel.classList.remove('dragging', 'snapping', 'closing');
+  if (clearNoAnim) panel.classList.remove('no-anim');
   panel.style.transform = '';
   panel.style.opacity = '';
 }
@@ -65,7 +71,7 @@ export function openPanel(which) {
     if (which === 'search') $('q').focus();
     return;
   }
-  resetPanelDragState();
+  resetPanelDragState({ clearNoAnim: true });
   lastFocus = document.activeElement?.closest?.('.bar') ? document.activeElement : $(BUTTONS[which]);
   panel.hidden = false;
   panel.dataset.pane = which;
@@ -87,7 +93,7 @@ export function openPanel(which) {
 export function closePanel(restore = true) {
   const panel = $('panel');
   if (!panel || panel.hidden) return false;
-  resetPanelDragState();
+  resetPanelDragState({ clearNoAnim: true });
   panel.hidden = true;
   for (const id of Object.values(BUTTONS)) $(id).setAttribute('aria-expanded', 'false');
   if (restore) (lastFocus?.isConnected ? lastFocus : $('view')).focus();
@@ -97,13 +103,19 @@ export function closePanel(restore = true) {
 function initPanelSwipeClose() {
   const panel = $('panel');
   if (!panel) return;
-  let state = null; // { active, pointerId, touchId, startX, startY, lastX, lastAt, prevX, prevAt, panelW, dx }
+  let state = null; // { active, pointerId, touchId, startX, startY, lastX, lastAt, prevX, prevAt, panelW, baseDx, dx }
   let suppressClickUntil = 0;
 
   const canStart = (target) => {
     if (panel.hidden || panel.classList.contains('closing')) return false;
     if (target?.closest?.('input, textarea, select')) return false;
     return true;
+  };
+
+  const currentTranslateX = () => {
+    const tr = getComputedStyle(panel).transform;
+    if (!tr || tr === 'none') return 0;
+    try { return Math.max(0, new DOMMatrix(tr).m41 || 0); } catch { return 0; }
   };
 
   const startTrack = (x, y, ids, target) => {
@@ -120,6 +132,7 @@ function initPanelSwipeClose() {
       prevX: x,
       prevAt: now,
       panelW: panel.offsetWidth || 380,
+      baseDx: 0,
       dx: 0,
     };
     return true;
@@ -136,9 +149,10 @@ function initPanelSwipeClose() {
         return;
       }
       state.active = true;
+      state.baseDx = currentTranslateX();
       resetPanelDragState();
+      panel.classList.add('no-anim', 'dragging');
       state.panelW = panel.offsetWidth || 380;
-      panel.classList.add('dragging');
     }
     prevent?.();
     const now = performance.now();
@@ -148,11 +162,20 @@ function initPanelSwipeClose() {
       state.lastX = x;
       state.lastAt = now;
     }
-    const clampedDx = Math.max(0, dx);
+    const clampedDx = Math.max(0, state.baseDx + dx);
     state.dx = clampedDx;
     const progress = Math.min(1, clampedDx / state.panelW);
     panel.style.transform = `translate3d(${clampedDx.toFixed(1)}px, 0, 0)`;
     panel.style.opacity = String((1 - progress * 0.45).toFixed(3));
+  };
+
+  const waitTransformEnd = (cb, ms = 220) => {
+    if (panelTransitionHandler) panel.removeEventListener('transitionend', panelTransitionHandler);
+    panelTransitionHandler = (e) => {
+      if (e.target === panel && e.propertyName === 'transform') cb();
+    };
+    panel.addEventListener('transitionend', panelTransitionHandler);
+    panelCloseTimer = setTimeout(cb, ms);
   };
 
   const finishTrack = () => {
@@ -166,31 +189,24 @@ function initPanelSwipeClose() {
     const ratio = cur.dx / cur.panelW;
     const shouldClose = cur.dx > 0 && (ratio >= 0.3 || (vx > 0.35 && cur.dx > 20));
     panel.classList.remove('dragging');
+    panel.classList.add('no-anim');
     if (shouldClose) {
       panel.classList.add('closing');
-      requestAnimationFrame(() => {
-        if (!panel.classList.contains('closing')) return;
-        panel.style.transform = `translate3d(${cur.panelW}px, 0, 0)`;
-        panel.style.opacity = '0';
-      });
-      const done = () => {
+      void panel.offsetWidth;
+      panel.style.transform = `translate3d(${cur.panelW}px, 0, 0)`;
+      panel.style.opacity = '0';
+      waitTransformEnd(() => {
         if (panel.classList.contains('closing')) closePanel();
-      };
-      panel.addEventListener('transitionend', (e) => { if (e.target === panel) done(); }, { once: true });
-      panelCloseTimer = setTimeout(done, 220);
+      });
       return;
     }
     panel.classList.add('snapping');
-    requestAnimationFrame(() => {
-      if (!panel.classList.contains('snapping')) return;
-      panel.style.transform = 'translate3d(0, 0, 0)';
-      panel.style.opacity = '1';
-    });
-    const snapped = () => {
+    void panel.offsetWidth;
+    panel.style.transform = 'translate3d(0, 0, 0)';
+    panel.style.opacity = '1';
+    waitTransformEnd(() => {
       if (panel.classList.contains('snapping')) resetPanelDragState();
-    };
-    panel.addEventListener('transitionend', (e) => { if (e.target === panel) snapped(); }, { once: true });
-    panelCloseTimer = setTimeout(snapped, 220);
+    });
   };
 
   const findTouch = (list, tid) => {
