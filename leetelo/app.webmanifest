@@ -1,6 +1,6 @@
 {
-    "name": "Léetelo",
-    "short_name": "Léetelo",
+    "name": "Mamut",
+    "short_name": "Mamut",
     "description": "Lector web moderno y ligero para libros EPUB, FB2 y CBZ sin conexión.",
     "start_url": "./",
     "scope": "./",

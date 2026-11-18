@@ -216,7 +216,7 @@ async function showLibrary() {
   $('library').hidden = false;
   applyReadingTheme(await (await storeReady).getSetting('theme', null));
   stopAnalogClock();
-  document.title = 'Léetelo';
+  document.title = 'Mamut';
   await (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary());
 }
 
@@ -272,7 +272,7 @@ async function show(book, id, { push = false } = {}) {
   if (location.search !== url) history.replaceState(null, '', url);
   await setupBook();
   await setupHighlights();
-  document.title = `${book.title || t('untitled')} — Léetelo`;
+  document.title = `${book.title || t('untitled')} — Mamut`;
   $('view').focus({ preventScroll: true });
   if (book.fixedLayout) showToast({ level: 'warn', text: t('fixed_layout'), details: [t('fixed_layout_more')] });
   else if (book.vertical) showToast({ level: 'warn', text: t('vertical_text'), details: [t('vertical_text_more')] });
@@ -345,7 +345,7 @@ export async function saveBookPhysically(file) {
       window.dispatchEvent(new CustomEvent('rp-book-saved', { detail: { name: filename } }));
     }
   } catch (err) {
-    console.warn('[Léetelo] No se pudo guardar el libro físicamente en /libros:', err);
+    console.warn('[Mamut] No se pudo guardar el libro físicamente en /libros:', err);
   } finally {
     clearTimeout(timer);
   }

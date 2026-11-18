@@ -1,12 +1,12 @@
-// PWA Service Worker for Léetelo WebApp
+// PWA Service Worker for Mamut WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'leetelo-pwa-v159';
+const CACHE_NAME = 'mamut-pwa-v160';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './leetelo.html',
+  './mamut.html',
   './favicon.ico',
   './app.webmanifest',
   './icons/icon.svg',

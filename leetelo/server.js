@@ -116,8 +116,8 @@ function resolvePath(reqUrl) {
   if (pathname === '/' || pathname === '/index.html') {
     return path.join(root, 'index.html');
   }
-  if (pathname === '/leetelo.html' || pathname === '/reader.html' || pathname === '/src/reader/reader.html') {
-    return path.join(root, 'leetelo.html');
+  if (pathname === '/mamut.html' || pathname === '/leetelo.html' || pathname === '/reader.html' || pathname === '/src/reader/reader.html') {
+    return path.join(root, 'mamut.html');
   }
 
   // Alias /books/ to /libros/ for backwards compatibility
@@ -400,7 +400,7 @@ const server = http.createServer((req, res) => {
 server.listen(port, host, () => {
   const lanIps = getLanIps();
   console.log('\n' + '='.repeat(60));
-  console.log('  📖 LÉETELO WEBAPP — LECTOR DE LIBROS EPUB / FB2 / CBZ');
+  console.log('  📖 MAMUT WEBAPP — LECTOR DE LIBROS EPUB / FB2 / CBZ');
   console.log('='.repeat(60));
   console.log('  Servidor activo y listo:');
   console.log(`\n  👉 En esta computadora (Localhost): http://localhost:${port}`);

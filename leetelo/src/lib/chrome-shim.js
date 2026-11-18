@@ -1,4 +1,4 @@
-﻿import EN from './i18n-en.js';
+import EN from './i18n-en.js';
 import ES from './i18n-es.js';
 
 const storageKey = (key) => `rp-webapp:${key}`;
@@ -65,8 +65,8 @@ const browserLike = {
     },
   },
   runtime: {
-    id: 'leetelo-webapp',
-    getManifest: () => ({ name: 'Léetelo Web', default_locale: 'es', version: '1.1.1' }),
+    id: 'mamut-webapp',
+    getManifest: () => ({ name: 'Mamut Web', default_locale: 'es', version: '1.1.1' }),
     getURL: (path) => {
       if (!path) return '';
       if (/^https?:\/\//i.test(path)) return path;

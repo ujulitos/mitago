@@ -171,7 +171,7 @@ export async function openStore(name = DB_NAME) {
           }
         }
       } catch (err) {
-        console.warn('[Léetelo] Error guardando ajuste en localStorage:', err);
+        console.warn('[Mamut] Error guardando ajuste en localStorage:', err);
       }
       if (writeDb) return put('settings', { key, value });
     },
