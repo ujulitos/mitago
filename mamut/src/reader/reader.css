@@ -2013,6 +2013,7 @@ body:has(#reading:not([hidden])) {
 }
 
 .chapter {
+    margin-top: 10px;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2032,6 +2033,7 @@ body:has(#reading:not([hidden])) {
 }
 
 .chapter-pages {
+    margin-bottom: 10px;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -3636,7 +3638,7 @@ body:has(#reading:not([hidden])) {
     .bar {
         height: auto;
         gap: 7px;
-        padding: var(--safe-top-ui, max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 8px calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: var(--safe-top-ui, max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(10px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 10px calc(10px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .bar-controls {
@@ -3833,7 +3835,7 @@ body:has(#reading:not([hidden])) {
     .bar {
         height: auto;
         gap: 7px;
-        padding: var(--safe-top-ui, max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 6px calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
+        padding: var(--safe-top-ui, max(6px, env(safe-area-inset-top, 0px), var(--safe-top, 0px))) calc(8px + max(env(safe-area-inset-right, 0px), var(--safe-right, 0px))) 8px calc(8px + max(env(safe-area-inset-left, 0px), var(--safe-left, 0px)));
     }
 
     .bar-controls {
