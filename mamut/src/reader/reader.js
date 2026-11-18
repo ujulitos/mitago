@@ -18,7 +18,7 @@ import { closeLibraryDrawer, hideNotice, importFile, initLibrary, problemText, r
 import { addStatTime } from './stats.js';
 import { EXTENSION } from './libfile.js';
 import { openRemote } from './remote.js';
-import { clearHighlights, closeHighlightBar, exportHighlights, highlightSelection, highlights, initHighlights, onTextMoved, paint as paintHighlights, setupHighlights } from './highlights.js';
+import { clearHighlights, closeHighlightBar, highlightSelection, highlights, initHighlights, onTextMoved, paint as paintHighlights, setupHighlights } from './highlights.js';
 import {
   MEASURES, READER_DEFAULTS, addBookmark, applyReadingTheme, bumpSize, closeKeys, closePanel, closeSettings,
   hideChrome, initReading, openKeys, onPosition as paintPosition, openPanel, paintFolio, runSearch, setStyle, settle, setupBook, stopAnalogClock, syncMode, teardownReadingView, toggleBookmark,
@@ -579,7 +579,6 @@ rp.addBookmark = addBookmark;
 rp.bookmarks = async () => (await storeReady).listBookmarks(rp.bookId);
 rp.highlight = highlightSelection;
 rp.highlights = highlights;
-rp.exportHighlights = exportHighlights;
 rp.openFile = openFile;
 rp.openStored = openStored;
 

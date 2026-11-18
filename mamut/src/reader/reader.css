@@ -2602,7 +2602,21 @@ body:has(#reading:not([hidden])) {
     color: var(--ink);
     border-inline-start: 1px solid var(--line);
     box-shadow: var(--shadow);
+    touch-action: pan-y;
     animation: panel-in 160ms ease-out;
+}
+
+.panel.dragging {
+    animation: none;
+    transition: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.panel.snapping,
+.panel.closing {
+    animation: none;
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 160ms ease;
 }
 
 @keyframes panel-in {
@@ -3055,13 +3069,6 @@ body:has(#reading:not([hidden])) {
     display: flex;
     justify-content: flex-end;
     gap: 6px;
-}
-
-.hl-tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 2px 4px 10px;
 }
 
 .hl-list li {

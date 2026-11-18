@@ -1,7 +1,6 @@
 // Highlights and notes in the reading view. Select text -> a small toolbar (four colours,
 // a note; H highlights). Click a highlight -> recolour, edit its note, delete. The
-// Highlights pane lists them in book order and exports Markdown / JSON (Blob + <a download>:
-// no permission, no network).
+// Highlights pane lists them in book order.
 //
 // Painted with the CSS Custom Highlight API (::highlight(rp-hl-*) in render.js SECTION_CSS),
 // so the chapter DOM, and every position path into it, never changes. start/end are
@@ -12,7 +11,7 @@ import { icon } from '../lib/icons.js';
 import { t } from '../lib/i18n.js';
 import { showToast } from '../lib/toast.js';
 import { boundaryAt, pointOf } from '../core/anchor.js';
-import { COLORS, exportName, snippet, sortHighlights, toJson, toMarkdown } from '../core/notes.js';
+import { COLORS, snippet, sortHighlights } from '../core/notes.js';
 import { parse, progress as progressOf, serialize } from '../core/position.js';
 import { $, el, labelled } from './dom.js';
 import { percent, tocIndexAt } from './logic.js';
@@ -274,7 +273,6 @@ async function copyText(text) {
 // ------------------------------------------------------------------------------------ pane
 function renderList() {
   $('hl-empty').hidden = list.length > 0;
-  $('hl-export-md').disabled = $('hl-export-json').disabled = !list.length;
   $('hl-list').replaceChildren(...list.map((h) => {
     const noteText = formatNote(h.note);
     const jump = el('button', { type: 'button', class: 'jump', dataset: { color: h.color } },
@@ -308,27 +306,10 @@ function renderList() {
       const li = del.closest('li');
       const i = Math.max(0, [...$('hl-list').children].indexOf(li) - (li.nextElementSibling ? 0 : 1));
       await remove(h);
-      ($('hl-list').children[i]?.querySelector('.jump') ?? $('hl-export-md')).focus();
+      ($('hl-list').children[i]?.querySelector('.jump') ?? $('panel-close')).focus();
     });
     return el('li', {}, jump, copyBtn, edit, del);
   }));
-}
-
-/** Markdown or JSON of this book's highlights; also downloads it unless { download: false }. */
-export async function exportHighlights(kind, { download = true } = {}) {
-  await refresh();
-  const book = { id: rp.bookId, title: rp.book.title || t('untitled'), creator: rp.book.creator, language: rp.book.language };
-  const md = kind === 'md';
-  const text = md ? toMarkdown(book, list, { chapterOf }) : toJson(book, list, { chapterOf });
-  if (download) {
-    const url = URL.createObjectURL(new Blob([text], { type: md ? 'text/markdown' : 'application/json' }));
-    const a = el('a', { href: url, download: exportName(book.title, md ? 'md' : 'json') });
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  }
-  return text;
 }
 
 /** Highlights of the book just opened (after setupBook). */
@@ -347,16 +328,12 @@ export function initHighlights(state, deps) {
   $('hl-note-btn').replaceChildren(icon('note', 16), el('span', { textContent: t('hl_note') }));
   $('hl-delete').replaceChildren(icon('trash', 16));
   labelled($('hl-delete'), t('hl_delete'));
-  $('hl-export-md').replaceChildren(icon('download', 15), el('span', { textContent: t('hl_export_md') }));
-  $('hl-export-json').replaceChildren(icon('download', 15), el('span', { textContent: t('hl_export_json') }));
 
   $('hl-note-btn').addEventListener('click', () => ($('hl-note-form').hidden ? openNote() : closeHighlightBar()));
   $('hl-delete').addEventListener('click', async () => { if (editing) await remove(editing); closeHighlightBar(); $('view').focus({ preventScroll: true }); });
   $('hl-note-form').addEventListener('submit', (e) => { e.preventDefault(); saveNote(); });
   $('hl-note-cancel').addEventListener('click', () => closeHighlightBar());
   $('hl-note').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveNote(); } });
-  $('hl-export-md').addEventListener('click', () => exportHighlights('md'));
-  $('hl-export-json').addEventListener('click', () => exportHighlights('json'));
 
   // Clicking the toolbar must not clear the selection it acts on (the note field may take focus).
   bar.addEventListener('pointerdown', (e) => { if (!e.target.closest('textarea')) e.preventDefault(); });

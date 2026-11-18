@@ -47,15 +47,28 @@ function onViewScroll() {
 // ------------------------------------------------------------------------------- panels
 const PANES = { toc: 'toc-pane', search: 'search-pane', marks: 'marks-pane', hl: 'hl-pane', settings: 'settings' };
 const BUTTONS = { toc: 'btn-toc', search: 'btn-search', marks: 'btn-marks', hl: 'btn-hl', settings: 'btn-settings' };
+let panelCloseTimer = 0;
+
+function resetPanelDragState() {
+  clearTimeout(panelCloseTimer);
+  panelCloseTimer = 0;
+  const panel = $('panel');
+  if (!panel) return;
+  panel.classList.remove('dragging', 'snapping', 'closing');
+  panel.style.transform = '';
+  panel.style.opacity = '';
+}
 
 export function openPanel(which) {
-  if (!$('panel').hidden && $('panel').dataset.pane === which) {
+  const panel = $('panel');
+  if (!panel.hidden && !panel.classList.contains('closing') && panel.dataset.pane === which) {
     if (which === 'search') $('q').focus();
     return;
   }
+  resetPanelDragState();
   lastFocus = document.activeElement?.closest?.('.bar') ? document.activeElement : $(BUTTONS[which]);
-  $('panel').hidden = false;
-  $('panel').dataset.pane = which;
+  panel.hidden = false;
+  panel.dataset.pane = which;
   for (const [k, id] of Object.entries(PANES)) $(id).hidden = k !== which;
   for (const [k, id] of Object.entries(BUTTONS)) $(id).setAttribute('aria-expanded', String(k === which));
   $('panel-title').textContent = { toc: t('contents'), search: t('search'), marks: t('bookmarks'), hl: t('highlights'), settings: t('settings_title') }[which];
@@ -72,11 +85,170 @@ export function openPanel(which) {
 }
 
 export function closePanel(restore = true) {
-  if ($('panel').hidden) return false;
-  $('panel').hidden = true;
+  const panel = $('panel');
+  if (!panel || panel.hidden) return false;
+  resetPanelDragState();
+  panel.hidden = true;
   for (const id of Object.values(BUTTONS)) $(id).setAttribute('aria-expanded', 'false');
   if (restore) (lastFocus?.isConnected ? lastFocus : $('view')).focus();
   return true;
+}
+
+function initPanelSwipeClose() {
+  const panel = $('panel');
+  if (!panel) return;
+  let state = null; // { active, pointerId, touchId, startX, startY, lastX, lastAt, prevX, prevAt, panelW, dx }
+  let suppressClickUntil = 0;
+
+  const canStart = (target) => {
+    if (panel.hidden || panel.classList.contains('closing')) return false;
+    if (target?.closest?.('input, textarea, select')) return false;
+    return true;
+  };
+
+  const startTrack = (x, y, ids, target) => {
+    if (!canStart(target)) return false;
+    const now = performance.now();
+    state = {
+      active: false,
+      pointerId: ids.pointerId ?? null,
+      touchId: ids.touchId ?? null,
+      startX: x,
+      startY: y,
+      lastX: x,
+      lastAt: now,
+      prevX: x,
+      prevAt: now,
+      panelW: panel.offsetWidth || 380,
+      dx: 0,
+    };
+    return true;
+  };
+
+  const updateTrack = (x, y, prevent) => {
+    if (!state) return;
+    const dx = x - state.startX;
+    const dy = y - state.startY;
+    if (!state.active) {
+      if (Math.hypot(dx, dy) < 8) return;
+      if (dx <= 0 || Math.abs(dy) >= Math.abs(dx) * 0.9) {
+        state = null;
+        return;
+      }
+      state.active = true;
+      resetPanelDragState();
+      state.panelW = panel.offsetWidth || 380;
+      panel.classList.add('dragging');
+    }
+    prevent?.();
+    const now = performance.now();
+    if (now - state.lastAt > 12) {
+      state.prevX = state.lastX;
+      state.prevAt = state.lastAt;
+      state.lastX = x;
+      state.lastAt = now;
+    }
+    const clampedDx = Math.max(0, dx);
+    state.dx = clampedDx;
+    const progress = Math.min(1, clampedDx / state.panelW);
+    panel.style.transform = `translate3d(${clampedDx.toFixed(1)}px, 0, 0)`;
+    panel.style.opacity = String((1 - progress * 0.45).toFixed(3));
+  };
+
+  const finishTrack = () => {
+    if (!state) return;
+    const cur = state;
+    state = null;
+    if (!cur.active) return;
+    suppressClickUntil = performance.now() + 250;
+    const dt = Math.max(1, performance.now() - cur.prevAt);
+    const vx = (cur.lastX - cur.prevX) / dt; // px/ms
+    const ratio = cur.dx / cur.panelW;
+    const shouldClose = cur.dx > 0 && (ratio >= 0.3 || (vx > 0.35 && cur.dx > 20));
+    panel.classList.remove('dragging');
+    if (shouldClose) {
+      panel.classList.add('closing');
+      requestAnimationFrame(() => {
+        if (!panel.classList.contains('closing')) return;
+        panel.style.transform = `translate3d(${cur.panelW}px, 0, 0)`;
+        panel.style.opacity = '0';
+      });
+      const done = () => {
+        if (panel.classList.contains('closing')) closePanel();
+      };
+      panel.addEventListener('transitionend', (e) => { if (e.target === panel) done(); }, { once: true });
+      panelCloseTimer = setTimeout(done, 220);
+      return;
+    }
+    panel.classList.add('snapping');
+    requestAnimationFrame(() => {
+      if (!panel.classList.contains('snapping')) return;
+      panel.style.transform = 'translate3d(0, 0, 0)';
+      panel.style.opacity = '1';
+    });
+    const snapped = () => {
+      if (panel.classList.contains('snapping')) resetPanelDragState();
+    };
+    panel.addEventListener('transitionend', (e) => { if (e.target === panel) snapped(); }, { once: true });
+    panelCloseTimer = setTimeout(snapped, 220);
+  };
+
+  const findTouch = (list, tid) => {
+    for (let i = 0; list && i < list.length; i++) {
+      if (list[i].identifier === tid) return list[i];
+    }
+    return null;
+  };
+
+  panel.addEventListener('click', (e) => {
+    if (performance.now() < suppressClickUntil) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  panel.addEventListener('touchstart', (e) => {
+    if (state || e.touches.length > 1) return;
+    const t0 = e.changedTouches?.[0] || e.touches?.[0];
+    if (t0) startTrack(t0.clientX, t0.clientY, { touchId: t0.identifier }, e.target);
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!state || state.touchId === null) return;
+    const t0 = findTouch(e.changedTouches, state.touchId) || findTouch(e.touches, state.touchId);
+    if (!t0) return;
+    updateTrack(t0.clientX, t0.clientY, () => { if (e.cancelable) e.preventDefault(); });
+  }, { passive: false });
+
+  const onTouchDone = (e) => {
+    if (!state || state.touchId === null) return;
+    if (!findTouch(e.changedTouches, state.touchId)) return;
+    finishTrack();
+  };
+  window.addEventListener('touchend', onTouchDone, { passive: true });
+  window.addEventListener('touchcancel', onTouchDone, { passive: true });
+
+  panel.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch' || e.button !== 0 || state) return;
+    startTrack(e.clientX, e.clientY, { pointerId: e.pointerId }, e.target);
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (!state || state.pointerId !== e.pointerId) return;
+    updateTrack(e.clientX, e.clientY, () => e.preventDefault());
+  });
+
+  const onPointerDone = (e) => {
+    if (!state || state.pointerId !== e.pointerId) return;
+    finishTrack();
+  };
+  window.addEventListener('pointerup', onPointerDone);
+  window.addEventListener('pointercancel', onPointerDone);
+
+  window.addEventListener('blur', () => {
+    if (state?.active) resetPanelDragState();
+    state = null;
+  });
 }
 
 function togglePanel(which) {
@@ -1188,6 +1360,7 @@ export function initReading(state, deps) {
     if (e.composedPath().some((n) => n.tagName === 'A' || n.dataset?.rpHref)) return;
     $('reading').classList.toggle('mobile-ui-visible');
   });
+  initPanelSwipeClose();
   initSettings();
   initKeys();
   initRail();
