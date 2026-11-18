@@ -1,7 +1,7 @@
 // PWA Service Worker for El Reservorio WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'el-reservorio-pwa-v174';
+const CACHE_NAME = 'el-reservorio-pwa-v175';
 
 const STATIC_ASSETS = [
   './',

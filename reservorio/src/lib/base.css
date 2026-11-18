@@ -293,6 +293,38 @@ select {
     outline-offset: 2px;
 }
 
+button,
+button:focus,
+button:focus-visible,
+[type="button"],
+[type="button"]:focus,
+[type="button"]:focus-visible,
+[type="submit"],
+[type="submit"]:focus,
+[type="submit"]:focus-visible,
+[type="reset"],
+[type="reset"]:focus,
+[type="reset"]:focus-visible,
+[role="button"],
+[role="button"]:focus,
+[role="button"]:focus-visible,
+[role="radio"],
+[role="radio"]:focus,
+[role="radio"]:focus-visible,
+[role="switch"],
+[role="switch"]:focus,
+[role="switch"]:focus-visible {
+    outline: none !important;
+}
+
+button::-moz-focus-inner,
+[type="button"]::-moz-focus-inner,
+[type="submit"]::-moz-focus-inner,
+[type="reset"]::-moz-focus-inner {
+    border: 0;
+    padding: 0;
+}
+
 kbd {
     padding: 0 4px;
     border: 1px solid var(--border);
