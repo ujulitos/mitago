@@ -5,8 +5,8 @@
     "start_url": "./",
     "scope": "./",
     "display": "standalone",
-    "background_color": "#17181b",
-    "theme_color": "#17181b",
+    "background_color": "#2B2B2B",
+    "theme_color": "#2B2B2B",
     "orientation": "any",
     "categories": ["books", "productivity", "utilities"],
     "icons": [{

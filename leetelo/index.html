@@ -40,17 +40,12 @@
         @keyframes rp-spin { to { transform: rotate(360deg); } }
     </style>
 
-    <!-- Non-blocking stylesheets (splash paints on frame 0) -->
-    <link rel="stylesheet" href="src/lib/fonts.css" media="print" onload="this.media='all'">
-    <link rel="stylesheet" href="src/lib/base.css" media="print" onload="this.media='all';window.__rpCssDone?.()" onerror="window.__rpCssDone?.()">
-    <link rel="stylesheet" href="src/reader/reader.css" media="print" onload="this.media='all';window.__rpCssDone?.()" onerror="window.__rpCssDone?.()">
+    <!-- Deferred stylesheets inside noscript fallback (JS injects after splash Frame 0 paint) -->
     <noscript>
         <link rel="stylesheet" href="src/lib/fonts.css">
         <link rel="stylesheet" href="src/lib/base.css">
         <link rel="stylesheet" href="src/reader/reader.css">
     </noscript>
-    <script src="src/lib/version.js" defer></script>
-    <script type="module" src="src/reader/reader.js"></script>
 </head>
 
 <body>
@@ -92,7 +87,6 @@
             }
         };
         fillSplashVersion();
-        window.addEventListener('DOMContentLoaded', fillSplashVersion, { once: true });
     </script>
 
     <input id="file" type="file" accept=".epub,application/epub+zip,.fb2,.fbz,.fb2.zip,.zip,.cbz" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
@@ -509,7 +503,7 @@
                     if (navigator.onLine !== false) {
                         await Promise.race([
                             reg.update().catch(() => {}),
-                            new Promise((r) => setTimeout(r, 2500))
+                            new Promise((r) => setTimeout(r, 1500))
                         ]);
                     }
                     const incoming = found || reg.installing || (hadController ? reg.waiting : null);
@@ -527,17 +521,50 @@
                     window.__rpUpdating = false;
                 }
             };
-            if (navigator.onLine !== false || !hadController) {
-                window.__rpSwCheck = checkUpdates();
-            } else {
-                window.__rpSwCheck = Promise.resolve();
-                window.addEventListener('online', () => {
-                    checkUpdates();
-                }, { once: true });
-            }
+            const startSwCheck = () => {
+                if (navigator.onLine !== false || !hadController) {
+                    window.__rpSwCheck = checkUpdates();
+                } else {
+                    window.__rpSwCheck = Promise.resolve();
+                    window.addEventListener('online', () => {
+                        checkUpdates();
+                    }, { once: true });
+                }
+            };
+            window.__rpStartSwCheck = startSwCheck;
         } else {
             window.__rpSwCheck = Promise.resolve();
         }
+
+        // Paint splash Frame 0 first, then load stylesheets, SW update check & reader.js
+        const afterSplashPaint = () => new Promise((resolve) => {
+            const done = (() => { let ran = false; return () => { if (!ran) { ran = true; resolve(); } }; })();
+            if (typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => setTimeout(done, 0));
+            }
+            setTimeout(done, 48);
+        });
+        const injectCss = (href, track) => {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href;
+            if (track) {
+                link.onload = () => window.__rpCssDone?.();
+                link.onerror = () => window.__rpCssDone?.();
+            }
+            document.head.appendChild(link);
+        };
+        afterSplashPaint().then(() => {
+            injectCss('src/lib/fonts.css', false);
+            injectCss('src/lib/base.css', true);
+            injectCss('src/reader/reader.css', true);
+            const vs = document.createElement('script');
+            vs.src = 'src/lib/version.js';
+            vs.onload = fillSplashVersion;
+            document.head.appendChild(vs);
+            window.__rpStartSwCheck?.();
+            import('./src/reader/reader.js');
+        });
 
         // Notificar a la biblioteca para actualizar automáticamente al guardar un libro
         window.addEventListener('rp-book-saved', () => {
