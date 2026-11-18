@@ -1,12 +1,12 @@
-// PWA Service Worker for Mamut WebApp
+// PWA Service Worker for El Reservorio WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'mamut-pwa-v170';
+const CACHE_NAME = 'el-reservorio-pwa-v172';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './mamut.html',
+  './reservorio.html',
   './favicon.ico',
   './app.webmanifest',
   './icons/icon.svg',

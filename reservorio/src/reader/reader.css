@@ -2007,7 +2007,7 @@ body:has(#reading:not([hidden])) {
     -webkit-line-clamp: 2;
     overflow-wrap: anywhere;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 19px;
+    font-size: 20px;
     font-weight: 600;
     line-height: 1.35;
 }
@@ -2024,7 +2024,7 @@ body:has(#reading:not([hidden])) {
     overflow-wrap: anywhere;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--rp-soft);
-    font-size: 16.5px;
+    font-size: 16px;
     line-height: 1.3;
 }
 
@@ -2040,7 +2040,7 @@ body:has(#reading:not([hidden])) {
     white-space: nowrap;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--rp-soft);
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     line-height: 1.25;
@@ -3667,12 +3667,12 @@ body:has(#reading:not([hidden])) {
     }
 
     .book-title {
-        font-size: 16.5px;
+        font-size: 17px;
         line-height: 1.25;
     }
 
     .chapter {
-        font-size: 14.5px;
+        font-size: 16px;
         line-height: 1.22;
     }
 
@@ -3864,17 +3864,17 @@ body:has(#reading:not([hidden])) {
     }
 
     .book-title {
-        font-size: 15.5px;
+        /* font-size: 17px; */
         line-height: 1.22;
     }
 
     .chapter {
-        font-size: 13.5px;
+        font-size: 16px;
         line-height: 1.2;
     }
 
     .chapter-pages {
-        font-size: 12.5px;
+        font-size: 14px;
         line-height: 1.2;
     }
 
@@ -4333,8 +4333,9 @@ body:has(#reading:not([hidden])) {
 .modal-meta-divider-after {
     margin-bottom: 20px;
 }
+
 .margin-top-divider {
-       margin-top: 20px;
+    margin-top: 20px;
 }
 
 .modal-synopsis-section {

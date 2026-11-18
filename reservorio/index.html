@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>El Reservorio</title>
+    <link rel="manifest" href="app.webmanifest">
+    <meta name="theme-color" content="#17181b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="El Reservorio">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <style>
+        html, body { margin: 0; height: 100%; background: #17181b; color: #ACBAC3; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color-scheme: dark; }
+        .splash-screen { position: fixed; inset: 0; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); background: #17181b; color: #ACBAC3; }
+        .splash-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+        .splash-logo { display: block; width: 88px; height: 88px; flex-shrink: 0; }
+        .splash-title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; color: #ACBAC3; }
+        .splash-spinner { display: inline-flex; align-items: center; justify-content: center; margin-top: 4px; color: #8997a0; }
+        .splash-spinner svg { display: block; animation: rp-spin 0.85s linear infinite; }
+        .splash-spinner .loading-track { opacity: 0.22; }
+        .splash-version { position: absolute; left: 50%; bottom: max(28px, calc(18px + env(safe-area-inset-bottom, 0px))); transform: translateX(-50%); font-size: 12px; color: #8997a0; font-weight: 550; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+        @keyframes rp-spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+
+<body>
+    <div id="splash-screen" class="splash-screen" aria-hidden="true">
+        <div class="splash-inner">
+            <img class="splash-logo" src="data:image/webp;base64,UklGRsAbAABXRUJQVlA4WAoAAAAQAAAAvwAAvwAAQUxQSE8JAAABp8egbSNJ6yx/2u8dgIjI4VH2+UuiLCOXTd8m3EiS5ERdDSeb/394hAV+RP8nQI9odnhhYAAPJuU8peM4gOCSNCwgkjLh30Qk167e2vU0zFfMGM0AQYP2gG4YvqhtOyZn27Z124+zqhFdsZ1L0W3btu25e9xTvh/btm3bts3LjpNOV9Rdx7FPdHf1cZ61V+bucUfEBPB5/3+OVCVNoKRIgKTJoiQCTbzvE/0FUvGJIcv4R99PikJs/5I//LbfG5DcfRKYMrMv+q2vBUXh/K0/kf/9sR+fg6ToZMXZ9I73HX0e9+JxPDJfPPHg7/zqXzrJFJgl4InvevVucn7sbkocp85YwRP8xa9uB5IpJEvA1pe95QVGFmlwiTi1eIGc8JLg/u9+3jTQWDRKgvSc77tnO2QTmYevy6NwW7hrCZAZDAb/+AVPFCgpkJSAox//88FgkDHBkmIEqhVgfm5+MJj740/dASSLQQnY9pFfPTcYzM/Ni2UzDaE+hDNiKQ1c/bOf+MOrJC9jZzZEL37jC3fD0IxR/zUScRcaBdw9wf/9ws/fiymPVUqZdW9+xzMhY2L0syiOul5kXP6Vn/4rZHlszGDf+99wK15MjO7mZ/BIVAEonvA/++FfxihjoQTP/57X3EKWsXotPhxLrgNeEvzht/wZybunBEe/dzAgy6jbEKrXArKMX/ua/yR1zWDXN5wazM+ZqCzG2rSqqRYgm67+5A9h1iUlmo/dMxjMDQZUz4urknUJkq2itAI5cf6dkLpj8MzfGQzm5gdtWFqFNXRY3L4lYyo+wkJLeG42v/VOUDck1r7smWQTbZb+7b9hK5m8DDc+xzpjfPxvPvnz94OJgi9p2gLPnHwuWZ0onHh5AtFuZgNLJaDAkY/9+Xck1JHC9M4vnvuTX/mbRwFMSrYBbwvBtuduRe2Z65lHyEbbmWyWVArA4Se/6iVffXC+0FXR94U+nP2Hf/2b/z07BNhDFy1zYi9qjXVPn0KiAyoLgB0+9Mw7nr4ZFspC7ozTV7IiA87fe//9px449WysA8hZuwtva/8WhqKDhdcf7Z3YdHLX49cDGUt2CXlHxBVI4AXTU1i+E2BsOwJqpb8fRDdf+edTYmnGBOCIzg6XWeruYHLR1YKBVxMuOjxNBkmsOOjSzAgYS0VnBYtUdzyjDrkSo1+js85axtm5gioxlRhr64x8ahqNk137N7zOmcSkXDPFeGv+Gr66ovP/zZj38M742jFz/v++pFXZ4C58zAqdFDJsFo0Vzj9eS6tJ+e8Z+/U9b9wltWGCMmQofNz8L0mjmf70lJXxEpvXXqSDG9bsOtB/yXZsvPDm7u2mkRJ/Yc64Hfvav75x6aFd21VPfOFv/duO6USEzleSRkm8uDDuYu27gMVTj/x8D1WClz4RyJAC8A/elm0EHjueyrgBGUxrecrMZSo717InEiHm9V8tVrbF69uJ0osNCvX7qYggvbzoKcVW4K79lCiQjBZFoN57LyvawqPbiNSshV4k5m/YW2yJc/dmSiRSPaVIVDa8Fy1J5bEDWCTWghOqeONsFrjuKyrEKWT1grVy2wswkP/zHlMg0Ou1YKHgejcO4p2bcixSLSHFYjxxezFK8zJEqMNhLcdLLMq7X4nJtx6OptevBVIsuB8G40nbSjD9GVRHuAVjeuZ0Fs+kEGvPqN3sUjDiti1e+k/Dgkl75HXEG/a6Yinr76TsvwOFopJe9lnq+vBnL4tYi70IbltXYkH61ZLqwOVLeCziFthrTjD5Kl5LDeFuE7cRjAtRvQnonLPIBM3DeKaZrE686yFNkmTRiLXgk0QeDfShTJJhQAVSPGrBFI1zBTwa0WZK0YhZMYwGzOr1+ygW54rTC8fVQ7VSItwz4OGAqD5l8czCTEBWS1gTjdgCfRTOTC1QigbWiSEejNPUS0TrPAADJujUdDRwyVFAqV4/RSP29emH40zXElPJFQtsEiUc6NVyCiLa5OSAZmtBdsItTgqoh2pFLGcqoCkmaNMjoXCGLXg87twg3tSC4ilwISBvIWCPqUUv8QiuBmT1AI/FdRqagLyehGKR98QuPJyJuvsim5ikiscLa9HkUEALIOK1ehE30A+oRQWkmFRLhCyGAfVqwSwejjsloBYb4i0KqTdJIKTFetN4RAsBlXoiXnN6Ac3Um8XDETQB9er1iFdiGNA0XssCcigBraOy6AVkYAGpFlhAwGJALTYx5YBskhSnCUj1egE5kyXiJHJAM5OkcZqApvFJIU9gAS1S3cNxLSgk1cvhQIIrAVm9iDM0AameAgIU0EQtUCaJBeSwgE+OiB0MTY5+QIJpJmgKCFicJAooww18UjjTETmZCdoE5KBJsj4gE9NocnhAImTVu9GCr0Id6oM65aOpntcrq3OnICGtooA7ktSWfI3wDrjjjiE0WsEdJGlVLaZR3B0SK1+bLwUEStiGhpWLI6keyFnXjhcwsfL1SxS55Ep2S2Ll4m5SF3y54phYOnd6/j8uX3ho/sbDF3GWStjWnUr796Q7t27eKYCMpFrF6dcrjgngxqmL9z1y+d65Uh46L2eppJ07e9v3p3WHN23bZABekNRSAi/eAMz/133/d+4/zj88pNXN+48ePHl0rwHFZVWyuFrHCwlg7j/+9//+5/TD87S6c9uxPbftP7YeIGOtTOcs4L/u+sd/uvcRlk/CwX0kCQTZWbrh4JMff/T4LHiRtDprcoVSzIB7/v7f/+d/HmFZMxxwH0VC4MVZdsfRJ91x9PY+5GGp5WxK/cv/8te/9+8LAAkcd1qVhBeAw0945jNOAFk2kmvxErYaLyY49S9/+9f/OQ+QwN1pVRJkgN6Rp77gWTtZW8v4mp97/0EAS0mis5LIQO8pz3vBU3oUN41y8fuuH0SjFB8MBv/wdS/ZApCg4HRUGGRg61t+6JtRHWgANSbG0EQGTrzqTXdCNi23oq3gxcT/f/PzZwCTu9N5SQ4Y9S0Z4yvTEKZf8PbX9MmyFYYksaznBv72pzYDTRLjq5QI3JTh5HveupmMacnKxRMLf/CjvwMpiZtZGZn9b/jAYciSlvNC4tSv/MS/QxI3v6bMple87Tk9KAVQUuJ/fuLnTmPK3BzLMjz5tS+/Uyx76i9/4/cGJC/cPMuKM3N87xF3LvzXPecgFecm22zIyqbi3ITLEOAU5/P+/1y2AFZQOCBKEgAA0FIAnQEqwADAAD4xGIlDoiGhEjmeKCADBKbt1eHSwdieCFGjVR8XwkNQ+Z1z/+ZvbX6O/0p7Af6S9NP+t+gD+jf5b9qvdw/4n+79lv9w9QD+Z/7P1qPUm/u3/J9gD9cPTN/cL4Mf2z/cj4D/5p/ff/F7AH//9QD0AP3/7XX8O/0a8DP5KdIl7T5yv8Rfr+K35QahHrffEQAfnv9H/3niN+IHvl9dfRL/MP9B+ZPrM/yvzbvpn+4/U34B/4d/Sf9V/dPyV+Uj/O/xno2/Lv8d/zv8z8An8c/n/+y/t/+R/aX5mfYn+wnsUfq0bD+6TYVJsKkXUYsYB6xvGFWR2D3cqQuGd8CzSPTh9NTTqFFMEDg88Z36NmdMyrJBQDR+m/fwRReokBJgbanb7xEXLVJjXjHgcqmkUKQtJmZtj8940cFTnre8LuXnt8iD/z8I6qW6dSeoK/PY3B5wQ/ITQ/gWgoN29OrxQrucmF1TaZoQGNsj0Zk2roPI9IHkczwdKeJa1TZsVPrHHtSrdqcvyb+cV0wjCFOwMCO5JgyYnQo9HhNChjcMwiodo7gR4YWE17ETPNRaQAAIqKIGFIHVhRyN2nbxJug7hRyGpFy354aFxcXApf51DYxKbhCx+iNrFA3992iB85LURiMAu10mtQ4G0cWH210NCrVFCkvoZAX2sbAf50LoIZKOWMmW+QilRTrNq7ZXTKO0HifO7nq3ymAB95uKUP8miuoQ9Tz89BsiqTi2XnjrA8XH8WLyZ3eV0EPG3kdvvy91aNMdWphRld8nJAtsg/FGpFbi0YQDHstiFWJnkyFlu1YBwFeFHw+ZRfYFJO3WsH/++ezMA3JwiON91njDlctpIimf+lxjSrPpHIph/HZTXtzH0mwqTYVJpAAA/v7uqgAABQ/zyKxKj+0JvfEy/3W/bfisKkoUGWGbGAioxZ7iagAIFG6f5SP4l3QAP9oGJl38UKcY3urQmNx/ElP9NZUu3iCQcOGPJX2n+ARIdoa4lLa/t3mvwuoJQtdc00kCjFOonfYvd0EcM9zHICB+lm6FEd8f44O8RK5y99CrjUjb5XdBn9HDlKDRsZ83zKhoeTTthg9XJNzSzObRORdwu22AJX1addpTJW/9cFsYTya6RT1AtawHeaiG8lTzXDnKn3jjvpyZ8OOLPZa57U0+XfyusY++2OSzKFqEfwM1ypbTFrL2e0oa0G3iRfn3LfXJH2OUOS48MrKpJnp5WAntUQmyGd4qb40lB0Yn7qwNWjy2sIIgVxcM50r6mcRXKc0lpioMdXTpst4786EtuDtD6GIHXRujhsr8bLzVlcADDxoy3hrsNScNU0PxMm9wVlyUuwpYXvjLB510fP+7ZhivhAe+v8dIh27e7j5K5P0UOr+X0gYJIrhTK1sHyf4iXRRn/d7UYRf5h3MelgUS76nGwxkrTs0BZIQ3/870Xdwn9UuiCXAvHGdd4i//8cRVdb6ZIQnyYb5rAfg3wfTdD2wuaKHQ4nQ3mA+tanDtl1HzqeBGdJf9M9SlUmUaUM/etY2ngZV07c/q4FqLjh1e2ed+jCroyK8X+AB8FSg6aeGLRrr8VUNn0Zw5a3SEyul0MX5NIMFb+R6c10cmDCnB8/j11Ey9jtZ8FszJD581qcquj4tm4n577tp6rq/8gDv8H706oT/5sB935fCJ0Bfx3JW2FWVin4O2sVkZ5i64KskzFtV8MZ2V+8r42jt1seaFJVB99VndVubypUe24Kw3qNYG30xljm4fBtWjW7UhISri1V4+sX+RjDxc9wGUdaEgefo2SYDO5urWim3MClpBNfVt0bfazRAxxWP2k3cEQ76FUEz3NvntzicD2oAvoC+8kXX71cux7Tfk/ow+RS3ZIKEF0e9Aa3wLLIyuF3YrC7ngO+W/IXURreokpGSjKKq7bW+F3X2Uvy0w/tYOWFM7HcgvwPeifVa0f0jqD4zOL32b42VRR49fA5wgn/GRZd1jrMlQ7ih3IbPZHFjprE8zo2RAk43rkak3F8p/knrwKhcbAbV5M9DpYaRR0Ee1+JPK51lrqXu1ZoZ5h60Oln+O3xKGaIEHADzaz5/TAGs8pJUz6oHn2QgT4zu0UvO429w1ovxgwTeA4KMDpHkdZ+170RWFUqYGFLvOE0y8kk4hro31WTpcitukt06xzNITSknQqnGhy3mxSyN6FvnE9e4ezziQPh2OISY6wJRr640k1tqXvGKUDxIpDVj8NfNa0kKB38C2+o6Q8Qx9DpECBipMxHlVCPggM5kV8l7zE47OHIu18KEr8tOS+PNHPzQf0FtzYkSLDLPoSpI6/5t6JKr7bwkFVM7qXmYizfTr7ZgMJ5Mzle5VqhjHMoc+OWzmGwj4rsk7+AcyqP3o7RPb/wAvubplnD8xGPWQsP9BTK2E4W22cA8G/ncE6UOg15BBzdmjO36nBUhK0fn8i8S11GmIM3xKgxKViL7ozPtBpskoiQxchEVGEQslfwyC2U//F9fiEbkgiln2GVs1fjtMYMSboo3y5PROQOZKycE/4lEB9x7pf5BnkU096UOpyHwfP4iz5wTg/5d5WXUYdQafZ+B7fC9uJc/n2jm7n7lF9Ai4dBEhvIVF12M4yTYhsQeu3XziChHYJXxbub7GhIUQG+zTx3g4lKI7OeokaK3tT4bYFNfuML8dvi58SB/jc8QXUJTYutvPCExQz9nxF1J8vuvSButdDhcHnVU8kLFWtz5vnnYKHF5nw9eV+3QWfipIQfzeoItPOtVUc7V+ocQKpXP2VDeAb1oMcmTrDfFDHCOTldR47LFVlNks+p6xOriWVrKDzohW6viUzYlHivUXD32te31Fs85xgukI4NfwHRNE4pl/y04NqHkN/UCZMkf+Xx94fha6+NYJoAm5MHMPs3WOeVMAGJIlqEd9V0hljW7mZG06YCHVQOu3+YOHCyFHoLWaZrGX7kdkVUdn33q1be/eSg2CUKelFQ8UmnXFV5e0m/3DIDF3D+KWw0g7AMKhbncgsbAaWaBAOFf9WadShgwa01hHiWdgB/ugRKT/DiaBNTfxsBqcSHQ9E0UCn5ax7/ldYicHws0tB9Dn/zwXFrUCn7uQC8jO3m0erUcM0BsWA/iT7X/CvnBQtx83CYP4itq/DuPAmN8VtPTSoq3VSsQxh25CPH9kDHJ/VAJUonbs3l84bSJFnPehLhR+HNfL70+tdg3gbaHYIjC49XFlTw225KiYnZmtAfP+//n//IITrci7ufa/GBgvont+y4znHhJ533qGm4PUnjAUxXoPh+V6cy3yUaabfbw2DCQkd4ORAFOH392EG1THzcAfHW5sic6JY2vj0FsYdtqK/vLmlmZK8VZef1MDaW92hKQci18v2cyibpObrOWQHF4k6QkTeV8gx7j0rKxZ+LZ+kcbkZk3WFnZ0laJPdsMQwrppcAzh1U+gvqwoDTznxjH9g/QSLIzDg54/AFfLShpWhmqrWXVyguXJi+zdifof4uqP8ze5uvAz7s18bDncU63elNpybeh2G5uZQ0dy6L3xy+DsVx2YrU0awjfkRr6mTGE6wysLkQtHOJndtmx8v7fmb7wUis3FDM7K48Uir5iOhnve9ro+3u2KSh6FeK8cW89XSwfj8BVhnSOGwmhb0p0ZSvGVTVkMZrCtIgW9h1Y80BRO0l3/M/H0uMyRWFnsk1Bdj248fAOFub4vx9uW6l7nQnrKlcVSMAPPEJxim6KYNTq1GusA0pQAU6oP3jCqPoKm7Hu2BCWc9Nqv4yfd3m4p/2t4aOf5YXSh4F8F6EwJPXAnKV/pSNg5uOdUMsH1WIyWxwF/BI4UNXnzEjl6XQD8xYher/nN9t/ektJt6qOZemm1Tf4zbDThPH0akj3inA+hS6ceUPXU7WGSVqrX9ZwtlW5pXTBUc8BrWvks562S7vTM4b+ZoyMQxtueIcDCenH2NtvBQBlcL+tTBcEIAjfvv/9LJs28pnJoIzTzhrh4qKhjVYvosWKp0Q8EfUZC9VHZCYV+Cl4L0ub1MwpZjN4lakAETm0QSw84JRM4Id0udmcLzzPK8FQnuNJT3wS3qJE9JxYFZMxwFH/qVT+5+p/uedQkZ7+MT6aOt6ouejITJ4tgzZgUn3FRNxmMEpGVTCm0zgIKVOwpYGqySr7nbth1IoH/pFljtjOhl4bBuqUe1ydHUozPlaAnV5gofFzO+gXWjFVQ33cypqf3MLkKMMpig/Is1ioxBYOjWnWzfmT1E5uCqW7LfQ549aOyQG/uWrbSaOy6PbOlTYvTwN4Fo8xeeaJG1+YH0QLoTfgUdtkBJENsZxFbFuEmwXcG2MVM5cR6WUOuXj/pnltrLXAW7AQRhdijpKr3If5oafzLYC9OBxoHTX2QpxLjjYHt9NkrnVPIMyIVlepxoCS89LzZbOlNMQJ895nz8CpgD6coNe8/khKBNSKwyyzaSKk8NlK1mvLDTyvvsk+V7iI/pWwZ566H5xK5oNGZcuy0jA4gghCszh5nwhmd3RKukIp6fKw30sEMUYcalMqU1c5kRtEzbbRMhe1703aDoHJ7BPqDGu5QLrhXHAbQAYCLslcRH/GodQVpSeletpdWV6gRBrx6a6MhcRexZV6qPgwgEzKTYSkfqICjOP22ch3/UCIT38rm41b1LpxvEtEBJGCGwY08LQll9iZkD2Q7UZqGlA595c7Z5O/Lyy5D1M+5xpAx6shElZVV7XPmeDypffT/+bQ5oTszJEy6hG81Aur/AjfzS4fKmlJyzVCJxyqm3swoURcUPvAoc0vUMN017W/sLUjl7J+df2vPBLPfEqNZKQsAumCA7RIMDkldtHApz6YA/U5tATV+m7fT2rrCE6Fg2fBtHuZBp0q7S8C3Q6CZTc8mKt6VM3gvVyuQB9ZpVKMtoqADQweZjXiB9csEtozXzLDDbcKO+2aDYwgtoQcy7YGpW2OafmZ/SWv7Uh55L3TQ539rST/PdZEbAj1PVryMGQtTFbMFUTrNGKbG7KRh84XxJjNx38JRijzL3sbmM8hf+t7LGv7SgKZ0KrBGJ3NoYhiMC+JP9tBzHp+MzRiQ8sP/4DgbEVU7saoVLAvg24FOmaz1a5mw+jCZBPzQBz27fnPQFeXkbLLq4EypXAoOJeP9ZMFO1HCnXWS5ueKkmFZ6PFn3JrkTvqA90rmACqa1O4s3N4PhvrkZicNJS30i0MgM/MA6F02FCOeK5WNOspF01T+h7wvH2j76d8jDqLqOO7bzwgFB8iDFWMU6aGKv9IDCEaP9Y8jeiWUSU5E2Yqn/42y4NsO+bDKIRqx+VHwYnd6G8VgRkD0Rs+HtJXxwnGq7kv5/ZPNod+DbgAo8ffv4A7Y5H0pjtKr5+vj4DF+ZxXiOr267vTTi3l/tliSFZC/JU6t/8EaxOwtpviDAOFc0UA/uAzzubac8mGL+DToE16EcbTzVK+ZTynZxNsMxBEa9Yf6sEsbR8JqsQwbfsFqdjIzRD6ynHEPebbQRYgkw9VaosYJd7u40OZxlK5iSvuME4pL/HatMcUWBAqjGY/5CJanJfTT7mTB5xFUMidTTQIldAGtbh01rVHYaNfQybTwSPLj3YogqhVYskwuRyR9Zj7eYC6AKRKwDqpHlflO2Yayo7oItYcou2wXGHWgSZMhZRq3JLmu/mrNXyOtAny1mQiJbLGUOAAgz8k7tsjHc0KmJJRhpLNW95FsDEZFtqlN28pzorCAPDT7mVdRw2jfkHrcx8Qp0BQJJBJVfsNWWfECZh7yuXYCRwTWPWecRFjrN9xyaUQn4i2BrmvBlimrRsHSsr9DJ0aoCrFz8Q+8qp0D2+7UzqLFVIpGk2H9vF7zKrlc+Twor7+1pXg1p7kuRVbFN7DvQQqcA0dnMQ9uVfe8X5Rs8npf6G4NTjNOwIaN7EY2Tikesce6gRIABkddPiggJe3+lCMDXn46SMorctGbrkGDIbezbD4tbohazhvxt9GOUBLBFYMc3+6Lzrjvqtak48CUwzbxYjxAWUPAkX6u6ItLL67UefzZhSVO4rJtiw1y3chsfvdbfnsBtDP8qQ3OHa7PBSHdqnkyuVQcUAr6Acdjmhm9W3YUKn7yJ7oH44/Bb8lIbwBapzTNbWyD790qB9YUcLOHZvmAJ/VP/ayj5/d1fLr8BAiC4SDojZBFOtIFUR/+RoOiAAAJbV1d43iLFZtpR5V3RJDo9m09NN2p+sJGuL2vBuYyg75PFx/21Qz6f69TuUu3QCPKuAAAAAAAAAAA=" width="88" height="88" alt="">
+            <div class="splash-title">El Reservorio</div>
+            <span class="splash-spinner" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
+                    <circle class="loading-track" cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="2.4" />
+                    <path class="loading-arc" d="M21.5 12a9.5 9.5 0 0 0-9.5-9.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
+        <div id="splash-version" class="splash-version"></div>
+    </div>
+    <script>
+        const afterFirstPaint = () => new Promise((resolve) => {
+            const done = (() => { let ran = false; return () => { if (!ran) { ran = true; resolve(); } }; })();
+            if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => setTimeout(done, 0));
+            setTimeout(done, 48);
+        });
+
+        const waitWorker = (worker) => new Promise((resolve) => {
+            if (!worker || worker.state === 'activated' || worker.state === 'redundant') {
+                resolve(worker?.state || 'none');
+                return;
+            }
+            const timer = setTimeout(() => resolve(worker.state), 6500);
+            worker.addEventListener('statechange', () => {
+                if (worker.state === 'activated' || worker.state === 'redundant') {
+                    clearTimeout(timer);
+                    resolve(worker.state);
+                }
+            });
+        });
+
+        const checkSwAndPreload = async () => {
+            const vs = document.createElement('script');
+            vs.src = 'src/lib/version.js';
+            vs.onload = () => {
+                const sv = document.getElementById('splash-version');
+                if (sv && window.APP_VERSION) sv.textContent = 'v ' + window.APP_VERSION;
+            };
+            document.head.appendChild(vs);
+
+            const prewarm = Promise.allSettled([
+                fetch('./reservorio.html'),
+                fetch('./src/lib/base.css'),
+                fetch('./src/reader/reader.css'),
+                fetch('./src/reader/reader.js'),
+            ]);
+
+            if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
+                try {
+                    const hadController = !!navigator.serviceWorker.controller;
+                    if (navigator.onLine !== false || !hadController) {
+                        const reg = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+                        if (reg && navigator.onLine !== false) {
+                            let found = reg.installing || (hadController ? reg.waiting : null);
+                            reg.addEventListener('updatefound', () => {
+                                if (!found) found = reg.installing;
+                            });
+                            await Promise.race([reg.update().catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
+                            const incoming = found || reg.installing || (hadController ? reg.waiting : null);
+                            if (incoming) await waitWorker(incoming);
+                        }
+                    }
+                    try { sessionStorage.setItem('rp_sw_checked', String(Date.now())); } catch {}
+                } catch {}
+            }
+
+            await Promise.race([prewarm, new Promise((r) => setTimeout(r, 1200))]);
+            location.replace('./reservorio.html' + location.search + location.hash);
+        };
+
+        afterFirstPaint().then(checkSwAndPreload);
+    </script>
+</body>
+
+</html>

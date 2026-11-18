@@ -65,8 +65,8 @@ const browserLike = {
     },
   },
   runtime: {
-    id: 'mamut-webapp',
-    getManifest: () => ({ name: 'Mamut Web', default_locale: 'es', version: '1.1.1' }),
+    id: 'el-reservorio-webapp',
+    getManifest: () => ({ name: 'El Reservorio', default_locale: 'es', version: '1.1.1' }),
     getURL: (path) => {
       if (!path) return '';
       if (/^https?:\/\//i.test(path)) return path;

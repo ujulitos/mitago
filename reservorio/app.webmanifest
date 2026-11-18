@@ -1,6 +1,6 @@
 {
-    "name": "Mamut",
-    "short_name": "Mamut",
+    "name": "El Reservorio",
+    "short_name": "El Reservorio",
     "description": "Lector web moderno y ligero para libros EPUB, FB2 y CBZ sin conexión.",
     "start_url": "./",
     "scope": "./",
