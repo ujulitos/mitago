@@ -2640,7 +2640,7 @@ body:has(#reading:not([hidden])) {
 .panel.snapping,
 .panel.closing {
     animation: none;
-    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease;
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .panel-head {

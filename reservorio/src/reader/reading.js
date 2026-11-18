@@ -164,9 +164,7 @@ function initPanelSwipeClose() {
     }
     const clampedDx = Math.max(0, state.baseDx + dx);
     state.dx = clampedDx;
-    const progress = Math.min(1, clampedDx / state.panelW);
     panel.style.transform = `translate3d(${clampedDx.toFixed(1)}px, 0, 0)`;
-    panel.style.opacity = String((1 - progress * 0.45).toFixed(3));
   };
 
   const waitTransformEnd = (cb, ms = 220) => {
@@ -194,7 +192,6 @@ function initPanelSwipeClose() {
       panel.classList.add('closing');
       void panel.offsetWidth;
       panel.style.transform = `translate3d(${cur.panelW}px, 0, 0)`;
-      panel.style.opacity = '0';
       waitTransformEnd(() => {
         if (panel.classList.contains('closing')) closePanel();
       });
@@ -203,7 +200,6 @@ function initPanelSwipeClose() {
     panel.classList.add('snapping');
     void panel.offsetWidth;
     panel.style.transform = 'translate3d(0, 0, 0)';
-    panel.style.opacity = '1';
     waitTransformEnd(() => {
       if (panel.classList.contains('snapping')) resetPanelDragState();
     });
