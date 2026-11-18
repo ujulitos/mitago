@@ -1,11 +1,12 @@
 // PWA Service Worker for Léetelo WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'leetelo-pwa-v152';
+const CACHE_NAME = 'leetelo-pwa-v158';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
+  './leetelo.html',
   './favicon.ico',
   './app.webmanifest',
   './icons/icon.svg',
@@ -110,12 +111,12 @@ const STATIC_ASSETS = [
 async function matchCached(request) {
   const exact = await caches.match(request);
   if (exact) return exact;
+  const ignored = await caches.match(request, { ignoreSearch: true });
+  if (ignored) return ignored;
   if (request.mode === 'navigate') {
-    return (await caches.match('./index.html'))
-      || (await caches.match('./'))
-      || caches.match(request, { ignoreSearch: true });
+    return (await caches.match('./index.html')) || caches.match('./');
   }
-  return caches.match(request, { ignoreSearch: true });
+  return undefined;
 }
 
 let networkBackoffUntil = 0;

@@ -1779,7 +1779,7 @@ body.dragging .shelf-dropzone {
     display: grid;
     place-items: center;
     padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
-    background: #2B2B2B;
+    background: #17181b;
     color: #ACBAC3;
     opacity: 1;
     will-change: opacity, transform;

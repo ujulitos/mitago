@@ -112,9 +112,12 @@ function resolvePath(reqUrl) {
   const reqUrlObj = new URL(reqUrl, 'http://localhost');
   let pathname = decodeURIComponent(reqUrlObj.pathname || '/');
 
-  // Root & reader alias
-  if (pathname === '/' || pathname === '/index.html' || pathname === '/reader.html' || pathname === '/src/reader/reader.html') {
+  // Root splash & reader HTML routes
+  if (pathname === '/' || pathname === '/index.html') {
     return path.join(root, 'index.html');
+  }
+  if (pathname === '/leetelo.html' || pathname === '/reader.html' || pathname === '/src/reader/reader.html') {
+    return path.join(root, 'leetelo.html');
   }
 
   // Alias /books/ to /libros/ for backwards compatibility

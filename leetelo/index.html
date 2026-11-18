@@ -5,31 +5,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <title>Léetelo</title>
-
-    <!-- PWA & Mobile WebApp Tags -->
     <link rel="manifest" href="app.webmanifest">
-    <meta name="theme-color" content="#2B2B2B">
+    <meta name="theme-color" content="#17181b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Léetelo">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
-    <link rel="shortcut icon" href="favicon.ico">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-
-    <!-- Splashscreen siempre en Crepúsculo desde frame 0 -->
-    <script>
-        document.documentElement.style.colorScheme = 'dark';
-        window.__rpStylesReady = new Promise((resolve) => {
-            window.__rpCssDone = ((n) => () => { if (--n <= 0) resolve(); })(2);
-        });
-    </script>
     <style>
-        [hidden] { display: none !important; }
-        html, body { margin: 0; background: #2B2B2B; color: #ACBAC3; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-        .splash-screen { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); background: #2B2B2B; color: #ACBAC3; opacity: 1; }
+        html, body { margin: 0; height: 100%; background: #17181b; color: #ACBAC3; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color-scheme: dark; }
+        .splash-screen { position: fixed; inset: 0; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); background: #17181b; color: #ACBAC3; }
         .splash-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
         .splash-logo { display: block; width: 88px; height: 88px; flex-shrink: 0; }
         .splash-title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; color: #ACBAC3; }
@@ -39,35 +24,27 @@
         .splash-version { position: absolute; left: 50%; bottom: max(28px, calc(18px + env(safe-area-inset-bottom, 0px))); transform: translateX(-50%); font-size: 12px; color: #8997a0; font-weight: 550; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
         @keyframes rp-spin { to { transform: rotate(360deg); } }
     </style>
-
-    <!-- Deferred stylesheets inside noscript fallback (JS injects after splash Frame 0 paint) -->
-    <noscript>
-        <link rel="stylesheet" href="src/lib/fonts.css">
-        <link rel="stylesheet" href="src/lib/base.css">
-        <link rel="stylesheet" href="src/reader/reader.css">
-    </noscript>
 </head>
 
 <body>
-    <!-- App startup splash screen -->
     <div id="splash-screen" class="splash-screen" aria-hidden="true">
         <div class="splash-inner">
             <svg class="splash-logo" viewBox="0 0 512 512" width="88" height="88" aria-hidden="true">
                 <defs>
-                    <linearGradient id="spCoverGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#32445c"/><stop offset="100%" stop-color="#1b2535"/></linearGradient>
-                    <linearGradient id="spUnderL" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c3ceda"/><stop offset="100%" stop-color="#dce4ed"/></linearGradient>
-                    <linearGradient id="spUnderR" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#d4dde7"/><stop offset="100%" stop-color="#b7c3d1"/></linearGradient>
-                    <linearGradient id="spPageL" x1="0" y1="0.2" x2="1" y2="0.6"><stop offset="0%" stop-color="#ffffff"/><stop offset="72%" stop-color="#f1f5f9"/><stop offset="100%" stop-color="#d6e0ea"/></linearGradient>
-                    <linearGradient id="spPageR" x1="0" y1="0.4" x2="1" y2="0.2"><stop offset="0%" stop-color="#cdd8e4"/><stop offset="28%" stop-color="#e9eff5"/><stop offset="100%" stop-color="#fafcfe"/></linearGradient>
-                    <linearGradient id="spRibbon" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f08770"/><stop offset="100%" stop-color="#d45b46"/></linearGradient>
+                    <linearGradient id="spBkCover" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4e592d"/><stop offset="100%" stop-color="#586434"/></linearGradient>
+                    <linearGradient id="spBkLeafA" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#6b7a42"/><stop offset="100%" stop-color="#879857"/></linearGradient>
+                    <linearGradient id="spBkLeafB" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#7c8f4c"/><stop offset="100%" stop-color="#99ae64"/></linearGradient>
+                    <linearGradient id="spBkLeafC" x1="0.2" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#8fa356"/><stop offset="100%" stop-color="#abc072"/></linearGradient>
                 </defs>
-                <path d="M50 132c0-11 8.5-19.5 19.5-19C140 116 210 132 256 164c46-32 116-48 186.5-51 11-.5 19.5 8 19.5 19v242c0 10.5-8 19-18.5 19.5-70 3.5-131 15.5-174 39-8.5 4.5-18.5 4.5-27 0-43-23.5-104-35.5-174-39C58 393 50 384.5 50 374V132Z" fill="url(#spCoverGrad)"/>
-                <path d="M68 124c66 3 136 19 188 52v220c-49-28-115-40-188-43V124Z" fill="url(#spUnderL)"/>
-                <path d="M444 124c-66 3-136 19-188 52v220c49-28 115-40 188-43V124Z" fill="url(#spUnderR)"/>
-                <path d="M84 102c62 3 128 21 172 55v226c-46-29-108-42-172-44 0-79 0-158 0-237Z" fill="url(#spPageL)"/>
-                <path d="M428 102c-62 3-128 21-172 55v226c46-29 108-42 172-44 0-79 0-158 0-237Z" fill="url(#spPageR)"/>
-                <path d="M248 152c3 3 5.5 5.5 8 8 2.5-2.5 5-5 8-8v231c-2.8-1.8-5.4-3.3-8-4.7-2.6 1.4-5.2 2.9-8 4.7V152Z" fill="#9fb0c2" opacity="0.32"/>
-                <path d="M294 358v78l19-14 19 14v-85c-13 2-25.5 4.5-38 7Z" fill="url(#spRibbon)"/>
+                <path d="M36 184c66-8 148 22 216 206h8c68-184 150-214 216-206v212c-74-14-142 0-198 32-12 7-32 7-44 0-56-32-124-46-198-32V184Z" fill="url(#spBkCover)"/>
+                <path d="M249 384C198 362 126 356 62 366V146c72 22 140 82 187 238Z" fill="url(#spBkLeafA)" opacity="0.88"/>
+                <path d="M249 384C178 362 96 320 34 226c76 48 158 58 215 158Z" fill="url(#spBkLeafB)" opacity="0.72"/>
+                <path d="M249 384C166 346 108 264 102 104c68 38 142 84 147 280Z" fill="url(#spBkLeafB)" opacity="0.72"/>
+                <path d="M249 384C168 332 108 258 68 178c82 40 156 96 181 206Z" fill="url(#spBkLeafC)" opacity="0.58"/>
+                <path d="M263 384c51-22 123-28 187-18V146c-72 22-140 82-187 238Z" fill="url(#spBkLeafA)" opacity="0.88"/>
+                <path d="M263 384c71-22 153-64 215-158-76 48-158 58-215 158Z" fill="url(#spBkLeafB)" opacity="0.72"/>
+                <path d="M263 384c83-38 141-120 147-280-68 38-142 84-147 280Z" fill="url(#spBkLeafB)" opacity="0.72"/>
+                <path d="M263 384c81-52 141-126 181-206-82 40-156 96-181 206Z" fill="url(#spBkLeafC)" opacity="0.58"/>
             </svg>
             <div class="splash-title">Léetelo</div>
             <span class="splash-spinner" aria-hidden="true">
@@ -80,496 +57,66 @@
         <div id="splash-version" class="splash-version"></div>
     </div>
     <script>
-        const fillSplashVersion = () => {
-            if (window.APP_VERSION) {
-                const sv = document.getElementById('splash-version');
-                if (sv) sv.textContent = 'v ' + window.APP_VERSION;
-            }
-        };
-        fillSplashVersion();
-    </script>
-
-    <input id="file" type="file" accept=".epub,application/epub+zip,.fb2,.fbz,.fb2.zip,.zip,.cbz" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
-
-    <!-- ============================================================ library -->
-    <div id="library" class="library" hidden>
-        <header class="lib-head">
-            <div class="lib-head-inner">
-                <div class="lib-brand-row">
-                    <button id="lib-menu-btn" class="icon-btn lib-menu-btn" type="button" aria-controls="lib-drawer" aria-expanded="false" data-i18n-aria="menu" data-i18n-title="menu">
-                        <span class="burger-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-                    </button>
-                    <h1 class="brand" id="brand"><span>Léetelo</span></h1>
-                </div>
-                <div class="lib-tools">
-                    <div id="shelf-search-wrap" class="shelf-search-bar" role="search">
-                        <span id="shelf-search-icon" class="shelf-search-icon" aria-hidden="true"></span>
-                        <input id="shelf-search" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="shelf_search_placeholder" data-i18n-aria="shelf_search_placeholder">
-                        <button id="shelf-search-clear" class="icon-btn shelf-search-clear" type="button" data-i18n-aria="dismiss" data-i18n-title="dismiss" hidden></button>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <main class="lib-main">
-            <div id="notice" class="notice" role="alert" hidden>
-                <span class="notice-icon" id="notice-icon" aria-hidden="true"></span>
-                <div class="notice-text">
-                    <p class="notice-title" id="notice-title"></p>
-                    <p class="notice-next" id="notice-next"></p>
-                </div>
-                <button id="notice-close" class="icon-btn" type="button" data-i18n-aria="dismiss" data-i18n-title="dismiss"></button>
-            </div>
-
-            <section id="first-run" class="dropzone" aria-labelledby="drop-title" hidden>
-                <div class="drop-art" id="drop-art" aria-hidden="true"></div>
-                <h2 id="drop-title" data-i18n="drop_title"></h2>
-                <p class="drop-sub" data-i18n="drop_sub"></p>
-            </section>
-
-            <section id="shelf" aria-labelledby="shelf-title" hidden>
-                <div class="shelf-head">
-                    <h2 id="shelf-title" data-i18n="your_books"></h2>
-                    <span id="shelf-count" class="muted"></span>
-                </div>
-                <div id="shelf-sections" class="shelf-sections">
-                    <ul id="books" class="books"></ul>
-                </div>
-            </section>
-
-            <!-- Synopsis / Metadata Modal -->
-            <div id="meta-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="meta-modal-heading" hidden>
-                <div class="modal-backdrop" id="meta-modal-backdrop"></div>
-                <div class="modal-card">
-                    <header class="modal-header">
-                        <h3 id="meta-modal-heading" data-i18n="synopsis_title">Sinopsis</h3>
-                        <button id="meta-modal-close" class="icon-btn modal-close" type="button" data-i18n-aria="close" data-i18n-title="close"></button>
-                    </header>
-                    <div class="modal-body" id="meta-modal-body"></div>
-                    <footer class="modal-footer" aria-hidden="true"></footer>
-                </div>
-            </div>
-
-            <!-- Batch Delete Confirmation Modal -->
-            <div id="batch-confirm-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="batch-confirm-heading" hidden>
-                <div class="modal-backdrop" id="batch-confirm-backdrop"></div>
-                <div class="modal-card modal-card-compact">
-                    <header class="modal-header">
-                        <h3 id="batch-confirm-heading"></h3>
-                        <button id="batch-confirm-close" class="icon-btn modal-close" type="button" data-i18n-aria="close" data-i18n-title="close"></button>
-                    </header>
-                    <div class="modal-confirm-body">
-                        <p id="batch-confirm-text" class="modal-confirm-text"></p>
-                        <div class="modal-confirm-actions">
-                            <button id="batch-confirm-keep" class="batch-btn" type="button" data-i18n="keep">Conservar</button>
-                            <button id="batch-confirm-yes" class="batch-btn batch-delete" type="button" data-i18n="delete">Eliminar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Hamburger Menu Drawer -->
-        <div id="lib-drawer" class="lib-drawer" role="dialog" aria-modal="true" aria-labelledby="lib-drawer-title" hidden>
-            <div class="lib-drawer-backdrop" id="lib-drawer-backdrop"></div>
-            <aside class="lib-drawer-panel">
-                <header class="lib-drawer-head">
-                    <button id="lib-drawer-close" class="icon-btn lib-menu-btn lib-drawer-close" type="button" data-i18n-aria="dismiss" data-i18n-title="dismiss">
-                        <span class="burger-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-                    </button>
-                    <h2 id="lib-drawer-title" data-i18n="menu">Menú</h2>
-                </header>
-                <div class="lib-drawer-body">
-                    <div class="lib-theme-dropdown" id="lib-theme-dropdown">
-                        <button id="lib-theme-toggle" class="lib-theme-toggle" type="button" aria-haspopup="true" aria-expanded="false">
-                            <span id="lib-theme-label" class="lib-theme-label" data-i18n="theme">Tema</span>
-                            <span id="lib-theme-chevron" class="lib-theme-chevron" aria-hidden="true"></span>
-                        </button>
-                        <div class="swatches" role="radiogroup" aria-labelledby="lbl-theme" id="lib-theme"></div>
-                    </div>
-
-                    <button id="lib-drawer-add" class="lib-drawer-action" type="button">
-                        <span class="lib-drawer-action-icon" id="lib-drawer-add-icon" aria-hidden="true"></span>
-                        <span class="lib-drawer-action-text">
-                            <strong data-i18n="add_books">Agregar libro(s)</strong>
-                            <small data-i18n="add_books_sub">Arrastra aquí o toca · EPUB, FB2 o CBZ</small>
-                        </span>
-                    </button>
-
-                    <section id="lib-info" class="lib-drawer-section" aria-labelledby="lib-info-title">
-                        <h3 id="lib-info-title" class="lib-drawer-section-title" data-i18n="library_info">Información de la biblioteca</h3>
-                        <dl class="lib-info-list">
-                            <div>
-                                <dt data-i18n="total_books_label">Libros en la biblioteca</dt>
-                                <dd id="lib-info-books">0</dd>
-                            </div>
-                            <div>
-                                <dt data-i18n="cat_reading">Leyendo ahora</dt>
-                                <dd id="lib-info-reading">0</dd>
-                            </div>
-                            <div>
-                                <dt data-i18n="cat_to_read">Por leer</dt>
-                                <dd id="lib-info-to-read">0</dd>
-                            </div>
-                            <div>
-                                <dt data-i18n="cat_read">Leídos</dt>
-                                <dd id="lib-info-read">0</dd>
-                            </div>
-                            <div>
-                                <dt data-i18n="storage_label">Espacio ocupado</dt>
-                                <dd id="storage">—</dd>
-                            </div>
-                            <div>
-                                <dt data-i18n="version_label">Versión</dt>
-                                <dd id="app-version">1.00</dd>
-                            </div>
-                        </dl>
-                    </section>
-                </div>
-            </aside>
-        </div>
-
-        <!-- Batch selection bar for Todos -->
-        <div id="batch-bar" class="batch-bar" role="region" aria-live="polite" hidden>
-            <div class="batch-bar-inner">
-                <div class="batch-bar-main" id="batch-bar-main">
-                    <button id="batch-cancel" class="icon-btn batch-close" type="button" data-i18n-aria="cancel" data-i18n-title="cancel"></button>
-                    <span id="batch-count" class="batch-count"></span>
-                    <div class="batch-bar-actions">
-                        <button id="batch-select-all" class="batch-btn" type="button" data-i18n="select_all">Seleccionar todos</button>
-                        <button id="batch-delete" class="batch-btn batch-delete" type="button"></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Touch/pointer interactive right-side scroll rail for mobile Home -->
-        <div id="lib-scrollbar" class="lib-scrollbar" aria-hidden="true" hidden>
-            <div id="lib-scrollbar-track" class="lib-scrollbar-track">
-                <div id="lib-scrollbar-thumb" class="lib-scrollbar-thumb"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================ reading -->
-    <div id="reading" class="reading" hidden>
-        <header id="bar" class="bar">
-            <div class="bar-controls">
-                <button id="back" class="icon-btn" type="button" data-i18n-aria="back_to_library" data-i18n-title="back_to_library"></button>
-                <div class="bar-tools">
-                    <button id="btn-toc" class="icon-btn" type="button" aria-controls="panel" aria-expanded="false"></button>
-                    <button id="btn-search" class="icon-btn" type="button" aria-controls="panel" aria-expanded="false"></button>
-                    <button id="btn-marks" class="icon-btn" type="button" aria-controls="panel" aria-expanded="false"></button>
-                    <button id="btn-hl" class="icon-btn" type="button" aria-controls="panel" aria-expanded="false"></button>
-                    <button id="btn-settings" class="icon-btn" type="button" aria-controls="panel" aria-expanded="false"></button>
-                </div>
-            </div>
-            <div class="bar-title">
-                <span id="book-title" class="book-title"></span>
-                <span id="chapter" class="chapter"></span>
-                <span id="chapter-pages" class="chapter-pages"></span>
-            </div>
-        </header>
-        <div id="bar-margin" class="bar-margin" aria-hidden="true"></div>
-        <button id="quick-theme" class="corner-btn corner-theme" type="button"></button>
-        <button id="quick-bookmark" class="corner-btn corner-bookmark" type="button" aria-pressed="false"></button>
-
-        <main id="view" tabindex="-1"></main>
-
-        <!-- Highlight toolbar -->
-        <div id="hl-bar" class="hl-bar" role="toolbar" data-i18n-aria="hl_toolbar" hidden>
-            <div id="hl-colors" class="hl-colors"></div>
-            <button id="hl-note-btn" class="tool" type="button" aria-controls="hl-note-form" aria-expanded="false"></button>
-            <button id="hl-delete" class="icon-btn" type="button" hidden></button>
-            <form id="hl-note-form" class="hl-note" hidden>
-                <textarea id="hl-note" rows="3" data-i18n-aria="hl_note" data-i18n-placeholder="hl_note_placeholder"></textarea>
-                <div class="hl-note-actions">
-                    <button id="hl-note-cancel" class="tool" type="button" data-i18n="hl_cancel"></button>
-                    <button id="hl-note-save" class="tool strong" type="submit" data-i18n="hl_save"></button>
-                </div>
-            </form>
-        </div>
-
-        <button id="page-prev" class="page-btn prev" type="button" hidden></button>
-        <button id="page-next" class="page-btn next" type="button" hidden></button>
-
-        <footer id="reading-foot" class="reading-foot">
-            <div id="foot-margin" class="foot-margin" aria-hidden="true"></div>
-            <div id="rail" class="rail" role="slider" tabindex="0" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                <div class="rail-track" id="rail-track">
-                    <div class="rail-fill" id="rail-fill"></div>
-                    <div id="ticks" class="ticks"></div>
-                    <div class="rail-thumb" id="rail-thumb"></div>
-                </div>
-                <div class="rail-tip" id="rail-tip" hidden></div>
-            </div>
-            <div class="reading-foot-row">
-                <div class="reading-foot-left">
-                    <div id="clock-widget" class="clock-widget">
-                        <div id="analog-clock" class="analog-clock" role="img" aria-label="Reloj analógico" title="Reloj">
-                            <svg viewBox="0 0 176 176" width="100%" height="100%" class="clock-svg">
-                                <circle class="clock-dial" cx="88" cy="88" r="82" />
-                                <line id="clock-hour" class="clock-hand clock-hour" x1="88" y1="88" x2="88" y2="44" stroke-linecap="round" />
-                                <line id="clock-min" class="clock-hand clock-min" x1="88" y1="88" x2="88" y2="20" stroke-linecap="round" />
-                                <circle class="clock-pivot" cx="88" cy="88" r="7" />
-                            </svg>
-                        </div>
-                        <div id="clock-segmented" class="segmented clock-segmented">
-                            <button id="clock-bar-toggle" class="clock-bar-toggle" type="button" role="switch" aria-checked="true" aria-label="Reloj" title="Reloj">
-                                <span id="clock-bar-label" class="clock-bar-label" data-i18n="clock">Reloj</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="folio" class="folio" hidden></div>
-                </div>
-                <div id="pct" class="pct" aria-hidden="true"></div>
-                <div class="reading-foot-right">
-                    <div id="chapter-time" class="chapter-time" aria-hidden="true"></div>
-                </div>
-            </div>
-            <div id="book-bar" class="book-bar" aria-hidden="true">
-                <div id="book-fill" class="book-fill"></div>
-            </div>
-        </footer>
-
-        <aside id="panel" class="panel" aria-labelledby="panel-title" hidden>
-            <div class="panel-head">
-                <h2 id="panel-title"></h2>
-                <button id="panel-close" class="icon-btn" type="button" data-i18n-aria="close_panel" data-i18n-title="close_panel"></button>
-            </div>
-
-            <nav id="toc-pane" class="pane" data-i18n-aria="contents" hidden>
-                <ol id="toc" class="toc"></ol>
-                <p id="toc-empty" class="empty" data-i18n="toc_empty" hidden></p>
-            </nav>
-
-            <div id="search-pane" class="pane" hidden>
-                <form id="search-form" class="search-box" role="search">
-                    <span id="search-icon" aria-hidden="true"></span>
-                    <input id="q" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="search_placeholder" data-i18n-aria="search_placeholder">
-                </form>
-                <div id="search-progress" class="search-progress" hidden>
-                    <div class="search-fill" id="search-fill"></div>
-                </div>
-                <p id="search-status" class="search-status" role="status"></p>
-                <button id="search-back" class="tool strong back-btn" type="button" hidden></button>
-                <ol id="results" class="results"></ol>
-            </div>
-
-            <div id="marks-pane" class="pane" hidden>
-                <button id="mark-add" class="tool strong" type="button"></button>
-                <p id="mark-reason" class="hint" hidden></p>
-                <ol id="bookmarks" class="marks"></ol>
-                <p id="marks-empty" class="empty" data-i18n="marks_empty" hidden></p>
-            </div>
-
-            <div id="hl-pane" class="pane" hidden>
-                <div class="hl-tools">
-                    <button id="hl-export-md" class="tool strong" type="button"></button>
-                    <button id="hl-export-json" class="tool strong" type="button"></button>
-                </div>
-                <ol id="hl-list" class="marks hl-list"></ol>
-                <p id="hl-empty" class="empty" data-i18n="hl_empty" hidden></p>
-            </div>
-
-            <div id="settings" class="pane" hidden>
-                <div class="set-row">
-                    <span class="set-label" id="lbl-size" data-i18n="text_size"></span>
-                    <div class="stepper" role="group" aria-labelledby="lbl-size">
-                        <button id="size-down" class="icon-btn" type="button" data-i18n-aria="smaller_text" data-i18n-title="smaller_text"></button>
-                        <output id="size-val" aria-live="polite"></output>
-                        <button id="size-up" class="icon-btn" type="button" data-i18n-aria="larger_text" data-i18n-title="larger_text"></button>
-                    </div>
-                </div>
-                <div class="set-row col">
-                    <span class="set-label" id="lbl-font" data-i18n="font"></span>
-                    <div class="segmented wide" role="radiogroup" aria-labelledby="lbl-font" id="seg-font"></div>
-                </div>
-                <div class="set-row">
-                    <span class="set-label" id="lbl-lh" data-i18n="line_spacing"></span>
-                    <div class="slider-wrap">
-                        <input type="range" id="slider-lh" min="1.1" max="2.4" step="0.05" value="1.4" aria-labelledby="lbl-lh">
-                        <output id="lh-val" aria-live="polite">1.40</output>
-                    </div>
-                </div>
-                <div class="set-row">
-                    <span class="set-label" id="lbl-margin-v" data-i18n="margin_v"></span>
-                    <div class="slider-wrap">
-                        <input type="range" id="slider-margin-v" min="10" max="30" step="1" value="10" aria-labelledby="lbl-margin-v">
-                        <output id="margin-v-val" aria-live="polite">10%</output>
-                    </div>
-                </div>
-                <div class="set-row">
-                    <span class="set-label" id="lbl-margin-h" data-i18n="margin_h"></span>
-                    <div class="slider-wrap">
-                        <input type="range" id="slider-margin-h" min="10" max="60" step="1" value="20" aria-labelledby="lbl-margin-h">
-                        <output id="margin-h-val" aria-live="polite">20%</output>
-                    </div>
-                </div>
-                <div class="set-row">
-                    <span class="set-label" id="lbl-justify" data-i18n="justify"></span>
-                    <div class="segmented" role="radiogroup" aria-labelledby="lbl-justify" id="seg-justify"></div>
-                </div>
-                <div class="set-row col" id="row-theme">
-                    <span class="set-label" id="lbl-theme" data-i18n="theme"></span>
-                    <div class="swatches" role="radiogroup" aria-labelledby="lbl-theme" id="seg-theme"></div>
-                </div>
-                <div class="set-row">
-                    <span class="set-label" id="lbl-mode" data-i18n="layout"></span>
-                    <div class="segmented" role="radiogroup" aria-labelledby="lbl-mode" id="seg-mode"></div>
-                </div>
-                <div class="set-row col" id="row-spread">
-                    <span class="set-label" id="lbl-spread" data-i18n="pages_per_screen"></span>
-                    <div class="segmented wide three" role="radiogroup" aria-labelledby="lbl-spread" id="seg-spread"></div>
-                </div>
-                <div class="set-row col" id="row-turn">
-                    <span class="set-label" id="lbl-turn" data-i18n="page_turn"></span>
-                    <div class="segmented wide three" role="radiogroup" aria-labelledby="lbl-turn" id="seg-turn"></div>
-                </div>
-                <div class="set-row">
-                    <span class="set-label" id="lbl-own" data-i18n="book_only"></span>
-                    <button id="own-style" class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="lbl-own"></button>
-                </div>
-                <div class="set-row">
-                    <button id="btn-keys" class="tool" type="button" data-i18n="keyboard_shortcuts"></button>
-                </div>
-            </div>
-        </aside>
-    </div>
-
-    <dialog id="keys" class="keys" aria-labelledby="keys-title">
-        <h2 id="keys-title" data-i18n="keyboard_shortcuts"></h2>
-        <dl id="keys-list" class="keys-list"></dl>
-        <button id="keys-close" class="tool strong" type="button" data-i18n="close_panel"></button>
-    </dialog>
-
-    <div id="veil" class="veil" hidden>
-        <div class="veil-box"><span id="veil-icon" aria-hidden="true"></span><span data-i18n="drop_to_open"></span></div>
-    </div>
-
-    <div id="loading-overlay" class="loading-overlay" role="status" aria-live="polite" aria-modal="true" hidden>
-        <div class="loading-box">
-            <span class="loading-spinner" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="34" height="34" fill="none">
-                    <circle class="loading-track" cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="2.6" />
-                    <path class="loading-arc" d="M21.5 12a9.5 9.5 0 0 0-9.5-9.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
-                </svg>
-            </span>
-            <span id="loading-text" class="loading-text"></span>
-        </div>
-    </div>
-
-    <!-- WebApp Scripts: Service Worker & Sync -->
-    <script>
-        // 1. PWA Service Worker Registration (startup update check behind splash screen)
-        window.__rpUpdating = false;
-        if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
-            const hadController = !!navigator.serviceWorker.controller;
-            let reloaded = false;
-            navigator.serviceWorker.addEventListener('controllerchange', async () => {
-                if (hadController && !reloaded) {
-                    reloaded = true;
-                    window.__rpUpdating = true;
-                    try {
-                        await window.__rp?.flush?.();
-                    } catch {}
-                    location.reload();
-                }
-            });
-            const waitWorker = (worker) => new Promise((resolve) => {
-                if (!worker || worker.state === 'activated' || worker.state === 'redundant') {
-                    resolve(worker?.state || 'none');
-                    return;
-                }
-                const done = (state) => resolve(state);
-                const timer = setTimeout(() => done(worker.state), 6500);
-                worker.addEventListener('statechange', () => {
-                    if (worker.state === 'activated' || worker.state === 'redundant') {
-                        clearTimeout(timer);
-                        done(worker.state);
-                    }
-                });
-            });
-            const checkUpdates = async () => {
-                try {
-                    const reg = await navigator.serviceWorker.register('./sw.js', {
-                        updateViaCache: 'none'
-                    });
-                    if (!reg) return;
-                    let found = reg.installing || (hadController ? reg.waiting : null);
-                    reg.addEventListener('updatefound', () => {
-                        if (!found) found = reg.installing;
-                    });
-                    if (navigator.onLine !== false) {
-                        await Promise.race([
-                            reg.update().catch(() => {}),
-                            new Promise((r) => setTimeout(r, 1500))
-                        ]);
-                    }
-                    const incoming = found || reg.installing || (hadController ? reg.waiting : null);
-                    if (incoming && hadController) {
-                        window.__rpUpdating = true;
-                        const state = await waitWorker(incoming);
-                        if (state === 'redundant') {
-                            window.__rpUpdating = false;
-                            return;
-                        }
-                        await new Promise((r) => setTimeout(r, 1000));
-                        if (!reloaded) window.__rpUpdating = false;
-                    }
-                } catch {
-                    window.__rpUpdating = false;
-                }
-            };
-            const startSwCheck = () => {
-                if (navigator.onLine !== false || !hadController) {
-                    window.__rpSwCheck = checkUpdates();
-                } else {
-                    window.__rpSwCheck = Promise.resolve();
-                    window.addEventListener('online', () => {
-                        checkUpdates();
-                    }, { once: true });
-                }
-            };
-            window.__rpStartSwCheck = startSwCheck;
-        } else {
-            window.__rpSwCheck = Promise.resolve();
-        }
-
-        // Paint splash Frame 0 first, then load stylesheets, SW update check & reader.js
-        const afterSplashPaint = () => new Promise((resolve) => {
+        const afterFirstPaint = () => new Promise((resolve) => {
             const done = (() => { let ran = false; return () => { if (!ran) { ran = true; resolve(); } }; })();
-            if (typeof requestAnimationFrame === 'function') {
-                requestAnimationFrame(() => setTimeout(done, 0));
-            }
+            if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => setTimeout(done, 0));
             setTimeout(done, 48);
         });
-        const injectCss = (href, track) => {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = href;
-            if (track) {
-                link.onload = () => window.__rpCssDone?.();
-                link.onerror = () => window.__rpCssDone?.();
+
+        const waitWorker = (worker) => new Promise((resolve) => {
+            if (!worker || worker.state === 'activated' || worker.state === 'redundant') {
+                resolve(worker?.state || 'none');
+                return;
             }
-            document.head.appendChild(link);
-        };
-        afterSplashPaint().then(() => {
-            injectCss('src/lib/fonts.css', false);
-            injectCss('src/lib/base.css', true);
-            injectCss('src/reader/reader.css', true);
-            const vs = document.createElement('script');
-            vs.src = 'src/lib/version.js';
-            vs.onload = fillSplashVersion;
-            document.head.appendChild(vs);
-            window.__rpStartSwCheck?.();
-            import('./src/reader/reader.js');
+            const timer = setTimeout(() => resolve(worker.state), 6500);
+            worker.addEventListener('statechange', () => {
+                if (worker.state === 'activated' || worker.state === 'redundant') {
+                    clearTimeout(timer);
+                    resolve(worker.state);
+                }
+            });
         });
 
-        // Notificar a la biblioteca para actualizar automáticamente al guardar un libro
-        window.addEventListener('rp-book-saved', () => {
-            window.dispatchEvent(new CustomEvent('rp-reload-library'));
-        });
+        const checkSwAndPreload = async () => {
+            const vs = document.createElement('script');
+            vs.src = 'src/lib/version.js';
+            vs.onload = () => {
+                const sv = document.getElementById('splash-version');
+                if (sv && window.APP_VERSION) sv.textContent = 'v ' + window.APP_VERSION;
+            };
+            document.head.appendChild(vs);
+
+            const prewarm = Promise.allSettled([
+                fetch('./leetelo.html'),
+                fetch('./src/lib/base.css'),
+                fetch('./src/reader/reader.css'),
+                fetch('./src/reader/reader.js'),
+            ]);
+
+            if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
+                try {
+                    const hadController = !!navigator.serviceWorker.controller;
+                    if (navigator.onLine !== false || !hadController) {
+                        const reg = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+                        if (reg && navigator.onLine !== false) {
+                            let found = reg.installing || (hadController ? reg.waiting : null);
+                            reg.addEventListener('updatefound', () => {
+                                if (!found) found = reg.installing;
+                            });
+                            await Promise.race([reg.update().catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
+                            const incoming = found || reg.installing || (hadController ? reg.waiting : null);
+                            if (incoming) await waitWorker(incoming);
+                        }
+                    }
+                    try { sessionStorage.setItem('rp_sw_checked', String(Date.now())); } catch {}
+                } catch {}
+            }
+
+            await Promise.race([prewarm, new Promise((r) => setTimeout(r, 1200))]);
+            location.replace('./leetelo.html' + location.search + location.hash);
+        };
+
+        afterFirstPaint().then(checkSwAndPreload);
     </script>
 </body>
 
