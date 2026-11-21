@@ -1862,7 +1862,7 @@ body:has(#reading:not([hidden])) {
 }
 
 .reading {
-    --rail-h: 60px;
+    --rail-h: 50px;
     position: relative;
     width: 100%;
     height: 100vh;
@@ -2124,7 +2124,7 @@ body:has(#reading:not([hidden])) {
     left: 0;
     right: 0;
     width: 100%;
-    height: var(--rail-h, 60px);
+    height: var(--rail-h, 50px);
     background: var(--rp-paper);
     cursor: pointer;
     touch-action: none;
@@ -2153,9 +2153,9 @@ body:has(#reading:not([hidden])) {
 
 .ticks i {
     position: absolute;
-    top: -14px;
+    top: -12px;
     width: 2px;
-    height: 16px;
+    height: 14px;
     margin-left: -0.75px;
     border-radius: 1px;
     background: var(--rp-soft);
@@ -2387,7 +2387,7 @@ body:has(#reading:not([hidden])) {
 
 .analog-clock {
     position: absolute;
-    bottom: calc(100% + var(--rail-h, 42px) + 10px);
+    bottom: calc(100% + var(--rail-h, 50px) + 10px);
     left: 50%;
     transform: translate(-50%, 0);
     width: 131px;
@@ -3586,7 +3586,7 @@ body:has(#reading:not([hidden])) {
     }
 
     .reading {
-        --rail-h: 38px;
+        --rail-h: 50px;
     }
 
     .bar {
@@ -3783,7 +3783,7 @@ body:has(#reading:not([hidden])) {
     }
 
     .reading {
-        --rail-h: 36px;
+        --rail-h: 50px;
     }
 
     .bar {
@@ -3966,11 +3966,11 @@ body:has(#reading:not([hidden])) {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateY(var(--rail-h, 42px));
+    transform: translateY(var(--rail-h, 50px));
 }
 
 #reading:not(.mobile-ui-visible) #analog-clock {
-    transform: translate(-50%, var(--rail-h, 42px));
+    transform: translate(-50%, var(--rail-h, 50px));
 }
 
 #reading.mobile-ui-visible #bar {
