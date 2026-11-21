@@ -15,7 +15,10 @@ import { chapterTicks, percent, tocIndexAt } from './logic.js';
 
 export const MEASURES = { narrow: 30, medium: 35, wide: 44 }; // em: ~62, ~72, ~90 characters per line
 export const READER_DEFAULTS = { ...STYLE_DEFAULTS, marginV: 10, marginH: 20 };
-const SIZES = { min: 12, max: 36, step: 2 };
+const SIZES = { min: 12, max: 36, step: 1 };
+const LINE_HEIGHTS = { min: 1.1, max: 2.4, step: 0.05 };
+const MARGIN_V = { min: 10, max: 30, step: 1 };
+const MARGIN_H = { min: 10, max: 60, step: 1 };
 const WORD_SPACINGS = [0, 0.12, 0.25];
 
 let rp;
@@ -625,6 +628,26 @@ export function bumpSize(dir) {
   if (next !== rp.view.style.fontSize) return setStyle({ fontSize: next });
 }
 
+function bumpLineHeight(dir) {
+  const cur = Number(rp.view.style.lineHeight ?? 1.4);
+  const next = Number(Math.min(LINE_HEIGHTS.max, Math.max(LINE_HEIGHTS.min, cur + dir * LINE_HEIGHTS.step)).toFixed(2));
+  if (Math.abs(next - cur) > 1e-6) return setStyle({ lineHeight: next });
+}
+
+function bumpMarginV(dir) {
+  const raw = Number(rp.view.style.marginV ?? 10);
+  const cur = (raw > MARGIN_V.max || raw < MARGIN_V.min) ? 10 : raw;
+  const next = Math.min(MARGIN_V.max, Math.max(MARGIN_V.min, cur + dir * MARGIN_V.step));
+  if (next !== cur) return setStyle({ marginV: next });
+}
+
+function bumpMarginH(dir) {
+  const raw = Number(rp.view.style.marginH ?? 20);
+  const cur = raw > MARGIN_H.max ? 20 : Math.min(MARGIN_H.max, Math.max(MARGIN_H.min, raw));
+  const next = Math.min(MARGIN_H.max, Math.max(MARGIN_H.min, cur + dir * MARGIN_H.step));
+  if (next !== cur) return setStyle({ marginH: next });
+}
+
 function syncSettings() {
   const s = rp.view.style;
   $('size-val').textContent = String(s.fontSize);
@@ -638,19 +661,46 @@ function syncSettings() {
   const activeFont = validFonts.has(s.fontFamily) ? s.fontFamily : (s.fontFamily === 'readable' ? 'atkinson' : 'condensed');
   segs.font?.set(activeFont);
 
-  const lh = Number(s.lineHeight ?? 1.4);
-  if ($('slider-lh')) $('slider-lh').value = String(lh);
+  const lh = Number(Number(s.lineHeight ?? 1.4).toFixed(2));
   if ($('lh-val')) $('lh-val').textContent = lh.toFixed(2);
+  const lhDown = $('lh-down');
+  const lhUp = $('lh-up');
+  if (lhDown) {
+    lhDown.disabled = lh <= LINE_HEIGHTS.min + 1e-6;
+    labelled(lhDown, lhDown.disabled ? t('smallest_lh') : t('smaller_lh'));
+  }
+  if (lhUp) {
+    lhUp.disabled = lh >= LINE_HEIGHTS.max - 1e-6;
+    labelled(lhUp, lhUp.disabled ? t('largest_lh') : t('larger_lh'));
+  }
 
   const rawMv = Number(s.marginV ?? 10);
-  const mv = (rawMv > 30 || rawMv < 10) ? 10 : rawMv;
-  if ($('slider-margin-v')) $('slider-margin-v').value = String(mv);
+  const mv = (rawMv > MARGIN_V.max || rawMv < MARGIN_V.min) ? 10 : rawMv;
   if ($('margin-v-val')) $('margin-v-val').textContent = `${mv}%`;
+  const mvDown = $('margin-v-down');
+  const mvUp = $('margin-v-up');
+  if (mvDown) {
+    mvDown.disabled = mv <= MARGIN_V.min;
+    labelled(mvDown, mvDown.disabled ? t('smallest_margin_v') : t('smaller_margin_v'));
+  }
+  if (mvUp) {
+    mvUp.disabled = mv >= MARGIN_V.max;
+    labelled(mvUp, mvUp.disabled ? t('largest_margin_v') : t('larger_margin_v'));
+  }
 
   const rawMh = Number(s.marginH ?? 20);
-  const mh = rawMh > 60 ? 20 : Math.min(60, Math.max(10, rawMh));
-  if ($('slider-margin-h')) $('slider-margin-h').value = String(mh);
+  const mh = rawMh > MARGIN_H.max ? 20 : Math.min(MARGIN_H.max, Math.max(MARGIN_H.min, rawMh));
   if ($('margin-h-val')) $('margin-h-val').textContent = `${mh}%`;
+  const mhDown = $('margin-h-down');
+  const mhUp = $('margin-h-up');
+  if (mhDown) {
+    mhDown.disabled = mh <= MARGIN_H.min;
+    labelled(mhDown, mhDown.disabled ? t('smallest_margin_h') : t('smaller_margin_h'));
+  }
+  if (mhUp) {
+    mhUp.disabled = mh >= MARGIN_H.max;
+    labelled(mhUp, mhUp.disabled ? t('largest_margin_h') : t('larger_margin_h'));
+  }
 
   segs.ws?.set(s.wordSpacing);
   segs.justify?.set(String(!!s.justify));
@@ -693,54 +743,21 @@ function initKeys() {
   $('btn-keys').addEventListener('click', openKeys);
 }
 
-function wireSlider(slider, onValue) {
-  if (!slider) return;
-  const apply = () => onValue(Number(slider.value));
-  slider.addEventListener('input', apply);
-  slider.addEventListener('change', apply);
-  let dragging = false;
-  const setFromPointer = (clientX) => {
-    const r = slider.getBoundingClientRect();
-    if (!r.width) return;
-    const min = Number(slider.min || 0);
-    const max = Number(slider.max || 100);
-    const step = Number(slider.step || 1);
-    const thumbPad = 11;
-    const usable = Math.max(1, r.width - 2 * thumbPad);
-    const rawFrac = Math.min(1, Math.max(0, (clientX - r.left - thumbPad) / usable));
-    const rtl = getComputedStyle(slider).direction === 'rtl';
-    const frac = rtl ? 1 - rawFrac : rawFrac;
-    const raw = min + frac * (max - min);
-    const snapped = min + Math.round((raw - min) / step) * step;
-    const decimals = (String(slider.step).split('.')[1] || '').length;
-    const next = Number(Math.min(max, Math.max(min, snapped)).toFixed(decimals));
-    if (Number(slider.value) !== next) {
-      slider.value = String(next);
-      onValue(next);
-    }
-  };
-  slider.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'mouse') return;
-    dragging = true;
-    slider.setPointerCapture?.(e.pointerId);
-    e.preventDefault();
-    setFromPointer(e.clientX);
-  });
-  slider.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    e.preventDefault();
-    setFromPointer(e.clientX);
-  });
-  const stop = () => { dragging = false; };
-  slider.addEventListener('pointerup', stop);
-  slider.addEventListener('pointercancel', stop);
+function wireStepper(downId, upId, onStep) {
+  const down = $(downId);
+  const up = $(upId);
+  if (down) {
+    down.append(icon('minus', 16));
+    down.addEventListener('click', () => onStep(-1));
+  }
+  if (up) {
+    up.append(icon('plus', 16));
+    up.addEventListener('click', () => onStep(1));
+  }
 }
 
 function initSettings() {
-  $('size-down').append(icon('minus', 16));
-  $('size-up').append(icon('plus', 16));
-  $('size-down').addEventListener('click', () => bumpSize(-1));
-  $('size-up').addEventListener('click', () => bumpSize(1));
+  wireStepper('size-down', 'size-up', bumpSize);
   const fontOptions = [
     ['condensed', 'Roboto Condensed', 'Roboto', '"Roboto Condensed", "Arial Narrow", sans-serif'],
     ['asap_condensed', 'Asap Condensed', 'Asap', '"Asap Condensed", sans-serif'],
@@ -754,10 +771,7 @@ function initSettings() {
     label,
     content: [el('span', { style: `font-family:${fontCss}`, textContent: shortLabel })],
   })), (v) => setStyle({ fontFamily: v }));
-  wireSlider($('slider-lh'), (v) => {
-    if ($('lh-val')) $('lh-val').textContent = v.toFixed(2);
-    setStyle({ lineHeight: v });
-  });
+  wireStepper('lh-down', 'lh-up', bumpLineHeight);
   const steps = (id, values, icons, key) => $(id) && radioGroup($(id), values.map((v, i) => ({
     value: v, label: t(['spacing_book', 'spacing_wide', 'spacing_wider'][i]), content: [icon(icons[i], 18)],
   })), (v) => setStyle({ [key]: v }));
@@ -777,14 +791,8 @@ function initSettings() {
   segs.spread = radioGroup($('seg-spread'), [['auto', 'spread_auto_hint', 'spread_auto'], ['1', 'spread_one'], ['2', 'spread_two']].map(([v, k, short = k]) => ({
     value: v, label: t(k), content: [el('span', { textContent: t(short) })],
   })), (v) => setStyle({ spread: v }));
-  wireSlider($('slider-margin-v'), (v) => {
-    if ($('margin-v-val')) $('margin-v-val').textContent = `${v}%`;
-    setStyle({ marginV: v });
-  });
-  wireSlider($('slider-margin-h'), (v) => {
-    if ($('margin-h-val')) $('margin-h-val').textContent = `${v}%`;
-    setStyle({ marginH: v });
-  });
+  wireStepper('margin-v-down', 'margin-v-up', bumpMarginV);
+  wireStepper('margin-h-down', 'margin-h-up', bumpMarginH);
   initAnalogClock();
   const closeLibThemeDropdown = () => {
     const dd = $('lib-theme-dropdown');
