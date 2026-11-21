@@ -90,13 +90,24 @@ export function openPanel(which) {
   }
   if (which === 'marks') ($('bookmarks').querySelector('.jump') ?? $('mark-add')).focus();
   if (which === 'hl') ($('hl-list').querySelector('.jump') ?? $('panel-close')).focus();
-  if (which === 'settings') $('panel-close')?.focus();
+  if (which === 'settings') {
+    const s = $('settings');
+    if (s) s.scrollTop = 0;
+    panel.scrollTop = 0;
+    $('panel-close')?.focus({ preventScroll: true });
+    requestAnimationFrame(() => {
+      if (s) s.scrollTop = 0;
+      panel.scrollTop = 0;
+    });
+  }
 }
 
 export function closePanel(restore = true) {
   const panel = $('panel');
   if (!panel || panel.hidden) return false;
   resetPanelDragState({ clearNoAnim: true });
+  const s = $('settings');
+  if (s) s.scrollTop = 0;
   panel.hidden = true;
   for (const id of Object.values(BUTTONS)) $(id).setAttribute('aria-expanded', 'false');
   if (restore) (lastFocus?.isConnected ? lastFocus : $('view')).focus();

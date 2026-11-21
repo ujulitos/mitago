@@ -2158,7 +2158,8 @@ body:has(#reading:not([hidden])) {
     height: 14px;
     margin-left: -0.75px;
     border-radius: 1px;
-    background: var(--rp-soft);
+    /* background: var(--rp-soft); */
+    background: rgba(173, 175, 178, 0.78);
     opacity: 0.72;
 }
 
