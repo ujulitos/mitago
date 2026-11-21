@@ -1404,6 +1404,15 @@ export async function refreshBookInLibrary(bookId) {
 
 let drawerCloseTimer = 0;
 
+function resetDrawerScroll(drawer) {
+  if (!drawer) return;
+  drawer.scrollTop = 0;
+  const panel = drawer.querySelector('.lib-drawer-panel');
+  const body = drawer.querySelector('.lib-drawer-body');
+  if (panel) panel.scrollTop = 0;
+  if (body) body.scrollTop = 0;
+}
+
 export function closeLibraryDrawer(immediate = false) {
   const drawer = $('lib-drawer');
   const menuBtn = $('lib-menu-btn');
@@ -1423,6 +1432,7 @@ export function closeLibraryDrawer(immediate = false) {
   if (immediate) {
     if (panel) panel.style.transform = '';
     if (backdrop) backdrop.style.opacity = '';
+    resetDrawerScroll(drawer);
     drawer.hidden = true;
     return;
   }
@@ -1435,7 +1445,10 @@ export function closeLibraryDrawer(immediate = false) {
   }
   const finish = () => {
     clearTimeout(drawerCloseTimer);
-    if (!drawer.classList.contains('open')) drawer.hidden = true;
+    if (!drawer.classList.contains('open')) {
+      resetDrawerScroll(drawer);
+      drawer.hidden = true;
+    }
   };
   panel?.addEventListener('transitionend', finish, { once: true });
   drawerCloseTimer = setTimeout(finish, 260);
@@ -1456,6 +1469,7 @@ function openLibraryDrawer() {
   renderStorage();
   const fromDrag = Boolean(panel && panel.style.transform);
   drawer.hidden = false;
+  resetDrawerScroll(drawer);
   if (fromDrag) {
     void panel.offsetWidth;
     drawer.classList.add('open');
@@ -1468,6 +1482,7 @@ function openLibraryDrawer() {
   drawerOpenState = true;
   syncHomeScrollLock();
   $('lib-drawer-close')?.focus({ preventScroll: true });
+  requestAnimationFrame(() => resetDrawerScroll(drawer));
 }
 
 function initDrawerEdgeSwipe() {
@@ -1534,6 +1549,7 @@ function initDrawerEdgeSwipe() {
       if (state.mode === 'open') {
         renderStorage();
         drawer.hidden = false;
+        resetDrawerScroll(drawer);
       }
       state.panelW = panel.offsetWidth || 300;
       drawer.classList.add('dragging');
