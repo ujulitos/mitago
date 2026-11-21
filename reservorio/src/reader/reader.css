@@ -3160,6 +3160,10 @@ body:has(#reading:not([hidden])) {
     width: 38px;
     height: 38px;
     border-radius: 50%;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     transition: color 120ms ease, background-color 80ms ease;
 }
@@ -3169,7 +3173,8 @@ body:has(#reading:not([hidden])) {
     height: 19px;
 }
 
-.stepper .icon-btn:active {
+.stepper .icon-btn:active,
+.stepper .icon-btn.holding {
     background: color-mix(in srgb, var(--ink) 14%, transparent);
     color: var(--ink);
 }

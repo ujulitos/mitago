@@ -111,7 +111,7 @@ function initPanelSwipeClose() {
 
   const canStart = (target) => {
     if (panel.hidden || panel.classList.contains('closing')) return false;
-    if (target?.closest?.('input, textarea, select')) return false;
+    if (target?.closest?.('input, textarea, select, .stepper .icon-btn')) return false;
     return true;
   };
 
@@ -744,16 +744,90 @@ function initKeys() {
 }
 
 function wireStepper(downId, upId, onStep) {
-  const down = $(downId);
-  const up = $(upId);
-  if (down) {
-    down.append(icon('minus', 16));
-    down.addEventListener('click', () => onStep(-1));
-  }
-  if (up) {
-    up.append(icon('plus', 16));
-    up.addEventListener('click', () => onStep(1));
-  }
+  const bind = (btn, iconName, dir) => {
+    if (!btn) return;
+    btn.append(icon(iconName, 16));
+    let holdTimer = 0;
+    let activePointerId = null;
+    let startX = 0;
+    let startY = 0;
+    let suppressClickUntil = 0;
+
+    const stop = () => {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = 0;
+      }
+      if (activePointerId !== null) {
+        activePointerId = null;
+        suppressClickUntil = performance.now() + 350;
+        btn.classList.remove('holding');
+        window.removeEventListener('pointerup', onPointerEnd);
+        window.removeEventListener('pointercancel', onPointerEnd);
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('blur', stop);
+      }
+    };
+
+    const onPointerEnd = (e) => {
+      if (e.pointerId === activePointerId) stop();
+    };
+
+    const onPointerMove = (e) => {
+      if (e.pointerId !== activePointerId) return;
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 18) stop();
+    };
+
+    const scheduleNext = (count) => {
+      const delay = count === 0 ? 360 : (count < 6 ? 110 : 65);
+      holdTimer = setTimeout(() => {
+        holdTimer = 0;
+        if (activePointerId === null || btn.disabled) {
+          stop();
+          return;
+        }
+        onStep(dir);
+        if (btn.disabled) {
+          stop();
+          return;
+        }
+        scheduleNext(count + 1);
+      }, delay);
+    };
+
+    btn.addEventListener('pointerdown', (e) => {
+      if (btn.disabled) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      stop();
+      activePointerId = e.pointerId;
+      startX = e.clientX;
+      startY = e.clientY;
+      suppressClickUntil = Infinity;
+      btn.classList.add('holding');
+      window.addEventListener('pointerup', onPointerEnd);
+      window.addEventListener('pointercancel', onPointerEnd);
+      window.addEventListener('pointermove', onPointerMove, { passive: true });
+      window.addEventListener('blur', stop);
+      onStep(dir);
+      if (btn.disabled) {
+        stop();
+        return;
+      }
+      scheduleNext(0);
+    });
+
+    btn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    btn.addEventListener('click', () => {
+      if (performance.now() < suppressClickUntil) {
+        suppressClickUntil = 0;
+        return;
+      }
+      if (!btn.disabled) onStep(dir);
+    });
+  };
+  bind($(downId), 'minus', -1);
+  bind($(upId), 'plus', 1);
 }
 
 function initSettings() {
