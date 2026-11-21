@@ -1427,10 +1427,9 @@ export function closeLibraryDrawer(immediate = false) {
     return;
   }
   if (panel && panel.style.transform) {
-    requestAnimationFrame(() => {
-      panel.style.transform = '';
-      if (backdrop) backdrop.style.opacity = '';
-    });
+    void panel.offsetWidth;
+    panel.style.transform = '';
+    if (backdrop) backdrop.style.opacity = '';
   } else if (backdrop) {
     backdrop.style.opacity = '';
   }
@@ -1458,8 +1457,9 @@ function openLibraryDrawer() {
   const fromDrag = Boolean(panel && panel.style.transform);
   drawer.hidden = false;
   if (fromDrag) {
+    void panel.offsetWidth;
     drawer.classList.add('open');
-    if (panel) panel.style.transform = '';
+    panel.style.transform = '';
     if (backdrop) backdrop.style.opacity = '';
   } else {
     requestAnimationFrame(() => requestAnimationFrame(() => drawer.classList.add('open')));
@@ -1467,7 +1467,7 @@ function openLibraryDrawer() {
   if (menuBtn) menuBtn.setAttribute('aria-expanded', 'true');
   drawerOpenState = true;
   syncHomeScrollLock();
-  $('lib-drawer-close')?.focus();
+  $('lib-drawer-close')?.focus({ preventScroll: true });
 }
 
 function initDrawerEdgeSwipe() {
@@ -1537,7 +1537,6 @@ function initDrawerEdgeSwipe() {
       }
       state.panelW = panel.offsetWidth || 300;
       drawer.classList.add('dragging');
-      document.body.style.overflow = 'hidden';
     }
     prevent?.();
     const now = performance.now();
