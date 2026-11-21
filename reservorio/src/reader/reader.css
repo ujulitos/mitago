@@ -2141,7 +2141,7 @@ body:has(#reading:not([hidden])) {
     margin-top: -1.5px;
     border-radius: 2px;
     /* background: var(--rp-rule); */
-    background: color-mix(in srgb, var(--rp-ink) 60%, transparent) !important;
+    background: #adafb2 !important;
 }
 
 .ticks {
