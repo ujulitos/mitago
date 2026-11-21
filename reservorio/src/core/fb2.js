@@ -212,9 +212,31 @@ export function fb2Book(text, name = '') {
   }
 
   const spineIndex = new Map(spine.map((s, i) => [s.path, i]));
+  const tocBySpine = new Map();
   for (const t of toc) {
     const [path, frag = ''] = t.href.split('#');
-    Object.assign(t, { path, frag, spine: spineIndex.get(path) ?? -1 });
+    const sp = spineIndex.get(path) ?? -1;
+    Object.assign(t, { path, frag, spine: sp });
+    if (sp >= 0) {
+      let list = tocBySpine.get(sp);
+      if (!list) { list = []; tocBySpine.set(sp, list); }
+      list.push(t);
+    }
+  }
+  for (const [sp, group] of tocBySpine) {
+    if (group.length < 2 || !group.some((t) => t.frag)) continue;
+    const html = files.get(spine[sp]?.path)?.text;
+    if (!html) continue;
+    const bodyMatch = /<body\b[^>]*>/i.exec(html);
+    const bodyStart = bodyMatch ? bodyMatch.index + bodyMatch[0].length : 0;
+    const bodyEnd = html.lastIndexOf('</body>');
+    const span = Math.max(1, (bodyEnd > bodyStart ? bodyEnd : html.length) - bodyStart);
+    for (const t of group) {
+      if (!t.frag) continue;
+      const esc = t.frag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const m = new RegExp(`\\bid\\s*=\\s*"${esc}"`, 'i').exec(html);
+      if (m) t.spineFrac = Math.min(0.999, Math.max(0, (m.index - bodyStart) / span));
+    }
   }
   const manifest = new Map([...files].map(([path, f]) => [path, { id: path, path, type: f.type, props: [] }]));
   return {

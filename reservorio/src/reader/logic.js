@@ -60,20 +60,49 @@ export function sectionStarts(sizes) {
 }
 
 /**
- * Chapter ticks for the progress bar: top-level ToC entries (all entries when the
- * ToC is flat), one per section, never closer than minGap, at most max.
+ * Chapter ticks for the progress bar: every valid ToC entry (all depths, including
+ * fragment anchors inside shared spine sections), ordered along the book and deduplicated
+ * only when two entries land virtually on top of each other.
  */
-export function chapterTicks(toc, sizes, { max = 120, minGap = 0.004 } = {}) {
+export function chapterTicks(toc, sizes, { max = 200, minGap = 0.0025 } = {}) {
+  if (!Array.isArray(toc) || !toc.length || !Array.isArray(sizes) || !sizes.length) return [];
   const starts = sectionStarts(sizes);
-  const top = toc.filter((e) => e.spine >= 0 && e.depth === 0);
-  const entries = (top.length >= 2 ? top : toc.filter((e) => e.spine >= 0));
+  const entries = toc.filter((e) => e && e.spine >= 0 && e.spine < starts.length);
+  if (!entries.length) return [];
+
+  const bySpine = new Map();
+  for (const e of entries) {
+    let list = bySpine.get(e.spine);
+    if (!list) { list = []; bySpine.set(e.spine, list); }
+    list.push(e);
+  }
+
+  const raw = [];
+  for (const e of entries) {
+    const start = starts[e.spine] ?? 0;
+    const nextStart = e.spine + 1 < starts.length ? starts[e.spine + 1] : 1;
+    const span = Math.max(0, nextStart - start);
+    let frac = 0;
+    if (Number.isFinite(e.spineFrac) && e.spineFrac > 0) {
+      frac = Math.min(0.999, Math.max(0, e.spineFrac));
+    } else if (e.frag) {
+      const group = bySpine.get(e.spine);
+      if (group && group.length > 1) {
+        const idx = group.indexOf(e);
+        if (idx > 0) frac = idx / group.length;
+      }
+    }
+    const at = Math.min(1, Math.max(0, start + frac * span));
+    raw.push({ at, label: e.label, spine: e.spine, href: e.href });
+  }
+
+  raw.sort((a, b) => a.at - b.at);
   const out = [];
   let last = -1;
-  for (const e of entries) {
-    const at = starts[e.spine] ?? 0;
-    if (out.length && (e.spine === out[out.length - 1].spine || at - last < minGap)) continue;
-    out.push({ at, label: e.label, spine: e.spine, href: e.href });
-    last = at;
+  for (const item of raw) {
+    if (out.length && item.at - last < minGap) continue;
+    out.push(item);
+    last = item.at;
   }
   if (out.length <= max) return out;
   const step = out.length / max;

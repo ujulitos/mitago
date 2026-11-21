@@ -171,6 +171,21 @@ function resolveHref(base, href) {
   return resolvePath(base, href) + frag;
 }
 
+function findFragFraction(html, frag) {
+  if (!html || !frag) return -1;
+  let decoded = frag;
+  try { decoded = decodeURIComponent(frag); } catch {}
+  const esc = decoded.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = new RegExp(`(?:\\bid|\\bname)\\s*=\\s*(?:"${esc}"|'${esc}')`, 'i').exec(html);
+  if (!m) return -1;
+  const bodyMatch = /<body\b[^>]*>/i.exec(html);
+  const bodyStart = bodyMatch ? bodyMatch.index + bodyMatch[0].length : 0;
+  const bodyEnd = html.lastIndexOf('</body>');
+  const end = bodyEnd > bodyStart ? bodyEnd : html.length;
+  const span = Math.max(1, end - bodyStart);
+  return Math.min(0.999, Math.max(0, (m.index - bodyStart) / span));
+}
+
 /**
  * Open an EPUB Blob/File. Throws BookError with a stable `code`:
  * pdf, acsm, mobi, not-zip, corrupt, not-epub, drm (detail = scheme), encrypted.
@@ -289,10 +304,27 @@ export async function openBook(blob, opened = null) {
     if (toc.length) tocSource = 'ncx';
   }
   const real = (p) => bookZip.entry(p)?.name ?? p;
+  const tocBySpine = new Map();
   for (const t of toc) {
     t.path = real(t.href.split('#')[0]);
     t.frag = fragmentOf(t.href);
     t.spine = spineIndex.get(t.path) ?? -1;
+    if (t.spine >= 0) {
+      let list = tocBySpine.get(t.spine);
+      if (!list) { list = []; tocBySpine.set(t.spine, list); }
+      list.push(t);
+    }
+  }
+  for (const [sp, group] of tocBySpine) {
+    if (group.length < 2 || !group.some((t) => t.frag)) continue;
+    try {
+      const html = await bookZip.text(spine[sp].path);
+      for (const t of group) {
+        if (!t.frag) continue;
+        const frac = findFragFraction(html, t.frag);
+        if (frac >= 0) t.spineFrac = frac;
+      }
+    } catch {}
   }
 
   return {

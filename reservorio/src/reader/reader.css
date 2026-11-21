@@ -1862,7 +1862,7 @@ body:has(#reading:not([hidden])) {
 }
 
 .reading {
-    --rail-h: 42px;
+    --rail-h: 60px;
     position: relative;
     width: 100%;
     height: 100vh;
@@ -2124,7 +2124,7 @@ body:has(#reading:not([hidden])) {
     left: 0;
     right: 0;
     width: 100%;
-    height: var(--rail-h, 42px);
+    height: var(--rail-h, 60px);
     background: var(--rp-paper);
     cursor: pointer;
     touch-action: none;
@@ -2140,36 +2140,31 @@ body:has(#reading:not([hidden])) {
     height: 3px;
     margin-top: -1.5px;
     border-radius: 2px;
-    background: var(--rp-rule);
-}
-
-.rail-fill {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    border-radius: 2px;
+    /* background: var(--rp-rule); */
     background: color-mix(in srgb, var(--rp-ink) 60%, transparent) !important;
 }
 
 .ticks {
     position: absolute;
     inset: 0;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .ticks i {
     position: absolute;
-    top: -4px;
-    width: 1.5px;
-    height: 11px;
+    top: -14px;
+    width: 2px;
+    height: 16px;
     margin-left: -0.75px;
+    border-radius: 1px;
     background: var(--rp-soft);
-    opacity: 0.55;
+    opacity: 0.72;
 }
 
 .rail-thumb {
     position: absolute;
+    z-index: 2;
     top: 50%;
     width: 26px;
     height: 12px;
@@ -3143,9 +3138,10 @@ body:has(#reading:not([hidden])) {
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    margin-top: 4px;
     padding: 3px;
     border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: 40px;
 }
 
 .stepper output {
@@ -3185,6 +3181,7 @@ body:has(#reading:not([hidden])) {
     border: 0px solid var(--line);
     border-radius: 20px;
     background: var(--card);
+    margin-bottom: -2px;
 }
 
 .segmented.wide {
@@ -3255,6 +3252,36 @@ body:has(#reading:not([hidden])) {
     line-height: 1.2;
     white-space: nowrap;
     text-align: center;
+}
+
+#seg-justify.segmented {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 5px;
+    width: 100%;
+    border-radius: 14px;
+}
+
+#seg-justify.segmented button {
+    grid-column: span 2;
+    height: auto;
+    min-height: 34px;
+    min-width: 0;
+    padding: 6px 6px;
+    gap: 5px;
+    font-size: 13px;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-align: center;
+}
+
+#seg-justify.segmented button:nth-child(4),
+#seg-justify.segmented button:nth-child(5) {
+    grid-column: span 3;
+}
+
+#seg-justify.segmented button .icon {
+    flex-shrink: 0;
 }
 
 .swatches {
@@ -3330,19 +3357,30 @@ body:has(#reading:not([hidden])) {
 }
 
 /* In settings popover, theme buttons take full row width in 5 small columns */
+/* In settings popover, theme buttons span 2 balanced rows (3 + 2) */
 #seg-theme.swatches {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     width: 100%;
     gap: 6px;
 }
 
 #seg-theme.swatches button {
+    grid-column: span 2;
     width: 100%;
     height: 30px;
     padding: 0 4px;
     font-size: 12.5px;
+    height: 34px;
+    padding: 0 8px;
+    font-size: 13px;
     transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+#seg-theme.swatches button:nth-child(4),
+#seg-theme.swatches button:nth-child(5) {
+    grid-column: span 3;
 }
 
 #seg-theme.swatches button:active {
@@ -3820,6 +3858,15 @@ body:has(#reading:not([hidden])) {
         height: 28px;
         font-size: 12px;
         padding: 0 4px;
+        height: 32px;
+        font-size: 12.5px;
+        padding: 0 6px;
+    }
+
+    #seg-justify.segmented button {
+        font-size: 12.5px;
+        padding: 5px 4px;
+        gap: 4px;
     }
 
     .reading-foot {

@@ -281,7 +281,6 @@
             <div id="foot-margin" class="foot-margin" aria-hidden="true"></div>
             <div id="rail" class="rail" role="slider" tabindex="0" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <div class="rail-track" id="rail-track">
-                    <div class="rail-fill" id="rail-fill"></div>
                     <div id="ticks" class="ticks"></div>
                     <div class="rail-thumb" id="rail-thumb"></div>
                 </div>
@@ -353,6 +352,10 @@
             </div>
 
             <div id="settings" class="pane" hidden>
+                <div class="set-row col">
+                    <span class="set-label" id="lbl-font" data-i18n="font"></span>
+                    <div class="segmented wide" role="radiogroup" aria-labelledby="lbl-font" id="seg-font"></div>
+                </div>
                 <div class="set-row">
                     <span class="set-label" id="lbl-size" data-i18n="text_size"></span>
                     <div class="stepper" role="group" aria-labelledby="lbl-size">
@@ -360,10 +363,6 @@
                         <output id="size-val" aria-live="polite"></output>
                         <button id="size-up" class="icon-btn" type="button" data-i18n-aria="larger_text" data-i18n-title="larger_text"></button>
                     </div>
-                </div>
-                <div class="set-row col">
-                    <span class="set-label" id="lbl-font" data-i18n="font"></span>
-                    <div class="segmented wide" role="radiogroup" aria-labelledby="lbl-font" id="seg-font"></div>
                 </div>
                 <div class="set-row">
                     <span class="set-label" id="lbl-lh" data-i18n="line_spacing"></span>
@@ -389,7 +388,7 @@
                         <button id="margin-h-up" class="icon-btn" type="button" data-i18n-aria="larger_margin_h" data-i18n-title="larger_margin_h"></button>
                     </div>
                 </div>
-                <div class="set-row">
+                <div class="set-row col" id="row-justify">
                     <span class="set-label" id="lbl-justify" data-i18n="justify"></span>
                     <div class="segmented" role="radiogroup" aria-labelledby="lbl-justify" id="seg-justify"></div>
                 </div>

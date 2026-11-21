@@ -5,7 +5,7 @@
 import { icon } from '../lib/icons.js';
 import { t, tn } from '../lib/i18n.js';
 import { THEMES, applyTheme } from '../lib/theme.js';
-import { STYLE_DEFAULTS, spineWeightsOf } from '../core/render.js';
+import { STYLE_DEFAULTS, normalizeJustify, spineWeightsOf } from '../core/render.js';
 import { EFFECTS, reducedMotion } from '../core/turn.js';
 import { indexSection, search } from '../core/search.js';
 import { byId } from '../core/anchor.js';
@@ -703,7 +703,7 @@ function syncSettings() {
   }
 
   segs.ws?.set(s.wordSpacing);
-  segs.justify?.set(String(!!s.justify));
+  segs.justify?.set(normalizeJustify(s.justify));
   segs.turn?.set(rp.view?.effect);
   segs.spread?.set(String(s.spread ?? 'auto'));
   segs.mode?.set(rp.view?.mode);
@@ -852,9 +852,18 @@ function initSettings() {
   if ($('seg-ws')) {
     segs.ws = steps('seg-ws', WORD_SPACINGS, ['wsNormal', 'wsWide', 'wsWider'], 'wordSpacing');
   }
-  segs.justify = radioGroup($('seg-justify'), [['false', 'alignStart', 'justify_off'], ['true', 'alignJustify', 'justify_on']].map(([v, ic, k]) => ({
-    value: v, label: t(k), content: [icon(ic, 18)],
-  })), (v) => setStyle({ justify: v === 'true' }));
+  const justifyOptions = [
+    ['left', 'alignStart', 'justify_left', 'justify_left'],
+    ['center', 'alignCenter', 'justify_center', 'justify_center'],
+    ['right', 'alignRight', 'justify_right', 'justify_right'],
+    ['justify-hyphen', 'alignJustifyHyphen', 'justify_hyphen', 'justify_hyphen_short'],
+    ['justify-no-hyphen', 'alignJustify', 'justify_no_hyphen', 'justify_no_hyphen_short'],
+  ];
+  segs.justify = radioGroup($('seg-justify'), justifyOptions.map(([v, ic, fullKey, shortKey]) => ({
+    value: v,
+    label: t(fullKey),
+    content: [icon(ic, 16), el('span', { textContent: t(shortKey) })],
+  })), (v) => setStyle({ justify: v }));
   segs.turn = radioGroup($('seg-turn'), EFFECTS.map((v) => ({ value: v, label: t(`turn_${v}`) })), async (v) => {
     rp.view.setEffect(v);
     syncSettings();
@@ -991,11 +1000,13 @@ function initRail() {
 
 let lastTicksKey = '';
 function renderTicks() {
+  if (!rp?.book || !$('ticks')) return;
   const sizes = sizesOf();
-  const key = `${rp.bookId}|${rp.view?.mode}|${sizes.join(',')}`;
+  const toc = rp.book.toc || [];
+  const key = `${rp.bookId}|${rp.view?.mode}|${toc.length}|${sizes.join(',')}`;
   if (key === lastTicksKey) return;
   lastTicksKey = key;
-  ticks = chapterTicks(rp.book.toc, sizes);
+  ticks = chapterTicks(toc, sizes);
   $('ticks').replaceChildren(...ticks.map((k) => el('i', { style: `left:${(k.at * 100).toFixed(3)}%` })));
 }
 
@@ -1010,8 +1021,6 @@ function paintRail(p) {
   lastPaintPct = pctStr;
   $('rail-thumb').style.left = pctStr;
   $('rail-thumb').style.top = '';
-  $('rail-fill').style.width = pctStr;
-  $('rail-fill').style.height = '';
 }
 
 // ------------------------------------------------------------------------------ position
@@ -1266,7 +1275,7 @@ export function paintFolio() {
   paintChapterPages();
   pageLine(rp.view.position);
   paintChapterTime();
-  if (rp.view.mode === 'paged') renderTicks();
+  renderTicks();
   if (!$('panel').hidden && $('panel').dataset.pane === 'toc') refreshTocPages();
 }
 
@@ -1296,7 +1305,6 @@ export function teardownReadingView() {
   if ($('search-back')) $('search-back').hidden = true;
   if ($('search-progress')) $('search-progress').hidden = true;
   if ($('search-fill')) $('search-fill').style.width = '';
-  if ($('rail-fill')) $('rail-fill').style.width = '';
   if ($('rail-thumb')) $('rail-thumb').style.left = '';
   if ($('rail')) $('rail').removeAttribute('aria-valuenow');
   lastFocus = null;

@@ -22,12 +22,20 @@ export function spineWeightsOf(book) {
 
 // forceColors: the page's theme colours (--rp-ink, --rp-link) replace the book's own
 // (dark and sepia themes); false keeps the publisher's colours.
-// letterSpacing / wordSpacing: em added by the reader (0 = the book's own); justify: justify
-// running text (hyphenated where the language is known). spread: pages per screen in the
-// paged view, 'auto' | '1' | '2' (src/core/spread.js).
+// letterSpacing / wordSpacing: em added by the reader (0 = the book's own); justify: text
+// alignment mode ('left' | 'center' | 'right' | 'justify-hyphen' | 'justify-no-hyphen').
+// spread: pages per screen in the paged view, 'auto' | '1' | '2' (src/core/spread.js).
+export function normalizeJustify(v) {
+  if (v === true || v === 'true' || v === 'justify' || v === 'justify-hyphen') return 'justify-hyphen';
+  if (v === 'justify-no-hyphen') return 'justify-no-hyphen';
+  if (v === 'center') return 'center';
+  if (v === 'right') return 'right';
+  return 'left';
+}
+
 export const STYLE_DEFAULTS = Object.freeze({
   fontSize: 18, fontFamily: 'condensed', lineHeight: 1.4, margin: 120, marginV: 10, marginH: 20, maxWidth: 900, forceColors: false,
-  letterSpacing: 0, wordSpacing: 0, justify: false, spread: 'auto',
+  letterSpacing: 0, wordSpacing: 0, justify: 'left', spread: 'auto',
 });
 const FAMILIES = {
   condensed: '"Roboto Condensed", "Arial Narrow", sans-serif',
@@ -371,7 +379,7 @@ class ContinuousView {
       this.sync();
       host.shadowRoot.adoptedStyleSheets = [...sheets, ...this.ctx.sheets];
       host.shadowRoot.replaceChildren(wrap.cloneNode(true));
-      if (this.ctx.style.justify) markJustify(host.shadowRoot.firstElementChild);
+      markJustify(host.shadowRoot.firstElementChild);
       host.style.height = '';
       host.rp.live = true;
       host.rp.loading = null;
@@ -701,7 +709,7 @@ class PagedView {
     host.dataset.spine = spine;
     host.shadowRoot.adoptedStyleSheets = [...sheets, ...this.ctx.sheets];
     host.shadowRoot.replaceChildren(wrap.cloneNode(true));
-    if (this.ctx.style.justify) markJustify(host.shadowRoot.firstElementChild);
+    markJustify(host.shadowRoot.firstElementChild);
   }
 
   /** Lay out the section holding `spine` (in pair mode: its pair). */
@@ -926,7 +934,7 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
   const cache = new Map(); // spine index -> Promise<loaded section>, small LRU shared by both modes
   const settingsSheet = new CSSStyleSheet();
   const ctx = {
-    style: { ...STYLE_DEFAULTS, ...style },
+    style: { ...STYLE_DEFAULTS, ...style, justify: normalizeJustify(style.justify ?? STYLE_DEFAULTS.justify) },
     inset, // scroll mode: px below the view's top where the reading edge sits (clear of an overlay bar)
     sheets: [sectionSheet(), ...(book.fixedLayout ? [cssSheet(FXL_CSS)] : []), settingsSheet],
     load(i) {
@@ -965,12 +973,20 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
     el.style.setProperty('--rp-max-width', `${s.maxWidth ?? 900}px`);
     const fam = FAMILIES[s.fontFamily] ?? (s.fontFamily === 'readable' ? FAMILIES.atkinson : FAMILIES.condensed);
     const text = '.rp-body, .rp-body :not(code, kbd, samp, pre, pre *)';
+    const justifyMode = normalizeJustify(s.justify);
+    const justifyCss = {
+      left: '[data-rp-j] { text-align: left !important; hyphens: none !important; -webkit-hyphens: none !important; }',
+      center: '[data-rp-j] { text-align: center !important; hyphens: none !important; -webkit-hyphens: none !important; }',
+      right: '[data-rp-j] { text-align: right !important; hyphens: none !important; -webkit-hyphens: none !important; }',
+      'justify-hyphen': '[data-rp-j] { text-align: justify !important; hyphens: auto !important; -webkit-hyphens: auto !important; }',
+      'justify-no-hyphen': '[data-rp-j] { text-align: justify !important; hyphens: none !important; -webkit-hyphens: none !important; }',
+    }[justifyMode];
     settingsSheet.replaceSync([
       `:host, .rp-body { --rp-font-size: ${s.fontSize}px; --rp-line-height: ${s.lineHeight}; }`,
       fam ? `${text} { font-family: ${fam} !important; }` : '',
       s.letterSpacing ? `${text} { letter-spacing: ${s.letterSpacing}em !important; }` : '',
       s.wordSpacing ? `${text} { word-spacing: ${s.wordSpacing}em !important; }` : '',
-      s.justify ? '[data-rp-j] { text-align: justify !important; } [lang] [data-rp-j], [data-rp-j][lang] { hyphens: auto; }' : '',
+      justifyCss,
       s.forceColors ? FORCED_COLORS : '',
     ].join('\n'));
   }
@@ -1039,7 +1055,7 @@ export function createView(el, book, loader, { mode = 'scroll', style = {}, onPo
       const before = ctx.style;
       if (impl.sync) impl.sync();
       ctx.style = { ...before, ...partial };
-      if (ctx.style.justify && !before.justify) for (const r of impl.roots()) markJustify(r);
+      ctx.style.justify = normalizeJustify(ctx.style.justify);
       applyStyle();
       const ratio = (ctx.style.fontSize / before.fontSize) * (ctx.style.lineHeight / before.lineHeight);
       return impl.restyle(ratio);
