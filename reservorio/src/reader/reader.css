@@ -2141,7 +2141,7 @@ body:has(#reading:not([hidden])) {
     margin-top: -1.5px;
     border-radius: 2px;
     /* background: var(--rp-rule); */
-    background: #adafb2 !important;
+    background: #286dd3 !important;
 }
 
 .ticks {
