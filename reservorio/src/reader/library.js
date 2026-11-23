@@ -5,6 +5,7 @@
 import '../lib/chrome-shim.js';
 import { icon, logo } from '../lib/icons.js';
 import { t, tn, uiLanguage } from '../lib/i18n.js';
+import { syncThemeColorMeta } from '../lib/theme.js';
 import { showToast } from '../lib/toast.js';
 import { $, el, formatSize, hideLoadingOverlay, labelled, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
 import { ERROR_FALLBACK, errorCode, percent } from './logic.js';
@@ -1448,6 +1449,7 @@ export function closeLibraryDrawer(immediate = false) {
     if (!drawer.classList.contains('open')) {
       resetDrawerScroll(drawer);
       drawer.hidden = true;
+      if (!$('library')?.hidden) syncThemeColorMeta();
     }
   };
   panel?.addEventListener('transitionend', finish, { once: true });

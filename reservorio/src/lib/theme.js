@@ -34,18 +34,29 @@ const HOME_BG = {
 
 let themeRaf = 0;
 let restoreUrl = null;
+let lastRepaintTarget = null;
 
-function syncThemeColorMeta(choice) {
+export function syncThemeColorMeta(choice) {
   cancelAnimationFrame(themeRaf);
+  if (lastRepaintTarget) {
+    lastRepaintTarget.style.transform = '';
+    lastRepaintTarget = null;
+  }
+  const resolved = resolveTheme(choice ?? document.documentElement.dataset.theme);
   const root = document.documentElement;
   const readingEl = document.getElementById('reading');
   const inReading = Boolean(readingEl && !readingEl.hidden);
-  const color = (inReading ? THEME_BG[choice] : HOME_BG[choice]) || THEME_BG[choice];
-  const isDark = choice !== 'sepia';
+  const color = (inReading ? THEME_BG[resolved] : HOME_BG[resolved]) || THEME_BG[resolved];
+  const isDark = resolved !== 'sepia';
 
   root.style.colorScheme = isDark ? 'dark' : 'light';
   root.style.backgroundColor = color;
   if (document.body) document.body.style.backgroundColor = color;
+
+  const activeLayer = inReading ? readingEl : document.getElementById('library');
+  if (activeLayer && !activeLayer.hidden) {
+    activeLayer.style.backgroundColor = color;
+  }
 
   const head = document.head;
   if (!head) return;
@@ -60,31 +71,33 @@ function syncThemeColorMeta(choice) {
   }
 
   if (typeof requestAnimationFrame !== 'function') return;
-  const activeLayer = inReading ? readingEl : document.getElementById('library');
+  const repaintTarget = inReading ? readingEl : document.querySelector('#library .lib-head');
   if (restoreUrl === null && location.hash !== '#_') {
     restoreUrl = `${location.pathname}${location.search}${location.hash}`;
   }
   themeRaf = requestAnimationFrame(() => {
     for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
-    if (activeLayer && !activeLayer.hidden) {
-      activeLayer.style.backgroundColor = color;
-      activeLayer.style.transform = 'translateZ(0)';
+    if (repaintTarget && !repaintTarget.hidden && (!activeLayer || !activeLayer.hidden)) {
+      repaintTarget.style.transform = 'translateZ(0)';
+      lastRepaintTarget = repaintTarget;
     }
+    void root.offsetHeight;
     if (restoreUrl !== null) {
       try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
     }
     themeRaf = requestAnimationFrame(() => {
-      if (activeLayer) activeLayer.style.transform = '';
+      if (repaintTarget) repaintTarget.style.transform = '';
+      if (lastRepaintTarget === repaintTarget) lastRepaintTarget = null;
+      for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
+      const fresh = document.createElement('meta');
+      fresh.name = 'theme-color';
+      fresh.content = color;
+      head.append(fresh);
+      void root.offsetHeight;
       if (restoreUrl !== null) {
         const cleanUrl = restoreUrl;
         restoreUrl = null;
         try { history.replaceState(history.state, '', cleanUrl); } catch { /* ignore */ }
-      }
-      if (!head.querySelector('meta[name="theme-color"]')) {
-        const fresh = document.createElement('meta');
-        fresh.name = 'theme-color';
-        fresh.content = color;
-        head.append(fresh);
       }
     });
   });
