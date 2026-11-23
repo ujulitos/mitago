@@ -2473,7 +2473,7 @@ body:has(#reading:not([hidden])) {
 }
 
 .clock-chapter-mark {
-    stroke: color-mix(in srgb, salmon 60%, var(--rp-paper));
+    stroke: color-mix(in srgb, salmon 80%, var(--rp-paper));
     stroke-width: 4;
     stroke-linecap: round;
     transition: stroke 200ms ease;
