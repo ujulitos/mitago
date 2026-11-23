@@ -2454,7 +2454,7 @@ body:has(#reading:not([hidden])) {
 }
 
 .clock-chapter-mark {
-    stroke: color-mix(in srgb, var(--rp-ink) 20%, var(--rp-paper));
+    stroke: color-mix(in srgb, var(--rp-ink) 50%, var(--rp-paper));
     stroke-width: 4;
     stroke-linecap: round;
     transition: all 200ms ease;
