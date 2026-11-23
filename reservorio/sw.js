@@ -1,7 +1,7 @@
 // PWA Service Worker for El Reservorio WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'el-reservorio-pwa-v205';
+const CACHE_NAME = 'el-reservorio-pwa-v206';
 
 const STATIC_ASSETS = [
   './',
@@ -78,6 +78,22 @@ const STATIC_ASSETS = [
   './fonts/atkinson-hyperlegible-normal-400-latin-ext.woff2',
   './fonts/atkinson-hyperlegible-normal-700-latin.woff2',
   './fonts/atkinson-hyperlegible-normal-700-latin-ext.woff2',
+  './fonts/barlow-condensed-italic-400-latin.woff2',
+  './fonts/barlow-condensed-italic-400-latin-ext.woff2',
+  './fonts/barlow-condensed-italic-500-latin.woff2',
+  './fonts/barlow-condensed-italic-500-latin-ext.woff2',
+  './fonts/barlow-condensed-italic-600-latin.woff2',
+  './fonts/barlow-condensed-italic-600-latin-ext.woff2',
+  './fonts/barlow-condensed-italic-700-latin.woff2',
+  './fonts/barlow-condensed-italic-700-latin-ext.woff2',
+  './fonts/barlow-condensed-normal-400-latin.woff2',
+  './fonts/barlow-condensed-normal-400-latin-ext.woff2',
+  './fonts/barlow-condensed-normal-500-latin.woff2',
+  './fonts/barlow-condensed-normal-500-latin-ext.woff2',
+  './fonts/barlow-condensed-normal-600-latin.woff2',
+  './fonts/barlow-condensed-normal-600-latin-ext.woff2',
+  './fonts/barlow-condensed-normal-700-latin.woff2',
+  './fonts/barlow-condensed-normal-700-latin-ext.woff2',
   './fonts/fira-sans-condensed-italic-400-latin.woff2',
   './fonts/fira-sans-condensed-italic-400-latin-ext.woff2',
   './fonts/fira-sans-condensed-italic-500-latin.woff2',
@@ -102,6 +118,10 @@ const STATIC_ASSETS = [
   './fonts/roboto-condensed-italic-300-700-latin-ext.woff2',
   './fonts/roboto-condensed-normal-300-700-latin.woff2',
   './fonts/roboto-condensed-normal-300-700-latin-ext.woff2',
+  './fonts/sofia-sans-condensed-italic-300-700-latin.woff2',
+  './fonts/sofia-sans-condensed-italic-300-700-latin-ext.woff2',
+  './fonts/sofia-sans-condensed-normal-300-700-latin.woff2',
+  './fonts/sofia-sans-condensed-normal-300-700-latin-ext.woff2',
   './fonts/source-sans-3-italic-300-700-latin.woff2',
   './fonts/source-sans-3-italic-300-700-latin-ext.woff2',
   './fonts/source-sans-3-normal-300-700-latin.woff2',

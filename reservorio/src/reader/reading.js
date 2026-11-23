@@ -668,7 +668,7 @@ function syncSettings() {
   up.disabled = s.fontSize >= SIZES.max;
   labelled(down, down.disabled ? t('smallest_size') : `${t('smaller_text')} (−)`);
   labelled(up, up.disabled ? t('largest_size') : `${t('larger_text')} (+)`);
-  const validFonts = new Set(['condensed', 'source_sans', 'fira_condensed', 'atkinson', 'noto_sans', 'asap_condensed']);
+  const validFonts = new Set(['condensed', 'source_sans', 'fira_condensed', 'atkinson', 'noto_sans', 'asap_condensed', 'sofia_condensed', 'barlow_condensed']);
   const activeFont = validFonts.has(s.fontFamily) ? s.fontFamily : (s.fontFamily === 'readable' ? 'atkinson' : 'condensed');
   segs.font?.set(activeFont);
 
@@ -850,6 +850,8 @@ function initSettings() {
     ['source_sans', 'Source Sans 3', 'Source Sans', '"Source Sans 3", sans-serif'],
     ['noto_sans', 'Noto Sans', 'Noto', '"Noto Sans", sans-serif'],
     ['atkinson', 'Atkinson Hyperlegible', 'Atkinson', '"Atkinson Hyperlegible", sans-serif'],
+    ['sofia_condensed', 'Sofia Sans Condensed', 'Sofia', '"Sofia Sans Condensed", sans-serif'],
+    ['barlow_condensed', 'Barlow Condensed', 'Barlow', '"Barlow Condensed", sans-serif'],
   ];
   segs.font = radioGroup($('seg-font'), fontOptions.map(([v, label, shortLabel, fontCss]) => ({
     value: v,
