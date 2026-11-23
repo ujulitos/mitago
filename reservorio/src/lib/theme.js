@@ -35,17 +35,12 @@ const HOME_BG = {
 let themeRaf = 0;
 let restoreUrl = null;
 let lastRepaintTarget = null;
-let lastDrawerTarget = null;
 
 export function syncThemeColorMeta(choice) {
   cancelAnimationFrame(themeRaf);
   if (lastRepaintTarget) {
     lastRepaintTarget.style.transform = '';
     lastRepaintTarget = null;
-  }
-  if (lastDrawerTarget) {
-    lastDrawerTarget.style.opacity = '';
-    lastDrawerTarget = null;
   }
   const resolved = resolveTheme(choice ?? document.documentElement.dataset.theme);
   const root = document.documentElement;
@@ -88,10 +83,6 @@ export function syncThemeColorMeta(choice) {
       repaintTarget.style.transform = 'translateZ(0)';
       lastRepaintTarget = repaintTarget;
     }
-    if (drawerOpen && drawerEl) {
-      drawerEl.style.opacity = '0.999';
-      lastDrawerTarget = drawerEl;
-    }
     void root.offsetHeight;
     if (restoreUrl !== null) {
       try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
@@ -99,8 +90,6 @@ export function syncThemeColorMeta(choice) {
     themeRaf = requestAnimationFrame(() => {
       if (repaintTarget) repaintTarget.style.transform = '';
       if (lastRepaintTarget === repaintTarget) lastRepaintTarget = null;
-      if (drawerEl) drawerEl.style.opacity = '';
-      if (lastDrawerTarget === drawerEl) lastDrawerTarget = null;
       for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
       const fresh = document.createElement('meta');
       fresh.name = 'theme-color';
