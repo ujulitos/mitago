@@ -46,6 +46,7 @@ const FAMILIES = {
   asap_condensed: '"Asap Condensed", sans-serif',
   sofia_condensed: '"Sofia Sans Condensed", sans-serif',
   barlow_condensed: '"Barlow Condensed", sans-serif',
+  reddit_condensed: '"Reddit Sans Condensed", sans-serif',
 };
 const FORCED_COLORS = `
 .rp-body { color: var(--rp-ink) !important; background: transparent !important; }

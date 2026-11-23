@@ -1,7 +1,7 @@
 // PWA Service Worker for El Reservorio WebApp
 // Enables full 100% offline reading on any device (phone, tablet, computer)
 
-const CACHE_NAME = 'el-reservorio-pwa-v206';
+const CACHE_NAME = 'el-reservorio-pwa-v208';
 
 const STATIC_ASSETS = [
   './',
@@ -114,6 +114,8 @@ const STATIC_ASSETS = [
   './fonts/noto-sans-italic-300-700-latin-ext.woff2',
   './fonts/noto-sans-normal-300-700-latin.woff2',
   './fonts/noto-sans-normal-300-700-latin-ext.woff2',
+  './fonts/reddit-sans-condensed-normal-300-700-latin.woff2',
+  './fonts/reddit-sans-condensed-normal-300-700-latin-ext.woff2',
   './fonts/roboto-condensed-italic-300-700-latin.woff2',
   './fonts/roboto-condensed-italic-300-700-latin-ext.woff2',
   './fonts/roboto-condensed-normal-300-700-latin.woff2',
