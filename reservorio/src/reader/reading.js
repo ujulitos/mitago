@@ -1054,12 +1054,28 @@ function countWords(root) {
   return count;
 }
 
+let chapterRemainingMins = null;
+
+function renderChapterClockMark(now = new Date()) {
+  const mark = $('clock-chapter-mark');
+  if (!mark) return;
+  if (chapterRemainingMins == null || !Number.isFinite(chapterRemainingMins)) {
+    mark.setAttribute('hidden', '');
+    return;
+  }
+  const deg = ((now.getMinutes() + chapterRemainingMins) % 60) * 6;
+  mark.removeAttribute('hidden');
+  mark.setAttribute('transform', `rotate(${deg.toFixed(2)} 88 88)`);
+}
+
 function paintChapterTime() {
   const el = $('chapter-time');
   if (!el || !rp?.view) return;
   const pos = rp.view.position;
   if (!pos) {
     el.textContent = '';
+    chapterRemainingMins = null;
+    renderChapterClockMark();
     return;
   }
   const spineIndex = pos.spine;
@@ -1098,6 +1114,8 @@ function paintChapterTime() {
   }
 
   mins = Math.max(1, mins);
+  chapterRemainingMins = mins;
+  renderChapterClockMark();
   const nextText = mins < 60
     ? t('time_left_chapter', mins)
     : t('time_left_chapter_hours', Math.floor(mins / 60), mins % 60);
@@ -1176,6 +1194,7 @@ function initAnalogClock() {
     const minHand = $('clock-min');
     if (hourHand) hourHand.setAttribute('transform', `rotate(${hourDeg.toFixed(2)} 88 88)`);
     if (minHand) minHand.setAttribute('transform', `rotate(${minDeg.toFixed(2)} 88 88)`);
+    renderChapterClockMark(now);
     clockEl.title = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
@@ -1293,6 +1312,8 @@ export function paintFolio() {
 /** Tear down Reading DOM, cached section metrics, and timers when returning Home. */
 export function teardownReadingView() {
   stopAnalogClock();
+  chapterRemainingMins = null;
+  renderChapterClockMark();
   closePanel(false);
   $('reading')?.classList.remove('mobile-ui-visible');
   tocCurrent = -1;

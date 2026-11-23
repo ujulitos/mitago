@@ -35,12 +35,17 @@ const HOME_BG = {
 let themeRaf = 0;
 let restoreUrl = null;
 let lastRepaintTarget = null;
+let lastDrawerTarget = null;
 
 export function syncThemeColorMeta(choice) {
   cancelAnimationFrame(themeRaf);
   if (lastRepaintTarget) {
     lastRepaintTarget.style.transform = '';
     lastRepaintTarget = null;
+  }
+  if (lastDrawerTarget) {
+    lastDrawerTarget.style.opacity = '';
+    lastDrawerTarget = null;
   }
   const resolved = resolveTheme(choice ?? document.documentElement.dataset.theme);
   const root = document.documentElement;
@@ -60,18 +65,20 @@ export function syncThemeColorMeta(choice) {
 
   const head = document.head;
   if (!head) return;
-  let existing = head.querySelector('meta[name="theme-color"]');
-  if (existing) {
-    existing.setAttribute('content', color);
-  } else {
-    existing = document.createElement('meta');
-    existing.name = 'theme-color';
-    existing.content = color;
-    head.append(existing);
-  }
+  for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
+  const immediate = document.createElement('meta');
+  immediate.name = 'theme-color';
+  immediate.content = color;
+  head.append(immediate);
 
   if (typeof requestAnimationFrame !== 'function') return;
-  const repaintTarget = inReading ? readingEl : document.querySelector('#library .lib-head');
+  const drawerEl = !inReading ? document.getElementById('lib-drawer') : null;
+  const drawerOpen = Boolean(drawerEl && !drawerEl.hidden);
+  const repaintTarget = inReading
+    ? readingEl
+    : (drawerOpen || document.body?.classList.contains('home-scroll-locked'))
+      ? activeLayer
+      : (document.querySelector('#library .lib-head') || activeLayer);
   if (restoreUrl === null && location.hash !== '#_') {
     restoreUrl = `${location.pathname}${location.search}${location.hash}`;
   }
@@ -81,6 +88,10 @@ export function syncThemeColorMeta(choice) {
       repaintTarget.style.transform = 'translateZ(0)';
       lastRepaintTarget = repaintTarget;
     }
+    if (drawerOpen && drawerEl) {
+      drawerEl.style.opacity = '0.999';
+      lastDrawerTarget = drawerEl;
+    }
     void root.offsetHeight;
     if (restoreUrl !== null) {
       try { history.replaceState(history.state, '', `${location.pathname}${location.search}#_`); } catch { /* ignore */ }
@@ -88,17 +99,21 @@ export function syncThemeColorMeta(choice) {
     themeRaf = requestAnimationFrame(() => {
       if (repaintTarget) repaintTarget.style.transform = '';
       if (lastRepaintTarget === repaintTarget) lastRepaintTarget = null;
+      if (drawerEl) drawerEl.style.opacity = '';
+      if (lastDrawerTarget === drawerEl) lastDrawerTarget = null;
       for (const old of head.querySelectorAll('meta[name="theme-color"]')) old.remove();
       const fresh = document.createElement('meta');
       fresh.name = 'theme-color';
       fresh.content = color;
       head.append(fresh);
       void root.offsetHeight;
-      if (restoreUrl !== null) {
-        const cleanUrl = restoreUrl;
-        restoreUrl = null;
-        try { history.replaceState(history.state, '', cleanUrl); } catch { /* ignore */ }
-      }
+      themeRaf = requestAnimationFrame(() => {
+        if (restoreUrl !== null) {
+          const cleanUrl = restoreUrl;
+          restoreUrl = null;
+          try { history.replaceState(history.state, '', cleanUrl); } catch { /* ignore */ }
+        }
+      });
     });
   });
 }

@@ -2432,25 +2432,32 @@ body:has(#reading:not([hidden])) {
     fill: var(--rp-paper);
     stroke: color-mix(in srgb, var(--rp-ink) 25%, var(--rp-paper));
     stroke-width: 3;
-    transition: fill 200ms ease, stroke 200ms ease;
+    transition: all 200ms ease;
 }
 
 .clock-hour {
     stroke: color-mix(in srgb, var(--rp-ink) 72%, var(--rp-paper));
     stroke-width: 6;
     stroke-linecap: round;
-    transition: stroke 200ms ease;
+    transition: all 200ms ease;
 }
 
 .clock-min {
     stroke: color-mix(in srgb, var(--rp-ink) 55%, var(--rp-paper));
     stroke-width: 4.5;
     stroke-linecap: round;
-    transition: stroke 200ms ease;
+    transition: all 200ms ease;
 }
 
 .clock-pivot {
     fill: color-mix(in srgb, var(--rp-progress, salmon) 72%, var(--rp-paper));
+}
+
+.clock-chapter-mark {
+    stroke: color-mix(in srgb, var(--rp-ink) 20%, var(--rp-paper));
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: all 200ms ease;
 }
 
 /* Clock button underneath the clock dial: exactly the same design as font buttons (segmented) without mouseover */
