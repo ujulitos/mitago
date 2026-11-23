@@ -2140,14 +2140,25 @@ body:has(#reading:not([hidden])) {
     height: 3px;
     margin-top: -1.5px;
     border-radius: 2px;
+    isolation: isolate;
     /* background: var(--rp-rule); */
     background: #286dd3 !important;
+}
+
+.rail-track::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: inherit;
+    pointer-events: none;
 }
 
 .ticks {
     position: absolute;
     inset: 0;
-    z-index: -1;
+    z-index: 0;
     pointer-events: none;
 }
 
