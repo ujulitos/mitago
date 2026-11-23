@@ -2142,7 +2142,7 @@ body:has(#reading:not([hidden])) {
     border-radius: 2px;
     isolation: isolate;
     /* background: var(--rp-rule); */
-    background: #286dd3 !important;
+    background: #adafb2 !important;
 }
 
 .rail-track::before {
