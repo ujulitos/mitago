@@ -504,6 +504,21 @@ button.primary:hover {
     display: none !important;
 }
 
+/* iOS tints the status bar from the fixed element touching the top edge (like .bar in
+   reading). While the drawer covers the top, this themed strip is that element, so picking
+   a theme in the dropdown recolours the status bar at once instead of on close. */
+.lib-drawer::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    height: max(env(safe-area-inset-top, 0px), var(--safe-top, 0px));
+    background: var(--paper);
+    pointer-events: none;
+}
+
 .lib-drawer-backdrop {
     position: absolute;
     inset: 0;
