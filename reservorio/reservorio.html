@@ -429,13 +429,36 @@
     <!-- Book Finished Celebration Modal -->
     <div id="read-celebration-modal" class="modal-overlay celebrate-overlay" role="dialog" aria-modal="true" aria-labelledby="read-celebration-badge" hidden>
         <div class="modal-backdrop celebrate-backdrop" id="read-celebration-backdrop"></div>
-        <div class="celebrate-confetti" id="read-celebration-confetti" aria-hidden="true"></div>
+        <canvas class="celebrate-canvas" id="read-celebration-canvas" aria-hidden="true"></canvas>
+        <div class="celebrate-sparkles" id="read-celebration-sparkles" aria-hidden="true"></div>
         <div class="modal-card celebrate-card">
             <div class="celebrate-body">
                 <span class="celebrate-pill" id="read-celebration-badge" data-i18n="celebrate_badge">¡Libro terminado!</span>
                 <div class="celebrate-cover-stage">
                     <div class="celebrate-halo" aria-hidden="true"></div>
-                    <div class="celebrate-rays" aria-hidden="true"></div>
+                    <svg class="celebrate-rays" viewBox="0 0 240 240" aria-hidden="true">
+                        <defs>
+                            <radialGradient id="celeb-ray-grad" cx="50%" cy="50%" r="50%">
+                                <stop offset="18%" stop-color="#ffd166" stop-opacity="0.28" />
+                                <stop offset="68%" stop-color="#ffd166" stop-opacity="0.06" />
+                                <stop offset="100%" stop-color="#ffd166" stop-opacity="0" />
+                            </radialGradient>
+                        </defs>
+                        <g fill="url(#celeb-ray-grad)">
+                            <polygon points="120,120 110,4 130,4" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(30 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(60 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(90 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(120 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(150 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(180 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(210 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(240 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(270 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(300 120 120)" />
+                            <polygon points="120,120 110,4 130,4" transform="rotate(330 120 120)" />
+                        </g>
+                    </svg>
                     <div class="celebrate-cover-frame" id="read-celebration-cover"></div>
                     <span class="celebrate-check-badge" id="read-celebration-check" aria-hidden="true"></span>
                 </div>

@@ -708,11 +708,13 @@ function bookItem(book, pos, stat, category, categories) {
     if (markingAsRead) {
       categories[book.id] = 'read';
       openReadCelebration(book, { readCount: cachedReadCount + 1 });
+      await ctx.store.setSetting('book_categories', categories);
+      deferWhileCelebrating(() => renderLibrary());
     } else {
       categories[book.id] = 'none';
+      await ctx.store.setSetting('book_categories', categories);
+      await renderLibrary();
     }
-    await ctx.store.setSetting('book_categories', categories);
-    await renderLibrary();
   });
 
   const btnMeta = labelled(el('button', {
@@ -973,48 +975,185 @@ function enableRowDragScroll(row) {
 
 // ---- book finished celebration modal --------------------------------------------
 const CELEBRATE_COLORS = ['#ffd166', '#58c97a', '#ff6b6b', '#4da6ff', '#f4a261', '#c084fc', '#ffe58f', '#2ec4b6'];
+let celebrateRaf = 0;
+let deferredCelebrationJobs = [];
+let deferredCelebrationTimer = 0;
 
-function buildCelebrationConfetti(container) {
+function flushDeferredCelebrationJobs() {
+  clearTimeout(deferredCelebrationTimer);
+  deferredCelebrationTimer = 0;
+  if (!deferredCelebrationJobs.length) return;
+  const jobs = deferredCelebrationJobs;
+  deferredCelebrationJobs = [];
+  for (const fn of jobs) {
+    try { fn(); } catch {}
+  }
+}
+
+/**
+ * Defer heavy shelf DOM rebuilds while the celebration entrance/burst is running
+ * so iPhone WebKit keeps a 100% idle main thread at 60/120fps.
+ */
+export function deferWhileCelebrating(fn) {
+  const modal = $('read-celebration-modal');
+  if (!modal || modal.hidden) {
+    fn();
+    return;
+  }
+  deferredCelebrationJobs.push(fn);
+  clearTimeout(deferredCelebrationTimer);
+  deferredCelebrationTimer = setTimeout(flushDeferredCelebrationJobs, 1500);
+}
+
+function stopCelebrationConfetti() {
+  if (celebrateRaf) {
+    cancelAnimationFrame(celebrateRaf);
+    celebrateRaf = 0;
+  }
+  const canvas = $('read-celebration-canvas');
+  if (canvas) {
+    const c2d = canvas.getContext('2d');
+    if (c2d) c2d.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+function startCelebrationConfetti() {
+  stopCelebrationConfetti();
+  const canvas = $('read-celebration-canvas');
+  if (!canvas) return;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return;
+
+  const vw = window.innerWidth || 390;
+  const vh = window.innerHeight || 844;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(vw * dpr);
+  canvas.height = Math.round(vh * dpr);
+  const c2d = canvas.getContext('2d');
+  if (!c2d) return;
+
+  const coverRect = $('read-celebration-cover')?.getBoundingClientRect();
+  const originX = coverRect && coverRect.width > 0 ? coverRect.left + coverRect.width / 2 : vw / 2;
+  const originY = coverRect && coverRect.height > 0 ? coverRect.top + coverRect.height * 0.45 : vh * 0.44;
+  const spreadScale = Math.min(1.15, Math.max(0.82, vw / 420));
+
+  const particles = [];
+  const spawnWave = (count, delaySec, speedMin, speedMax) => {
+    for (let i = 0; i < count; i++) {
+      const angle = ((i / count) * Math.PI * 2) + (Math.random() - 0.5) * 0.32;
+      const speed = (speedMin + Math.random() * (speedMax - speedMin)) * spreadScale;
+      const shape = i % 5 === 0 ? 'dot' : (i % 7 === 0 ? 'star' : 'ribbon');
+      particles.push({
+        x: originX + Math.cos(angle) * 18,
+        y: originY + Math.sin(angle) * 18,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - (120 + Math.random() * 140),
+        w: shape === 'ribbon' ? (7 + Math.random() * 5) : (5 + Math.random() * 3.5),
+        h: shape === 'ribbon' ? (3.5 + Math.random() * 2.5) : 6,
+        color: CELEBRATE_COLORS[(i + Math.floor(Math.random() * 3)) % CELEBRATE_COLORS.length],
+        shape,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() > 0.5 ? 1 : -1) * (3.2 + Math.random() * 4.8),
+        tiltPhase: Math.random() * Math.PI * 2,
+        tiltSpeed: 5.5 + Math.random() * 5.5,
+        wobblePhase: Math.random() * Math.PI * 2,
+        wobbleSpeed: 2.2 + Math.random() * 2.4,
+        wobbleAmp: 18 + Math.random() * 26,
+        delay: delaySec + Math.random() * 0.08,
+        life: 2.25 + Math.random() * 0.85,
+        age: 0,
+      });
+    }
+  };
+
+  spawnWave(38, 0.05, 290, 560);
+  spawnWave(18, 0.34, 240, 470);
+
+  let prev = performance.now();
+  const drawStar = (r) => {
+    c2d.beginPath();
+    c2d.moveTo(0, -r);
+    c2d.quadraticCurveTo(0, 0, r, 0);
+    c2d.quadraticCurveTo(0, 0, 0, r);
+    c2d.quadraticCurveTo(0, 0, -r, 0);
+    c2d.quadraticCurveTo(0, 0, 0, -r);
+    c2d.fill();
+  };
+
+  const step = (now) => {
+    const dt = Math.min(0.05, Math.max(0.001, (now - prev) / 1000));
+    prev = now;
+    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c2d.clearRect(0, 0, vw, vh);
+
+    const drag = Math.pow(0.945, dt * 60);
+    let alive = 0;
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      if (p.delay > 0) {
+        p.delay -= dt;
+        alive++;
+        continue;
+      }
+      p.age += dt;
+      if (p.age >= p.life) continue;
+      alive++;
+
+      p.vx *= drag;
+      p.vy = p.vy * drag + 235 * dt;
+      const sway = Math.sin(p.age * p.wobbleSpeed + p.wobblePhase) * p.wobbleAmp * dt;
+      p.x += p.vx * dt + sway;
+      p.y += p.vy * dt;
+      p.rot += p.vRot * dt;
+
+      const fadeIn = Math.min(1, p.age / 0.1);
+      const remain = p.life - p.age;
+      const fadeOut = remain < 0.75 ? Math.max(0, remain / 0.75) : 1;
+      const alpha = fadeIn * fadeOut * fadeOut;
+      if (alpha <= 0.01) continue;
+
+      c2d.save();
+      c2d.globalAlpha = alpha;
+      c2d.translate(p.x, p.y);
+      c2d.rotate(p.rot);
+      c2d.fillStyle = p.color;
+
+      if (p.shape === 'dot') {
+        c2d.beginPath();
+        c2d.arc(0, 0, p.w * 0.45, 0, Math.PI * 2);
+        c2d.fill();
+      } else if (p.shape === 'star') {
+        const s = 0.75 + 0.25 * Math.sin(p.age * 8 + p.tiltPhase);
+        c2d.scale(s, s);
+        drawStar(p.w * 0.68);
+      } else {
+        const flip = Math.cos(p.age * p.tiltSpeed + p.tiltPhase);
+        c2d.scale(1, Math.max(0.22, Math.abs(flip)));
+        c2d.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      }
+      c2d.restore();
+    }
+
+    if (alive > 0) {
+      celebrateRaf = requestAnimationFrame(step);
+    } else {
+      celebrateRaf = 0;
+      c2d.clearRect(0, 0, vw, vh);
+    }
+  };
+
+  celebrateRaf = requestAnimationFrame(step);
+}
+
+function buildCelebrationSparkles(container) {
   const frag = document.createDocumentFragment();
-  // Wave 1: wide radial burst clear of the book cover, then drifting down
-  const wave1 = 24;
-  for (let i = 0; i < wave1; i++) {
-    const angle = ((i / wave1) * Math.PI * 2) + ((i % 3) - 1) * 0.1;
-    const dist = 128 + (i % 5) * 28;
-    const dx = Math.cos(angle) * dist;
-    const dy = Math.sin(angle) * dist * 0.92 - 42;
-    const rot = (i % 2 === 0 ? 1 : -1) * (240 + (i % 4) * 95);
-    const delay = 90 + (i % 6) * 28;
-    const dur = 1900 + (i % 4) * 240;
-    const kind = i % 4 === 0 ? ' dot' : (i % 4 === 3 ? ' ribbon' : '');
-    frag.append(el('i', {
-      class: `celebrate-piece${kind}`,
-      style: `--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;--rot:${rot}deg;--delay:${delay}ms;--dur:${dur}ms;--c:${CELEBRATE_COLORS[i % CELEBRATE_COLORS.length]}`,
-    }));
-  }
-  // Wave 2: festive secondary pop so the celebration lingers gracefully
-  const wave2 = 12;
-  for (let i = 0; i < wave2; i++) {
-    const angle = ((i / wave2) * Math.PI * 2) + 0.26;
-    const dist = 152 + (i % 4) * 24;
-    const dx = Math.cos(angle) * dist;
-    const dy = Math.sin(angle) * dist * 0.85 - 58;
-    const rot = (i % 2 === 0 ? -1 : 1) * (260 + (i % 3) * 110);
-    const delay = 380 + (i % 5) * 65;
-    const dur = 2150 + (i % 3) * 260;
-    frag.append(el('i', {
-      class: `celebrate-piece${i % 2 === 0 ? ' ribbon' : ' dot'}`,
-      style: `--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;--rot:${rot}deg;--delay:${delay}ms;--dur:${dur}ms;--c:${CELEBRATE_COLORS[(i + 3) % CELEBRATE_COLORS.length]}`,
-    }));
-  }
-  // Persistent twinkling golden sparkles framing the cover
   const sparkles = [
     { x: '-104px', y: '-136px', s: 1.15, d: '120ms' },
-    { x: '112px', y: '-118px', s: 1.0, d: '300ms' },
-    { x: '-122px', y: '-18px', s: 0.9, d: '460ms' },
-    { x: '124px', y: '-26px', s: 1.05, d: '220ms' },
-    { x: '-96px', y: '82px', s: 0.85, d: '580ms' },
-    { x: '104px', y: '74px', s: 0.95, d: '380ms' },
+    { x: '112px', y: '-118px', s: 1.0, d: '320ms' },
+    { x: '-120px', y: '-14px', s: 0.9, d: '500ms' },
+    { x: '122px', y: '-22px', s: 1.05, d: '240ms' },
+    { x: '-96px', y: '82px', s: 0.85, d: '620ms' },
+    { x: '104px', y: '74px', s: 0.95, d: '400ms' },
   ];
   for (const sp of sparkles) {
     frag.append(el('span', {
@@ -1029,14 +1168,16 @@ function buildCelebrationConfetti(container) {
 export function closeReadCelebration() {
   const modal = $('read-celebration-modal');
   if (!modal || modal.hidden) return false;
+  stopCelebrationConfetti();
   modal.hidden = true;
   modal.classList.remove('is-open');
   if (celebrationCoverUrl) {
     URL.revokeObjectURL(celebrationCoverUrl);
     celebrationCoverUrl = null;
   }
-  $('read-celebration-confetti')?.replaceChildren();
+  $('read-celebration-sparkles')?.replaceChildren();
   syncHomeScrollLock();
+  flushDeferredCelebrationJobs();
   const prev = celebrationTrigger;
   celebrationTrigger = null;
   if (prev?.isConnected) prev.focus({ preventScroll: true });
@@ -1046,6 +1187,7 @@ export function closeReadCelebration() {
 export function openReadCelebration(book, { readCount = 0 } = {}) {
   const modal = $('read-celebration-modal');
   if (!modal || !book || $('library')?.hidden) return;
+  stopCelebrationConfetti();
   if (celebrationCoverUrl) {
     URL.revokeObjectURL(celebrationCoverUrl);
     celebrationCoverUrl = null;
@@ -1090,14 +1232,15 @@ export function openReadCelebration(book, { readCount = 0 } = {}) {
   }
   if ($('read-celebration-ok')) $('read-celebration-ok').textContent = t('celebrate_ok');
 
-  const confetti = $('read-celebration-confetti');
-  if (confetti) buildCelebrationConfetti(confetti);
+  const sparkles = $('read-celebration-sparkles');
+  if (sparkles) buildCelebrationSparkles(sparkles);
 
   modal.classList.remove('is-open');
   modal.hidden = false;
   void modal.offsetWidth;
   modal.classList.add('is-open');
   syncHomeScrollLock();
+  startCelebrationConfetti();
   $('read-celebration-ok')?.focus({ preventScroll: true });
 }
 

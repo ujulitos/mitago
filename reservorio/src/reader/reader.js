@@ -14,7 +14,7 @@ import { resolveTheme } from '../lib/theme.js';
 import { showToast } from '../lib/toast.js';
 import { $, hideLoadingOverlay, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
 import { addReadingTime, errorCode, fileProblem, findDuplicateBook, hasRoom, localDay } from './logic.js';
-import { closeLibraryDrawer, closeReadCelebration, getCachedReadCount, hideNotice, importFile, initLibrary, openReadCelebration, problemText, refreshBookInLibrary, renderLibrary, showNotice } from './library.js';
+import { closeLibraryDrawer, closeReadCelebration, deferWhileCelebrating, getCachedReadCount, hideNotice, importFile, initLibrary, openReadCelebration, problemText, refreshBookInLibrary, renderLibrary, showNotice } from './library.js';
 import { addStatTime } from './stats.js';
 import { EXTENSION } from './libfile.js';
 import { openRemote } from './remote.js';
@@ -244,7 +244,11 @@ async function showLibrary() {
   const store = await storeReady;
   await Promise.all([flush(), flushReadingStats()]);
   applyReadingTheme(await store.getSetting('theme', null));
-  await (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary());
+  if (shouldCelebrate) {
+    deferWhileCelebrating(() => (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary()));
+  } else {
+    await (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary());
+  }
 }
 
 /** Lay a book out at its saved place. Returns true when it had one. */

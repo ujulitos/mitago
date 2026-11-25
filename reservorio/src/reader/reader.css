@@ -4584,10 +4584,9 @@ body:has(#reading:not([hidden])) {
 }
 
 .celebrate-backdrop {
-    background: rgba(10, 12, 18, 0.76);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    animation: celebrateBackdropIn 140ms ease both;
+    background: radial-gradient(circle at 50% 42%, rgba(16, 18, 26, 0.72), rgba(6, 8, 12, 0.88));
+    will-change: opacity;
+    animation: celebrateBackdropIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .celebrate-card {
@@ -4598,47 +4597,34 @@ body:has(#reading:not([hidden])) {
     border-radius: 24px;
     overflow: hidden;
     background:
-        radial-gradient(circle at 50% 24%, rgba(232, 184, 75, 0.24), transparent 58%),
+        radial-gradient(circle at 50% 24%, rgba(232, 184, 75, 0.22), transparent 58%),
         var(--card);
     border: 1px solid color-mix(in srgb, #e8b84b 40%, var(--line));
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(232, 184, 75, 0.16);
-    animation: celebrateCardIn 210ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    animation: celebrateCardIn 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.celebrate-confetti {
+.celebrate-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    pointer-events: none;
+    transform: translate3d(0, 0, 0);
+}
+
+.celebrate-sparkles {
     position: fixed;
     top: calc(50% - 48px);
     left: 50%;
     width: 0;
     height: 0;
-    z-index: 3;
+    z-index: 4;
     pointer-events: none;
-}
-
-.celebrate-piece {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 11px;
-    height: 6px;
-    border-radius: 2px;
-    background: var(--c, #ffd166);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--c, #ffd166) 55%, transparent);
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.25);
-    animation: celebrateConfettiBurst var(--dur, 2000ms) cubic-bezier(0.12, 0.85, 0.25, 1) var(--delay, 90ms) forwards;
-}
-
-.celebrate-piece.ribbon {
-    width: 14px;
-    height: 5px;
-    border-radius: 3px;
-}
-
-.celebrate-piece.dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
 }
 
 .celebrate-sparkle {
@@ -4648,10 +4634,12 @@ body:has(#reading:not([hidden])) {
     font-size: 20px;
     line-height: 1;
     color: #ffd166;
-    text-shadow: 0 0 14px rgba(255, 209, 102, 0.85);
     opacity: 0;
-    transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(0.35);
-    animation: celebrateSparkle 1600ms ease-in-out var(--sd, 0ms) infinite;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translate3d(calc(-50% + var(--sx)), calc(-50% + var(--sy)), 0) scale3d(0.4, 0.4, 1);
+    animation: celebrateSparkle 2200ms cubic-bezier(0.4, 0, 0.2, 1) var(--sd, 0ms) infinite;
 }
 
 .celebrate-body {
@@ -4678,7 +4666,8 @@ body:has(#reading:not([hidden])) {
     color: #ffd166;
     background: rgba(232, 184, 75, 0.16);
     border: 1px solid rgba(232, 184, 75, 0.38);
-    animation: celebrateBadgePop 320ms cubic-bezier(0.22, 1, 0.36, 1) 50ms both;
+    will-change: transform, opacity;
+    animation: celebrateBadgePop 420ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both;
 }
 
 .celebrate-cover-stage {
@@ -4691,12 +4680,19 @@ body:has(#reading:not([hidden])) {
 
 .celebrate-halo {
     position: absolute;
-    width: 220px;
-    height: 220px;
+    width: 236px;
+    height: 236px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 209, 102, 0.42) 0%, rgba(88, 201, 122, 0.16) 46%, transparent 72%);
-    filter: blur(10px);
-    animation: celebrateHalo 2.4s ease-in-out infinite;
+    background: radial-gradient(
+        circle,
+        rgba(255, 209, 102, 0.36) 0%,
+        rgba(255, 209, 102, 0.18) 32%,
+        rgba(88, 201, 122, 0.09) 52%,
+        transparent 72%
+    );
+    will-change: transform, opacity;
+    transform: translate3d(0, 0, 0);
+    animation: celebrateHalo 3.2s ease-in-out infinite;
     pointer-events: none;
 }
 
@@ -4704,15 +4700,9 @@ body:has(#reading:not([hidden])) {
     position: absolute;
     width: 248px;
     height: 248px;
-    border-radius: 50%;
-    background: repeating-conic-gradient(
-        from 0deg,
-        rgba(255, 209, 102, 0.16) 0deg 10deg,
-        transparent 10deg 24deg
-    );
-    -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 0.85) 20%, transparent 70%);
-    mask-image: radial-gradient(circle, rgba(0, 0, 0, 0.85) 20%, transparent 70%);
-    animation: celebrateRaysSpin 14s linear infinite, celebrateBackdropIn 400ms ease both;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    animation: celebrateRaysSpin 18s linear infinite, celebrateBackdropIn 450ms ease-out both;
     pointer-events: none;
 }
 
@@ -4726,12 +4716,15 @@ body:has(#reading:not([hidden])) {
     background: var(--paper);
     border: 1px solid color-mix(in srgb, #ffd166 24%, transparent);
     box-shadow:
-        0 20px 38px rgba(0, 0, 0, 0.46),
-        0 4px 12px rgba(0, 0, 0, 0.26),
+        0 20px 38px rgba(0, 0, 0, 0.44),
+        0 4px 12px rgba(0, 0, 0, 0.24),
         inset 3px 0 8px rgba(255, 255, 255, 0.14);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     animation:
-        celebrateCoverPop 600ms cubic-bezier(0.16, 1, 0.3, 1) 40ms both,
-        celebrateCoverFloat 3.2s ease-in-out 660ms infinite;
+        celebrateCoverPop 680ms cubic-bezier(0.22, 1, 0.36, 1) 40ms both,
+        celebrateCoverFloat 4.2s ease-in-out 740ms infinite;
 }
 
 .celebrate-cover-frame img {
@@ -4756,9 +4749,10 @@ body:has(#reading:not([hidden])) {
 .celebrate-sheen {
     position: absolute;
     inset: 0;
-    background: linear-gradient(115deg, transparent 18%, rgba(255, 245, 210, 0.56) 48%, transparent 74%);
-    transform: translateX(-140%);
-    animation: celebrateSheen 1050ms cubic-bezier(0.22, 1, 0.36, 1) 260ms forwards;
+    background: linear-gradient(115deg, transparent 18%, rgba(255, 245, 210, 0.54) 48%, transparent 74%);
+    will-change: transform;
+    transform: translate3d(-140%, 0, 0);
+    animation: celebrateSheen 1200ms cubic-bezier(0.25, 0.1, 0.25, 1) 280ms forwards;
     pointer-events: none;
 }
 
@@ -4776,8 +4770,11 @@ body:has(#reading:not([hidden])) {
     background: linear-gradient(135deg, #58c97a, #358c56);
     color: #fff;
     border: 3px solid var(--card);
-    box-shadow: 0 10px 22px rgba(53, 140, 86, 0.5);
-    animation: celebrateBadgePop 480ms cubic-bezier(0.34, 1.56, 0.64, 1) 170ms both;
+    box-shadow: 0 10px 22px rgba(53, 140, 86, 0.48);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    animation: celebrateBadgePop 540ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
 }
 
 .celebrate-check-badge::before,
@@ -4786,18 +4783,19 @@ body:has(#reading:not([hidden])) {
     position: absolute;
     inset: -4px;
     border-radius: 50%;
-    border: 2px solid rgba(88, 201, 122, 0.8);
+    border: 2px solid rgba(88, 201, 122, 0.78);
     opacity: 0;
+    will-change: transform, opacity;
     pointer-events: none;
 }
 
 .celebrate-check-badge::before {
-    animation: celebrateRingPulse 1250ms ease-out 260ms forwards;
+    animation: celebrateRingPulse 1400ms cubic-bezier(0.22, 1, 0.36, 1) 300ms forwards;
 }
 
 .celebrate-check-badge::after {
-    border-color: rgba(255, 209, 102, 0.78);
-    animation: celebrateRingPulse 1350ms ease-out 520ms forwards;
+    border-color: rgba(255, 209, 102, 0.76);
+    animation: celebrateRingPulse 1500ms cubic-bezier(0.22, 1, 0.36, 1) 580ms forwards;
 }
 
 .celebrate-title {
@@ -4843,7 +4841,7 @@ body:has(#reading:not([hidden])) {
     font-weight: 700;
     cursor: pointer;
     box-shadow: 0 8px 22px rgba(217, 144, 54, 0.38);
-    transition: transform 120ms ease, filter 140ms ease;
+    transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1), filter 140ms ease;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -4852,7 +4850,7 @@ body:has(#reading:not([hidden])) {
 }
 
 .celebrate-btn:active {
-    transform: scale(0.96);
+    transform: scale3d(0.96, 0.96, 1);
 }
 
 @keyframes celebrateBackdropIn {
@@ -4861,72 +4859,55 @@ body:has(#reading:not([hidden])) {
 }
 
 @keyframes celebrateCardIn {
-    from { opacity: 0; transform: translateY(14px) scale(0.93); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translate3d(0, 18px, 0) scale3d(0.94, 0.94, 1); }
+    to { opacity: 1; transform: translate3d(0, 0, 0) scale3d(1, 1, 1); }
 }
 
 @keyframes celebrateCoverPop {
-    0% { opacity: 0; transform: translateY(24px) scale(0.72) rotate(-5deg); }
-    62% { opacity: 1; transform: translateY(-6px) scale(1.06) rotate(1.8deg); }
-    100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+    0% { opacity: 0; transform: translate3d(0, 22px, 0) scale3d(0.82, 0.82, 1) rotate(-3deg); }
+    68% { opacity: 1; transform: translate3d(0, -4px, 0) scale3d(1.03, 1.03, 1) rotate(0.8deg); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0) scale3d(1, 1, 1) rotate(0deg); }
 }
 
 @keyframes celebrateCoverFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0, -5px, 0); }
 }
 
 @keyframes celebrateSheen {
-    from { transform: translateX(-140%); }
-    to { transform: translateX(155%); }
+    from { transform: translate3d(-140%, 0, 0); }
+    to { transform: translate3d(155%, 0, 0); }
 }
 
 @keyframes celebrateHalo {
-    0%, 100% { transform: scale(0.92); opacity: 0.72; }
-    50% { transform: scale(1.1); opacity: 1; }
+    0%, 100% { transform: translate3d(0, 0, 0) scale3d(0.94, 0.94, 1); opacity: 0.74; }
+    50% { transform: translate3d(0, 0, 0) scale3d(1.08, 1.08, 1); opacity: 1; }
 }
 
 @keyframes celebrateRaysSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from { transform: translate3d(0, 0, 0) rotate(0deg); }
+    to { transform: translate3d(0, 0, 0) rotate(360deg); }
 }
 
 @keyframes celebrateBadgePop {
-    0% { opacity: 0; transform: scale(0.28); }
-    100% { opacity: 1; transform: scale(1); }
+    0% { opacity: 0; transform: scale3d(0.45, 0.45, 1); }
+    65% { opacity: 1; transform: scale3d(1.08, 1.08, 1); }
+    100% { opacity: 1; transform: scale3d(1, 1, 1); }
 }
 
 @keyframes celebrateRingPulse {
-    0% { transform: scale(0.85); opacity: 0.95; }
-    100% { transform: scale(2.05); opacity: 0; }
-}
-
-@keyframes celebrateConfettiBurst {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.25) rotate(0deg);
-    }
-    12% {
-        opacity: 1;
-    }
-    55% {
-        opacity: 1;
-        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.05) rotate(var(--rot));
-    }
-    100% {
-        opacity: 0;
-        transform: translate(calc(-50% + var(--dx) * 1.18), calc(-50% + var(--dy) + 96px)) scale(0.82) rotate(calc(var(--rot) * 1.45));
-    }
+    0% { transform: scale3d(0.88, 0.88, 1); opacity: 0.92; }
+    100% { transform: scale3d(2.05, 2.05, 1); opacity: 0; }
 }
 
 @keyframes celebrateSparkle {
     0%, 100% {
-        opacity: 0.2;
-        transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(calc(var(--ss) * 0.7)) rotate(0deg);
+        opacity: 0.22;
+        transform: translate3d(calc(-50% + var(--sx)), calc(-50% + var(--sy)), 0) scale3d(calc(var(--ss) * 0.75), calc(var(--ss) * 0.75), 1) rotate(0deg);
     }
     50% {
         opacity: 1;
-        transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(calc(var(--ss) * 1.25)) rotate(22deg);
+        transform: translate3d(calc(-50% + var(--sx)), calc(-50% + var(--sy)), 0) scale3d(calc(var(--ss) * 1.18), calc(var(--ss) * 1.18), 1) rotate(18deg);
     }
 }
 
@@ -4941,15 +4922,14 @@ body:has(#reading:not([hidden])) {
     .celebrate-check-badge,
     .celebrate-check-badge::before,
     .celebrate-check-badge::after,
-    .celebrate-piece,
     .celebrate-sparkle {
         animation: none !important;
     }
-    .celebrate-piece {
+    .celebrate-canvas {
         display: none;
     }
     .celebrate-sparkle {
         opacity: 0.85;
-        transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(var(--ss));
+        transform: translate3d(calc(-50% + var(--sx)), calc(-50% + var(--sy)), 0) scale3d(var(--ss), var(--ss), 1);
     }
 }
