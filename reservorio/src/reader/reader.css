@@ -4587,30 +4587,31 @@ body:has(#reading:not([hidden])) {
     background: rgba(10, 12, 18, 0.76);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    animation: celebrateBackdropIn 220ms ease both;
+    animation: celebrateBackdropIn 140ms ease both;
 }
 
 .celebrate-card {
     position: relative;
+    z-index: 2;
     width: min(370px, 90vw);
     min-width: 0;
     border-radius: 24px;
     overflow: hidden;
     background:
-        radial-gradient(circle at 50% 22%, rgba(232, 184, 75, 0.2), transparent 58%),
+        radial-gradient(circle at 50% 24%, rgba(232, 184, 75, 0.24), transparent 58%),
         var(--card);
-    border: 1px solid color-mix(in srgb, #e8b84b 36%, var(--line));
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(232, 184, 75, 0.14);
-    animation: celebrateCardIn 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    border: 1px solid color-mix(in srgb, #e8b84b 40%, var(--line));
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(232, 184, 75, 0.16);
+    animation: celebrateCardIn 210ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 
 .celebrate-confetti {
-    position: absolute;
-    top: 158px;
+    position: fixed;
+    top: calc(50% - 48px);
     left: 50%;
     width: 0;
     height: 0;
-    z-index: 1;
+    z-index: 3;
     pointer-events: none;
 }
 
@@ -4618,18 +4619,25 @@ body:has(#reading:not([hidden])) {
     position: absolute;
     left: 0;
     top: 0;
-    width: 9px;
-    height: 5px;
+    width: 11px;
+    height: 6px;
     border-radius: 2px;
-    background: var(--c, #e8b84b);
+    background: var(--c, #ffd166);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--c, #ffd166) 55%, transparent);
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.3);
-    animation: celebrateConfettiBurst var(--dur, 1300ms) cubic-bezier(0.16, 0.85, 0.3, 1) var(--delay, 0ms) forwards;
+    transform: translate(-50%, -50%) scale(0.25);
+    animation: celebrateConfettiBurst var(--dur, 2000ms) cubic-bezier(0.12, 0.85, 0.25, 1) var(--delay, 90ms) forwards;
+}
+
+.celebrate-piece.ribbon {
+    width: 14px;
+    height: 5px;
+    border-radius: 3px;
 }
 
 .celebrate-piece.dot {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
 }
 
@@ -4637,13 +4645,13 @@ body:has(#reading:not([hidden])) {
     position: absolute;
     left: 0;
     top: 0;
-    font-size: 16px;
+    font-size: 20px;
     line-height: 1;
-    color: #e8b84b;
-    text-shadow: 0 0 10px rgba(232, 184, 75, 0.65);
+    color: #ffd166;
+    text-shadow: 0 0 14px rgba(255, 209, 102, 0.85);
     opacity: 0;
-    transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(0.4);
-    animation: celebrateSparkle 1700ms ease-in-out var(--sd, 0ms) infinite;
+    transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(0.35);
+    animation: celebrateSparkle 1600ms ease-in-out var(--sd, 0ms) infinite;
 }
 
 .celebrate-body {
@@ -4667,15 +4675,15 @@ body:has(#reading:not([hidden])) {
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #e8b84b;
-    background: rgba(232, 184, 75, 0.14);
-    border: 1px solid rgba(232, 184, 75, 0.34);
-    animation: celebrateBadgePop 360ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+    color: #ffd166;
+    background: rgba(232, 184, 75, 0.16);
+    border: 1px solid rgba(232, 184, 75, 0.38);
+    animation: celebrateBadgePop 320ms cubic-bezier(0.22, 1, 0.36, 1) 50ms both;
 }
 
 .celebrate-cover-stage {
     position: relative;
-    margin: 12px 0 8px;
+    margin: 14px 0 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4683,28 +4691,47 @@ body:has(#reading:not([hidden])) {
 
 .celebrate-halo {
     position: absolute;
-    width: 196px;
-    height: 196px;
+    width: 220px;
+    height: 220px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(232, 184, 75, 0.34) 0%, rgba(88, 168, 107, 0.14) 45%, transparent 72%);
-    filter: blur(8px);
-    animation: celebrateHalo 2.6s ease-in-out infinite;
+    background: radial-gradient(circle, rgba(255, 209, 102, 0.42) 0%, rgba(88, 201, 122, 0.16) 46%, transparent 72%);
+    filter: blur(10px);
+    animation: celebrateHalo 2.4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.celebrate-rays {
+    position: absolute;
+    width: 248px;
+    height: 248px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(
+        from 0deg,
+        rgba(255, 209, 102, 0.16) 0deg 10deg,
+        transparent 10deg 24deg
+    );
+    -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 0.85) 20%, transparent 70%);
+    mask-image: radial-gradient(circle, rgba(0, 0, 0, 0.85) 20%, transparent 70%);
+    animation: celebrateRaysSpin 14s linear infinite, celebrateBackdropIn 400ms ease both;
     pointer-events: none;
 }
 
 .celebrate-cover-frame {
     position: relative;
-    width: 142px;
-    height: 212px;
+    z-index: 2;
+    width: 144px;
+    height: 214px;
     border-radius: 12px;
     overflow: hidden;
     background: var(--paper);
-    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    border: 1px solid color-mix(in srgb, #ffd166 24%, transparent);
     box-shadow:
-        0 18px 34px rgba(0, 0, 0, 0.42),
-        0 4px 10px rgba(0, 0, 0, 0.22),
-        inset 3px 0 8px rgba(255, 255, 255, 0.12);
-    animation: celebrateCoverPop 540ms cubic-bezier(0.16, 1, 0.3, 1) 70ms both;
+        0 20px 38px rgba(0, 0, 0, 0.46),
+        0 4px 12px rgba(0, 0, 0, 0.26),
+        inset 3px 0 8px rgba(255, 255, 255, 0.14);
+    animation:
+        celebrateCoverPop 600ms cubic-bezier(0.16, 1, 0.3, 1) 40ms both,
+        celebrateCoverFloat 3.2s ease-in-out 660ms infinite;
 }
 
 .celebrate-cover-frame img {
@@ -4729,38 +4756,48 @@ body:has(#reading:not([hidden])) {
 .celebrate-sheen {
     position: absolute;
     inset: 0;
-    background: linear-gradient(115deg, transparent 22%, rgba(255, 255, 255, 0.38) 48%, transparent 72%);
+    background: linear-gradient(115deg, transparent 18%, rgba(255, 245, 210, 0.56) 48%, transparent 74%);
     transform: translateX(-140%);
-    animation: celebrateSheen 950ms cubic-bezier(0.22, 1, 0.36, 1) 360ms forwards;
+    animation: celebrateSheen 1050ms cubic-bezier(0.22, 1, 0.36, 1) 260ms forwards;
     pointer-events: none;
 }
 
 .celebrate-check-badge {
     position: absolute;
     z-index: 3;
-    right: -12px;
-    bottom: -10px;
-    width: 42px;
-    height: 42px;
+    right: -13px;
+    bottom: -11px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #58a86b, #3a8b57);
+    background: linear-gradient(135deg, #58c97a, #358c56);
     color: #fff;
     border: 3px solid var(--card);
-    box-shadow: 0 8px 20px rgba(58, 139, 87, 0.45);
-    animation: celebrateBadgePop 440ms cubic-bezier(0.34, 1.56, 0.64, 1) 240ms both;
+    box-shadow: 0 10px 22px rgba(53, 140, 86, 0.5);
+    animation: celebrateBadgePop 480ms cubic-bezier(0.34, 1.56, 0.64, 1) 170ms both;
 }
 
+.celebrate-check-badge::before,
 .celebrate-check-badge::after {
     content: '';
     position: absolute;
     inset: -4px;
     border-radius: 50%;
-    border: 2px solid rgba(88, 168, 107, 0.7);
+    border: 2px solid rgba(88, 201, 122, 0.8);
     opacity: 0;
-    animation: celebrateRingPulse 1200ms ease-out 380ms forwards;
+    pointer-events: none;
+}
+
+.celebrate-check-badge::before {
+    animation: celebrateRingPulse 1250ms ease-out 260ms forwards;
+}
+
+.celebrate-check-badge::after {
+    border-color: rgba(255, 209, 102, 0.78);
+    animation: celebrateRingPulse 1350ms ease-out 520ms forwards;
 }
 
 .celebrate-title {
@@ -4800,12 +4837,12 @@ body:has(#reading:not([hidden])) {
     padding: 10px 24px;
     border: 0;
     border-radius: 999px;
-    background: linear-gradient(135deg, #e8b84b, #d99036);
+    background: linear-gradient(135deg, #ffd166, #d99036);
     color: #18140d;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 8px 20px rgba(217, 144, 54, 0.34);
+    box-shadow: 0 8px 22px rgba(217, 144, 54, 0.38);
     transition: transform 120ms ease, filter 140ms ease;
     -webkit-tap-highlight-color: transparent;
 }
@@ -4824,62 +4861,72 @@ body:has(#reading:not([hidden])) {
 }
 
 @keyframes celebrateCardIn {
-    from { opacity: 0; transform: translateY(16px) scale(0.92); }
+    from { opacity: 0; transform: translateY(14px) scale(0.93); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes celebrateCoverPop {
-    0% { opacity: 0; transform: translateY(20px) scale(0.76) rotate(-4deg); }
-    65% { opacity: 1; transform: translateY(-4px) scale(1.04) rotate(1.2deg); }
+    0% { opacity: 0; transform: translateY(24px) scale(0.72) rotate(-5deg); }
+    62% { opacity: 1; transform: translateY(-6px) scale(1.06) rotate(1.8deg); }
     100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+@keyframes celebrateCoverFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
 }
 
 @keyframes celebrateSheen {
     from { transform: translateX(-140%); }
-    to { transform: translateX(150%); }
+    to { transform: translateX(155%); }
 }
 
 @keyframes celebrateHalo {
-    0%, 100% { transform: scale(0.94); opacity: 0.72; }
-    50% { transform: scale(1.08); opacity: 1; }
+    0%, 100% { transform: scale(0.92); opacity: 0.72; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+@keyframes celebrateRaysSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 @keyframes celebrateBadgePop {
-    0% { opacity: 0; transform: scale(0.35); }
+    0% { opacity: 0; transform: scale(0.28); }
     100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes celebrateRingPulse {
-    0% { transform: scale(0.85); opacity: 0.9; }
-    100% { transform: scale(1.7); opacity: 0; }
+    0% { transform: scale(0.85); opacity: 0.95; }
+    100% { transform: scale(2.05); opacity: 0; }
 }
 
 @keyframes celebrateConfettiBurst {
     0% {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
+        transform: translate(-50%, -50%) scale(0.25) rotate(0deg);
     }
-    14% {
+    12% {
         opacity: 1;
     }
-    70% {
+    55% {
         opacity: 1;
-        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--rot));
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.05) rotate(var(--rot));
     }
     100% {
         opacity: 0;
-        transform: translate(calc(-50% + var(--dx) * 1.12), calc(-50% + var(--dy) + 46px)) scale(0.85) rotate(calc(var(--rot) * 1.25));
+        transform: translate(calc(-50% + var(--dx) * 1.18), calc(-50% + var(--dy) + 96px)) scale(0.82) rotate(calc(var(--rot) * 1.45));
     }
 }
 
 @keyframes celebrateSparkle {
     0%, 100% {
-        opacity: 0.25;
-        transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(calc(var(--ss) * 0.75)) rotate(0deg);
+        opacity: 0.2;
+        transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(calc(var(--ss) * 0.7)) rotate(0deg);
     }
     50% {
         opacity: 1;
-        transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(calc(var(--ss) * 1.18)) rotate(18deg);
+        transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(calc(var(--ss) * 1.25)) rotate(22deg);
     }
 }
 
@@ -4888,9 +4935,11 @@ body:has(#reading:not([hidden])) {
     .celebrate-card,
     .celebrate-pill,
     .celebrate-halo,
+    .celebrate-rays,
     .celebrate-cover-frame,
     .celebrate-sheen,
     .celebrate-check-badge,
+    .celebrate-check-badge::before,
     .celebrate-check-badge::after,
     .celebrate-piece,
     .celebrate-sparkle {

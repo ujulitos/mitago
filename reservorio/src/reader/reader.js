@@ -14,7 +14,7 @@ import { resolveTheme } from '../lib/theme.js';
 import { showToast } from '../lib/toast.js';
 import { $, hideLoadingOverlay, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
 import { addReadingTime, errorCode, fileProblem, findDuplicateBook, hasRoom, localDay } from './logic.js';
-import { closeLibraryDrawer, closeReadCelebration, hideNotice, importFile, initLibrary, openReadCelebration, problemText, refreshBookInLibrary, renderLibrary, showNotice } from './library.js';
+import { closeLibraryDrawer, closeReadCelebration, getCachedReadCount, hideNotice, importFile, initLibrary, openReadCelebration, problemText, refreshBookInLibrary, renderLibrary, showNotice } from './library.js';
 import { addStatTime } from './stats.js';
 import { EXTENSION } from './libfile.js';
 import { openRemote } from './remote.js';
@@ -77,6 +77,8 @@ let section = null;
 let lastReportedCatBook = null;
 let lastReportedCat = null;
 let pendingCelebrationBookId = null;
+let currentBookMeta = null;
+let openedBookWasAlreadyRead = false;
 const dirtyConfigKeys = new Set();
 const deletedConfigKeys = new Set();
 
@@ -221,46 +223,32 @@ function closeReading() {
 
 async function showLibrary() {
   const closedBookId = rp.bookId;
+  const closedMeta = currentBookMeta;
   const finishedAtEnd = Boolean(rp.view && ((rp.view.impl?.atEnd) || (rp.progress ?? 0) >= 0.9995));
+  const shouldCelebrate = Boolean(
+    closedBookId && closedMeta && finishedAtEnd && (!openedBookWasAlreadyRead || pendingCelebrationBookId === closedBookId)
+  );
   syncPendingFromView();
-  await Promise.all([flush(), flushReadingStats()]);
-  const celebrateBookId = (closedBookId && finishedAtEnd && pendingCelebrationBookId === closedBookId)
-    ? closedBookId
-    : null;
   pendingCelebrationBookId = null;
+  currentBookMeta = null;
+  openedBookWasAlreadyRead = false;
   closeReading();
   if (location.search || location.hash === '#_') history.replaceState(null, '', location.pathname);
   $('reading').hidden = true;
   $('library').hidden = false;
-  const store = await storeReady;
-  applyReadingTheme(await store.getSetting('theme', null));
   stopAnalogClock();
   document.title = 'El Reservorio';
-  await (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary());
-  if (celebrateBookId) {
-    try {
-      const [rec, books, positions, categories] = await Promise.all([
-        store.getBook(celebrateBookId),
-        store.listBooks(),
-        store.listPositions(),
-        store.getSetting('book_categories', {}),
-      ]);
-      const posById = new Map(positions.map((p) => [p.bookId, p]));
-      let readCount = 0;
-      for (const b of books) {
-        const c = categories[b.id];
-        const p = posById.get(b.id);
-        if (c === 'read' || (c !== 'none' && c !== 'reading' && c !== 'to_read' && p && Math.round((p.progress ?? 0) * 100) >= 100)) {
-          readCount++;
-        }
-      }
-      if (rec?.meta) openReadCelebration(rec.meta, { readCount });
-    } catch {}
+  if (shouldCelebrate) {
+    openReadCelebration(closedMeta, { readCount: getCachedReadCount() + 1 });
   }
+  const store = await storeReady;
+  await Promise.all([flush(), flushReadingStats()]);
+  applyReadingTheme(await store.getSetting('theme', null));
+  await (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary());
 }
 
 /** Lay a book out at its saved place. Returns true when it had one. */
-async function show(book, id, { push = false } = {}) {
+async function show(book, id, { push = false, meta = null } = {}) {
   const store = await storeReady;
   await ensureSpineMetrics(book);
   closeReadCelebration();
@@ -268,6 +256,13 @@ async function show(book, id, { push = false } = {}) {
   lastReportedCatBook = null;
   lastReportedCat = null;
   pendingCelebrationBookId = null;
+  currentBookMeta = meta;
+  openedBookWasAlreadyRead = false;
+  if (!meta) {
+    store.getBook(id).then((rec) => {
+      if (rp.bookId === id && rec?.meta) currentBookMeta = rec.meta;
+    }).catch(() => {});
+  }
   Object.assign(rp, { book, bookId: id, index: null, ready: false });
   rp.loader = createLoader(book);
   hideNotice();
@@ -277,6 +272,7 @@ async function show(book, id, { push = false } = {}) {
   const saved = await store.getPosition(id);
   try {
     const categories = await store.getSetting('book_categories', {});
+    openedBookWasAlreadyRead = categories[id] === 'read' || (saved?.progress ?? 0) >= 0.9995;
     const targetCat = (saved?.progress ?? 0) >= 0.9995 ? 'read' : 'reading';
     if (categories[id] !== targetCat) {
       categories[id] = targetCat;
@@ -510,7 +506,7 @@ async function openStored(id, { push = false } = {}) {
       if (freshCover) rec.meta = { ...rec.meta, cover: freshCover };
     }
     await store.putBook(rec.blob, rec.meta); // most recently opened first on the shelf
-    await show(book, id, { push });
+    await show(book, id, { push, meta: rec.meta });
   } catch (e) { fail(errorCode(e)); }
 }
 

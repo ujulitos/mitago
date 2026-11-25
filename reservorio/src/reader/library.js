@@ -28,6 +28,11 @@ let scrollLocked = false;
 let lockedScrollY = 0;
 let celebrationCoverUrl = null;
 let celebrationTrigger = null;
+let cachedReadCount = 0;
+
+export function getCachedReadCount() {
+  return cachedReadCount;
+}
 
 function syncHomeScrollLock() {
   const libraryVisible = !($('library')?.hidden);
@@ -700,24 +705,14 @@ function bookItem(book, pos, stat, category, categories) {
     btnRead.blur();
     closeMetadataModal();
     const markingAsRead = effectiveCat !== 'read';
-    if (effectiveCat === 'read') {
-      categories[book.id] = 'none';
-    } else {
+    if (markingAsRead) {
       categories[book.id] = 'read';
+      openReadCelebration(book, { readCount: cachedReadCount + 1 });
+    } else {
+      categories[book.id] = 'none';
     }
     await ctx.store.setSetting('book_categories', categories);
     await renderLibrary();
-    if (markingAsRead) {
-      let readCount = 0;
-      try {
-        const [books, positions] = await Promise.all([ctx.store.listBooks(), ctx.store.listPositions()]);
-        const posById = new Map(positions.map((p) => [p.bookId, p]));
-        for (const b of books) {
-          if (resolveCategory(b.id, posById.get(b.id), categories) === 'read') readCount++;
-        }
-      } catch {}
-      openReadCelebration(book, { readCount });
-    }
   });
 
   const btnMeta = labelled(el('button', {
@@ -977,30 +972,49 @@ function enableRowDragScroll(row) {
 }
 
 // ---- book finished celebration modal --------------------------------------------
-const CELEBRATE_COLORS = ['#e8b84b', '#58a86b', '#e06c55', '#4b9be8', '#d99036', '#a97be8', '#f2d27a'];
+const CELEBRATE_COLORS = ['#ffd166', '#58c97a', '#ff6b6b', '#4da6ff', '#f4a261', '#c084fc', '#ffe58f', '#2ec4b6'];
 
 function buildCelebrationConfetti(container) {
   const frag = document.createDocumentFragment();
-  const count = 24;
-  for (let i = 0; i < count; i++) {
-    const angle = ((i / count) * Math.PI * 2) + ((i % 3) - 1) * 0.12;
-    const dist = 84 + (i % 5) * 22;
+  // Wave 1: wide radial burst clear of the book cover, then drifting down
+  const wave1 = 24;
+  for (let i = 0; i < wave1; i++) {
+    const angle = ((i / wave1) * Math.PI * 2) + ((i % 3) - 1) * 0.1;
+    const dist = 128 + (i % 5) * 28;
     const dx = Math.cos(angle) * dist;
-    const dy = Math.sin(angle) * dist * 0.85 - 24;
-    const rot = (i % 2 === 0 ? 1 : -1) * (160 + (i % 4) * 75);
-    const delay = (i % 6) * 32;
-    const dur = 1150 + (i % 4) * 180;
-    const piece = el('i', {
-      class: `celebrate-piece${i % 3 === 0 ? ' dot' : ''}`,
+    const dy = Math.sin(angle) * dist * 0.92 - 42;
+    const rot = (i % 2 === 0 ? 1 : -1) * (240 + (i % 4) * 95);
+    const delay = 90 + (i % 6) * 28;
+    const dur = 1900 + (i % 4) * 240;
+    const kind = i % 4 === 0 ? ' dot' : (i % 4 === 3 ? ' ribbon' : '');
+    frag.append(el('i', {
+      class: `celebrate-piece${kind}`,
       style: `--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;--rot:${rot}deg;--delay:${delay}ms;--dur:${dur}ms;--c:${CELEBRATE_COLORS[i % CELEBRATE_COLORS.length]}`,
-    });
-    frag.append(piece);
+    }));
   }
+  // Wave 2: festive secondary pop so the celebration lingers gracefully
+  const wave2 = 12;
+  for (let i = 0; i < wave2; i++) {
+    const angle = ((i / wave2) * Math.PI * 2) + 0.26;
+    const dist = 152 + (i % 4) * 24;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist * 0.85 - 58;
+    const rot = (i % 2 === 0 ? -1 : 1) * (260 + (i % 3) * 110);
+    const delay = 380 + (i % 5) * 65;
+    const dur = 2150 + (i % 3) * 260;
+    frag.append(el('i', {
+      class: `celebrate-piece${i % 2 === 0 ? ' ribbon' : ' dot'}`,
+      style: `--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;--rot:${rot}deg;--delay:${delay}ms;--dur:${dur}ms;--c:${CELEBRATE_COLORS[(i + 3) % CELEBRATE_COLORS.length]}`,
+    }));
+  }
+  // Persistent twinkling golden sparkles framing the cover
   const sparkles = [
-    { x: '-78px', y: '-88px', s: 1.0, d: '120ms' },
-    { x: '84px', y: '-72px', s: 0.85, d: '260ms' },
-    { x: '-90px', y: '34px', s: 0.78, d: '340ms' },
-    { x: '92px', y: '22px', s: 0.95, d: '200ms' },
+    { x: '-104px', y: '-136px', s: 1.15, d: '120ms' },
+    { x: '112px', y: '-118px', s: 1.0, d: '300ms' },
+    { x: '-122px', y: '-18px', s: 0.9, d: '460ms' },
+    { x: '124px', y: '-26px', s: 1.05, d: '220ms' },
+    { x: '-96px', y: '82px', s: 0.85, d: '580ms' },
+    { x: '104px', y: '74px', s: 0.95, d: '380ms' },
   ];
   for (const sp of sparkles) {
     frag.append(el('span', {
@@ -1106,6 +1120,12 @@ function renderLibraryInfoCounts(books, posByBook, categories) {
   setCount('lib-info-reading', reading);
   setCount('lib-info-to-read', toRead);
   setCount('lib-info-read', read);
+  cachedReadCount = read;
+  const celebModal = $('read-celebration-modal');
+  const celebSub = $('read-celebration-sub');
+  if (celebModal && !celebModal.hidden && celebSub && read > 0) {
+    celebSub.textContent = tn('celebrate_count', read);
+  }
 }
 
 // ---- export / import helper ---------------------------------------------
