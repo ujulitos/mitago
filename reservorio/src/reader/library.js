@@ -26,12 +26,15 @@ let activeLongPressCancel = null;
 let drawerOpenState = false;
 let scrollLocked = false;
 let lockedScrollY = 0;
+let celebrationCoverUrl = null;
+let celebrationTrigger = null;
 
 function syncHomeScrollLock() {
   const libraryVisible = !($('library')?.hidden);
   const metaOpen = Boolean($('meta-modal') && !$('meta-modal').hidden);
   const batchOpen = Boolean($('batch-confirm-modal') && !$('batch-confirm-modal').hidden);
-  const shouldLock = libraryVisible && (drawerOpenState || metaOpen || batchOpen);
+  const celebrateOpen = Boolean($('read-celebration-modal') && !$('read-celebration-modal').hidden);
+  const shouldLock = libraryVisible && (drawerOpenState || metaOpen || batchOpen || celebrateOpen);
   const libMain = document.querySelector('#library .lib-main');
   if (shouldLock && !scrollLocked) {
     scrollLocked = true;
@@ -696,6 +699,7 @@ function bookItem(book, pos, stat, category, categories) {
     e.stopPropagation();
     btnRead.blur();
     closeMetadataModal();
+    const markingAsRead = effectiveCat !== 'read';
     if (effectiveCat === 'read') {
       categories[book.id] = 'none';
     } else {
@@ -703,6 +707,17 @@ function bookItem(book, pos, stat, category, categories) {
     }
     await ctx.store.setSetting('book_categories', categories);
     await renderLibrary();
+    if (markingAsRead) {
+      let readCount = 0;
+      try {
+        const [books, positions] = await Promise.all([ctx.store.listBooks(), ctx.store.listPositions()]);
+        const posById = new Map(positions.map((p) => [p.bookId, p]));
+        for (const b of books) {
+          if (resolveCategory(b.id, posById.get(b.id), categories) === 'read') readCount++;
+        }
+      } catch {}
+      openReadCelebration(book, { readCount });
+    }
   });
 
   const btnMeta = labelled(el('button', {
@@ -959,6 +974,117 @@ function enableRowDragScroll(row) {
     window.addEventListener('pointerup', onEnd);
     window.addEventListener('pointercancel', onEnd);
   });
+}
+
+// ---- book finished celebration modal --------------------------------------------
+const CELEBRATE_COLORS = ['#e8b84b', '#58a86b', '#e06c55', '#4b9be8', '#d99036', '#a97be8', '#f2d27a'];
+
+function buildCelebrationConfetti(container) {
+  const frag = document.createDocumentFragment();
+  const count = 24;
+  for (let i = 0; i < count; i++) {
+    const angle = ((i / count) * Math.PI * 2) + ((i % 3) - 1) * 0.12;
+    const dist = 84 + (i % 5) * 22;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist * 0.85 - 24;
+    const rot = (i % 2 === 0 ? 1 : -1) * (160 + (i % 4) * 75);
+    const delay = (i % 6) * 32;
+    const dur = 1150 + (i % 4) * 180;
+    const piece = el('i', {
+      class: `celebrate-piece${i % 3 === 0 ? ' dot' : ''}`,
+      style: `--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;--rot:${rot}deg;--delay:${delay}ms;--dur:${dur}ms;--c:${CELEBRATE_COLORS[i % CELEBRATE_COLORS.length]}`,
+    });
+    frag.append(piece);
+  }
+  const sparkles = [
+    { x: '-78px', y: '-88px', s: 1.0, d: '120ms' },
+    { x: '84px', y: '-72px', s: 0.85, d: '260ms' },
+    { x: '-90px', y: '34px', s: 0.78, d: '340ms' },
+    { x: '92px', y: '22px', s: 0.95, d: '200ms' },
+  ];
+  for (const sp of sparkles) {
+    frag.append(el('span', {
+      class: 'celebrate-sparkle',
+      textContent: '✦',
+      style: `--sx:${sp.x};--sy:${sp.y};--ss:${sp.s};--sd:${sp.d}`,
+    }));
+  }
+  container.replaceChildren(frag);
+}
+
+export function closeReadCelebration() {
+  const modal = $('read-celebration-modal');
+  if (!modal || modal.hidden) return false;
+  modal.hidden = true;
+  modal.classList.remove('is-open');
+  if (celebrationCoverUrl) {
+    URL.revokeObjectURL(celebrationCoverUrl);
+    celebrationCoverUrl = null;
+  }
+  $('read-celebration-confetti')?.replaceChildren();
+  syncHomeScrollLock();
+  const prev = celebrationTrigger;
+  celebrationTrigger = null;
+  if (prev?.isConnected) prev.focus({ preventScroll: true });
+  return true;
+}
+
+export function openReadCelebration(book, { readCount = 0 } = {}) {
+  const modal = $('read-celebration-modal');
+  if (!modal || !book || $('library')?.hidden) return;
+  if (celebrationCoverUrl) {
+    URL.revokeObjectURL(celebrationCoverUrl);
+    celebrationCoverUrl = null;
+  }
+  celebrationTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+  const title = book.title || t('untitled');
+  const author = book.creator || '';
+  const coverFrame = $('read-celebration-cover');
+  if (coverFrame) {
+    let img;
+    let isFallback = false;
+    if (typeof book.cover === 'string' && book.cover.startsWith('data:')) {
+      img = el('img', { src: book.cover, alt: title });
+    } else if (book.cover instanceof Blob && book.cover.size > 0) {
+      celebrationCoverUrl = URL.createObjectURL(book.cover);
+      img = el('img', { src: celebrationCoverUrl, alt: title });
+      img.addEventListener('error', () => {
+        img.src = 'icons/icon.svg';
+        coverFrame.classList.add('is-fallback');
+      }, { once: true });
+    } else {
+      isFallback = true;
+      img = el('img', { src: 'icons/icon.svg', alt: title });
+    }
+    coverFrame.classList.toggle('is-fallback', isFallback);
+    coverFrame.replaceChildren(img, el('span', { class: 'celebrate-sheen', 'aria-hidden': 'true' }));
+  }
+
+  const checkEl = $('read-celebration-check');
+  if (checkEl) checkEl.replaceChildren(icon('checkDouble', 20));
+  if ($('read-celebration-badge')) $('read-celebration-badge').textContent = t('celebrate_badge');
+  if ($('read-celebration-title')) $('read-celebration-title').textContent = title;
+  const authorEl = $('read-celebration-author');
+  if (authorEl) {
+    authorEl.textContent = author;
+    authorEl.hidden = !author;
+  }
+  const subEl = $('read-celebration-sub');
+  if (subEl) {
+    subEl.textContent = readCount > 0 ? tn('celebrate_count', readCount) : t('celebrate_sub');
+  }
+  if ($('read-celebration-ok')) $('read-celebration-ok').textContent = t('celebrate_ok');
+
+  const confetti = $('read-celebration-confetti');
+  if (confetti) buildCelebrationConfetti(confetti);
+
+  modal.classList.remove('is-open');
+  modal.hidden = false;
+  void modal.offsetWidth;
+  modal.classList.add('is-open');
+  syncHomeScrollLock();
+  $('read-celebration-ok')?.focus({ preventScroll: true });
 }
 
 // ---- library category breakdown (inside hamburger menu drawer) -----------
@@ -2004,6 +2130,10 @@ export function initLibrary(c) {
     batchConfirmYes.addEventListener('click', executeBatchDelete);
   }
 
+  // Read celebration modal dismiss listeners
+  $('read-celebration-backdrop')?.addEventListener('click', closeReadCelebration);
+  $('read-celebration-ok')?.addEventListener('click', closeReadCelebration);
+
   // Metadata modal dismiss listeners
   const metaModalClose = $('meta-modal-close');
   if (metaModalClose) {
@@ -2015,6 +2145,11 @@ export function initLibrary(c) {
     metaModalBackdrop.addEventListener('click', closeMetadataModal);
   }
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('read-celebration-modal') && !$('read-celebration-modal').hidden) {
+      e.stopPropagation();
+      closeReadCelebration();
+      return;
+    }
     if (e.key === 'Escape' && $('lib-drawer') && !$('lib-drawer').hidden) {
       e.stopPropagation();
       closeLibraryDrawer();

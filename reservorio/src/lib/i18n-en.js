@@ -381,5 +381,10 @@ export default {
 "deleting_books": "Deleting books…",
 "deleting_progress": "Deleting $1 of $2…",
 "duplicate_skipped_one": "This book is already in your library",
-"duplicate_skipped_other": "$1 books were already in your library"
+"duplicate_skipped_other": "$1 books were already in your library",
+"celebrate_badge": "Book finished!",
+"celebrate_sub": "Congratulations on completing this read!",
+"celebrate_count_one": "You have $1 finished book in your library.",
+"celebrate_count_other": "You have $1 finished books in your library.",
+"celebrate_ok": "Awesome!"
 };

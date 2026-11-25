@@ -426,6 +426,26 @@
         <button id="keys-close" class="tool strong" type="button" data-i18n="close_panel"></button>
     </dialog>
 
+    <!-- Book Finished Celebration Modal -->
+    <div id="read-celebration-modal" class="modal-overlay celebrate-overlay" role="dialog" aria-modal="true" aria-labelledby="read-celebration-badge" hidden>
+        <div class="modal-backdrop celebrate-backdrop" id="read-celebration-backdrop"></div>
+        <div class="modal-card celebrate-card">
+            <div class="celebrate-confetti" id="read-celebration-confetti" aria-hidden="true"></div>
+            <div class="celebrate-body">
+                <span class="celebrate-pill" id="read-celebration-badge" data-i18n="celebrate_badge">¡Libro terminado!</span>
+                <div class="celebrate-cover-stage">
+                    <div class="celebrate-halo" aria-hidden="true"></div>
+                    <div class="celebrate-cover-frame" id="read-celebration-cover"></div>
+                    <span class="celebrate-check-badge" id="read-celebration-check" aria-hidden="true"></span>
+                </div>
+                <h3 class="celebrate-title" id="read-celebration-title"></h3>
+                <p class="celebrate-author" id="read-celebration-author"></p>
+                <p class="celebrate-sub" id="read-celebration-sub"></p>
+                <button id="read-celebration-ok" class="celebrate-btn" type="button" data-i18n="celebrate_ok">¡Genial!</button>
+            </div>
+        </div>
+    </div>
+
     <div id="veil" class="veil" hidden>
         <div class="veil-box"><span id="veil-icon" aria-hidden="true"></span><span data-i18n="drop_to_open"></span></div>
     </div>

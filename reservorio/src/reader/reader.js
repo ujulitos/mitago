@@ -14,7 +14,7 @@ import { resolveTheme } from '../lib/theme.js';
 import { showToast } from '../lib/toast.js';
 import { $, hideLoadingOverlay, setLoadingOverlayText, showLoadingOverlay } from './dom.js';
 import { addReadingTime, errorCode, fileProblem, findDuplicateBook, hasRoom, localDay } from './logic.js';
-import { closeLibraryDrawer, hideNotice, importFile, initLibrary, problemText, refreshBookInLibrary, renderLibrary, showNotice } from './library.js';
+import { closeLibraryDrawer, closeReadCelebration, hideNotice, importFile, initLibrary, openReadCelebration, problemText, refreshBookInLibrary, renderLibrary, showNotice } from './library.js';
 import { addStatTime } from './stats.js';
 import { EXTENSION } from './libfile.js';
 import { openRemote } from './remote.js';
@@ -76,6 +76,7 @@ let flushingPromise = null;
 let section = null;
 let lastReportedCatBook = null;
 let lastReportedCat = null;
+let pendingCelebrationBookId = null;
 const dirtyConfigKeys = new Set();
 const deletedConfigKeys = new Set();
 
@@ -107,6 +108,9 @@ function onPosition(pos, progress) {
   pending = { pos, progress };
   if (rp.bookId) {
     const nextCat = progress >= 0.9995 ? 'read' : (progress > 0 ? 'reading' : null);
+    if (nextCat === 'reading' && pendingCelebrationBookId === rp.bookId) {
+      pendingCelebrationBookId = null;
+    }
     if (nextCat && (lastReportedCatBook !== rp.bookId || lastReportedCat !== nextCat)) {
       const targetBookId = rp.bookId;
       lastReportedCatBook = targetBookId;
@@ -115,8 +119,12 @@ function onPosition(pos, progress) {
         try {
           const categories = await store.getSetting('book_categories', {});
           if (categories[targetBookId] !== nextCat) {
+            const wasRead = categories[targetBookId] === 'read';
             categories[targetBookId] = nextCat;
             await store.setSetting('book_categories', categories);
+            if (nextCat === 'read' && !wasRead && rp.bookId === targetBookId) {
+              pendingCelebrationBookId = targetBookId;
+            }
           }
         } catch {}
       });
@@ -146,6 +154,7 @@ async function flush() {
           if (categories[posSnapshot.bookId] !== 'read') {
             categories[posSnapshot.bookId] = 'read';
             await store.setSetting('book_categories', categories);
+            pendingCelebrationBookId = posSnapshot.bookId;
           }
         } catch {}
       }
@@ -212,25 +221,53 @@ function closeReading() {
 
 async function showLibrary() {
   const closedBookId = rp.bookId;
+  const finishedAtEnd = Boolean(rp.view && ((rp.view.impl?.atEnd) || (rp.progress ?? 0) >= 0.9995));
   syncPendingFromView();
   await Promise.all([flush(), flushReadingStats()]);
+  const celebrateBookId = (closedBookId && finishedAtEnd && pendingCelebrationBookId === closedBookId)
+    ? closedBookId
+    : null;
+  pendingCelebrationBookId = null;
   closeReading();
   if (location.search || location.hash === '#_') history.replaceState(null, '', location.pathname);
   $('reading').hidden = true;
   $('library').hidden = false;
-  applyReadingTheme(await (await storeReady).getSetting('theme', null));
+  const store = await storeReady;
+  applyReadingTheme(await store.getSetting('theme', null));
   stopAnalogClock();
   document.title = 'El Reservorio';
   await (closedBookId ? refreshBookInLibrary(closedBookId) : renderLibrary());
+  if (celebrateBookId) {
+    try {
+      const [rec, books, positions, categories] = await Promise.all([
+        store.getBook(celebrateBookId),
+        store.listBooks(),
+        store.listPositions(),
+        store.getSetting('book_categories', {}),
+      ]);
+      const posById = new Map(positions.map((p) => [p.bookId, p]));
+      let readCount = 0;
+      for (const b of books) {
+        const c = categories[b.id];
+        const p = posById.get(b.id);
+        if (c === 'read' || (c !== 'none' && c !== 'reading' && c !== 'to_read' && p && Math.round((p.progress ?? 0) * 100) >= 100)) {
+          readCount++;
+        }
+      }
+      if (rec?.meta) openReadCelebration(rec.meta, { readCount });
+    } catch {}
+  }
 }
 
 /** Lay a book out at its saved place. Returns true when it had one. */
 async function show(book, id, { push = false } = {}) {
   const store = await storeReady;
   await ensureSpineMetrics(book);
+  closeReadCelebration();
   closeReading();
   lastReportedCatBook = null;
   lastReportedCat = null;
+  pendingCelebrationBookId = null;
   Object.assign(rp, { book, bookId: id, index: null, ready: false });
   rp.loader = createLoader(book);
   hideNotice();
@@ -586,7 +623,7 @@ const typing = (n) => n?.closest?.('input, textarea, select, [contenteditable="t
 document.addEventListener('keydown', (e) => {
   rp.lastActive = Date.now();
   if (e.key === 'Escape') {
-    if (closeKeys() || closeHighlightBar() || closeSettings() || closePanel()) e.preventDefault();
+    if (closeReadCelebration() || closeKeys() || closeHighlightBar() || closeSettings() || closePanel()) e.preventDefault();
     return;
   }
   if (e.ctrlKey || e.metaKey || e.altKey || typing(e.target) || $('keys').open) return;

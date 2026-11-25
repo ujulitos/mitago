@@ -378,5 +378,10 @@ export default {
   "deleting_books": "Eliminando libros…",
   "deleting_progress": "Eliminando $1 de $2…",
   "duplicate_skipped_one": "Este libro ya está en tu biblioteca",
-  "duplicate_skipped_other": "$1 libros ya estaban en tu biblioteca"
+  "duplicate_skipped_other": "$1 libros ya estaban en tu biblioteca",
+  "celebrate_badge": "¡Libro terminado!",
+  "celebrate_sub": "¡Felicidades por completar esta lectura!",
+  "celebrate_count_one": "Llevas $1 libro leído en tu biblioteca.",
+  "celebrate_count_other": "Llevas $1 libros leídos en tu biblioteca.",
+  "celebrate_ok": "¡Genial!"
 };
